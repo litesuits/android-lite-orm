@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+
+    <dimen name="common_marin">10dp</dimen>
+    <dimen name="min_height">40dp</dimen>
+    <dimen name="vertical_height">15dp</dimen>
+    <dimen name="common_marin_min">6dp</dimen>
+    <dimen name="common_title">20sp</dimen>
+    <dimen name="common_text">16sp</dimen>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+</resources>

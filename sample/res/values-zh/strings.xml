@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">LiteOrm</string>
+    <string name="title">Lite实验室:ORM</string>
+    <string name="sub_title">请在Log中查看执行结果</string>
+
+    <string-array name="orm_test_list">
+        <item>新增</item>
+        <item>更新</item>
+        <item>查找</item>
+        <item>删除</item>
+    </string-array>
+
+</resources>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+
+    <!-- 配色风格：冬日红梅，by 马天宇 -->
+    <!--
+     #00000000 透明
+     #000000 纯黑
+     #FFFFFF 纯白
+     #E36D6D 西瓜红
+     #698CD6 蓝
+     #E3DBCF 暗白
+     #9C8E8E 灰色
+     #8E9C8E 灰绿
+    -->
+    
+    <!-- 透明 -->
+    <color name="transparent">#00000000</color>
+    <color name="border_bkg">#FFFFFF</color>
+    <color name="border">#000000</color>
+<!--     <color name="border">#E36D6D</color> -->
+    <color name="text">#000000</color>
+    <color name="main_bkg">#E3DBCF</color>
+    <color name="button">#FFFFFF</color>
+    <color name="button_disable">#9C8E8E</color>
+    <color name="button_press">#F1F1F1</color>
+    <color name="button_text">#000000</color>
+  <!--   <color name="button_text">#698CD6</color> -->
+
+
+</resources>

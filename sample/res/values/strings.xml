@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">LiteOrm</string>
+    <string name="title">LiteLab:ORM</string>
+    <string name="sub_title">See The Result in The Log </string>
+
+    <string-array name="orm_test_list">
+        <item>Insert</item>
+        <item>Update</item>
+        <item>Select</item>
+        <item>Delete</item>
+    </string-array>
+
+</resources>
