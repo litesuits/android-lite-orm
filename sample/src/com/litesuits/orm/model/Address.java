@@ -28,9 +28,6 @@ public class Address extends BaseModel{
 
     @Override
     public String toString() {
-        return "Address{" +
-                "id=" + id +
-                ", address='" + address + '\'' +
-                "} " + super.toString();
+        return " address:"+address;
     }
 }

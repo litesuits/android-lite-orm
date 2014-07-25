@@ -170,13 +170,26 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         ArrayList<Address> as = db.query(Address.class);
         ArrayList<Wife> ws = db.query(Wife.class);
         ArrayList<Company> cs = db.query(Company.class);
+        ArrayList<Teacher> ts = db.query(Teacher.class);
         db.mapping(query, as);
         db.mapping(query, ws);
         db.mapping(query, cs);
+        db.mapping(query, ts);
+        for (Address uu : as) {
+            Log.i(this, "query Address: " + uu);
+        }
+        for (Wife uu : ws) {
+            Log.i(this, "query Wife: " + uu);
+        }
+        for (Company uu : cs) {
+            Log.i(this, "query Company: " + uu);
+        }
+        for (Teacher uu : ts) {
+            Log.i(this, "query Teacher: " + uu);
+        }
         for (Man uu : query) {
             Log.i(this, "query user: " + uu);
         }
-        Log.i(this, "query user: " + cs.get(0));
     }
 
     private void testDelete() {
