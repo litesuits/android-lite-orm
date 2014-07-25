@@ -10,6 +10,7 @@
         <item>更新</item>
         <item>查找</item>
         <item>删除</item>
+        <item>关系映射</item>
     </string-array>
 
 </resources>

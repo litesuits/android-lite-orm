@@ -10,6 +10,7 @@
         <item>Update</item>
         <item>Select</item>
         <item>Delete</item>
+        <item>Mapping</item>
     </string-array>
 
 </resources>

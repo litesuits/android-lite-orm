@@ -44,6 +44,8 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         setSubTitile(getString(R.string.sub_title));
         mockData();
         db = LiteOrm.via(this);
+        DataBase db = LiteOrm.newInstance(this, "dbname");
+        db.query(Man.class);
     }
 
     public void onDestroy() {
@@ -84,6 +86,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
      * 1<item>Update</item>
      * 2<item>Select</item>
      * 3<item>Delete</item>
+     * 4<item>Mapping</item>
      *
      * @param id
      */
@@ -102,6 +105,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
                 testDelete();
                 break;
             case 4:
+                testMapping();
                 break;
             case 5:
                 break;
@@ -171,10 +175,6 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         ArrayList<Wife> ws = db.query(Wife.class);
         ArrayList<Company> cs = db.query(Company.class);
         ArrayList<Teacher> ts = db.query(Teacher.class);
-        db.mapping(query, as);
-        db.mapping(query, ws);
-        db.mapping(query, cs);
-        db.mapping(query, ts);
         for (Address uu : as) {
             Log.i(this, "query Address: " + uu);
         }
@@ -188,6 +188,34 @@ public class LiteOrmSamplesActivity extends BaseActivity {
             Log.i(this, "query Teacher: " + uu);
         }
         for (Man uu : query) {
+            Log.i(this, "query user: " + uu);
+        }
+    }
+
+    private void testMapping() {
+        ArrayList<Man> mans = db.query(Man.class);
+        ArrayList<Address> as = db.query(Address.class);
+        ArrayList<Wife> ws = db.query(Wife.class);
+        ArrayList<Company> cs = db.query(Company.class);
+        ArrayList<Teacher> ts = db.query(Teacher.class);
+        db.mapping(mans, as);
+        db.mapping(mans, ws);
+        db.mapping(mans, cs);
+        db.mapping(mans, ts);
+        for (Address uu : as) {
+            Log.i(this, "query Address: " + uu);
+        }
+        for (Wife uu : ws) {
+            Log.i(this, "query Wife: " + uu);
+        }
+        for (Company uu : cs) {
+            Log.i(this, "query Company: " + uu);
+        }
+        for (Teacher uu : ts) {
+            Log.i(this, "query Teacher: " + uu);
+        }
+        //可以看到与Man关联的Teacher、Company、Address都智能映射给Man对应的各个的实例了。
+        for (Man uu : mans) {
             Log.i(this, "query user: " + uu);
         }
     }
@@ -236,12 +264,12 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         addrList.add(new Address("1 Xihu Hangzhou China"));
         addrList.add(new Address("2 Hangzhou China"));
         addrList.add(new Address("3 Nanjing China"));
-        addrList.add(new Address("4"));
-        addrList.add(new Address("5 "));
-        addrList.add(new Address("6 "));
-        addrList.add(new Address("7 "));
-        addrList.add(new Address("8 "));
-        addrList.add(new Address("9 "));
+        addrList.add(new Address("4 sssss"));
+        addrList.add(new Address("5 bbbbbb"));
+        addrList.add(new Address("6 ccccc"));
+        addrList.add(new Address("7 dddddd"));
+        addrList.add(new Address("8 eeeee"));
+        addrList.add(new Address("9 fffff"));
         uMax.addrList = addrList;
 
         // N to N
