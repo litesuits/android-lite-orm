@@ -1,12 +1,12 @@
-package com.litesuits.android.samples;
+package com.litesuits.orm.samples;
 
 import android.os.Bundle;
 import android.view.Menu;
-import com.litesuits.android.R;
 import com.litesuits.android.log.Log;
-import com.litesuits.android.model.*;
 import com.litesuits.orm.LiteOrm;
+import com.litesuits.orm.R;
 import com.litesuits.orm.db.DataBase;
+import com.litesuits.orm.model.*;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,15 +25,15 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     /**
      * man:teacher -> n:n
      */
-    static ArrayList<Teacher>  teacherList;
+    static ArrayList<Teacher>             teacherList;
     /**
      * man:company -> n:1
      */
-    static Company             company;
+    static Company                        company;
     /**
      * man:wife -> 1:1
      */
-    static Wife                wife1, wife2;
+    static Wife                           wife1, wife2;
 
     /**
      * 在{@link BaseActivity#onCreate(Bundle)}中设置视图

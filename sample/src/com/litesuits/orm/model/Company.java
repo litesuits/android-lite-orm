@@ -1,4 +1,4 @@
-package com.litesuits.android.model;
+package com.litesuits.orm.model;
 
 import com.litesuits.orm.db.annotation.Column;
 import com.litesuits.orm.db.annotation.Mapping;
@@ -25,8 +25,7 @@ public class Company extends BaseModel {
     @Mapping(Relation.OneToMany)
     private ArrayList<Man> list;
 
-    public Company() {
-    }
+    public Company() { }
 
     public Company(String name, ArrayList<Man> list) {
         this.name = name;
@@ -37,7 +36,7 @@ public class Company extends BaseModel {
     public String toString() {
         StringBuilder sb = new StringBuilder("Company [ name=" + name);
         if (list != null) {
-            sb.append(", list=");
+            sb.append(", man=");
             for (Man m : list) {
                 sb.append(m.getName() + ", ");
             }

@@ -1,9 +1,7 @@
-package com.litesuits.android.model;
+package com.litesuits.orm.model;
 
-import com.litesuits.orm.db.annotation.Column;
-import com.litesuits.orm.db.annotation.PrimaryKey;
+import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.annotation.PrimaryKey.AssignType;
-import com.litesuits.orm.db.annotation.Table;
 
 /**
  * Wifi 和Man 是一对一关系
@@ -17,6 +15,9 @@ public class Person extends  BaseModel{
     @Column("_id")
     protected long id;
 
+    @Unique
+    @NotNull
+    @Conflict(Conflict.Strategy.FAIL)
     public String name;
 
     @Override

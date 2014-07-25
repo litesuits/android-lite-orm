@@ -1,4 +1,4 @@
-package com.litesuits.android.model;
+package com.litesuits.orm.model;
 
 import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.annotation.Mapping.Relation;
@@ -33,9 +33,9 @@ public class Man extends Person{
     @Mapping(Relation.ManyToOne)
     public Company company;
 
-    /************* 关系示例：使用其他容器和存放方式 ***************/
+    /************* 约束性规则示例 ***************/
 
-    @Check("custom_name>99")
+    @Check("custom_name > 99")
     @Column("custom_name")
     private int check = 100;
 
@@ -54,10 +54,6 @@ public class Man extends Person{
     @NotNull
     private String not_null = "not null";
 
-    @Conflict(Conflict.Strategy.ABORT)
-    @Unique()
-    @Default("more_def")
-    private String more;
     /************* 其他数据类型示例 ***************/
     public  short  us;
 

@@ -1,8 +1,7 @@
-package com.litesuits.android.model;
+package com.litesuits.orm.model;
 
-import com.litesuits.orm.db.annotation.PrimaryKey;
+import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.annotation.PrimaryKey.AssignType;
-import com.litesuits.orm.db.annotation.Table;
 
 /**
  * 一个 {@link Man}可以有多个地址
@@ -12,16 +11,20 @@ import com.litesuits.orm.db.annotation.Table;
  */
 @Table("address")
 public class Address extends BaseModel{
-	@PrimaryKey(AssignType.AUTO_INCREMENT)
-	public long id;
-	public String address;
+
+    @PrimaryKey(AssignType.AUTO_INCREMENT)
+    public long id;
+
+    @NotNull
+    @Unique
+    public String address;
 
     public Address() {
     }
 
     public Address(String address) {
-		this.address = address;
-	}
+        this.address = address;
+    }
 
     @Override
     public String toString() {

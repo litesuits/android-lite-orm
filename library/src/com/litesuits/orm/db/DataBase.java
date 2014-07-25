@@ -56,24 +56,17 @@ public interface DataBase {
     /**
      * query entity and put it into list
      */
-    public <T> ArrayList<T> query(Class<T> claxx, Collection<?> collection, QueryBuilder qb);
+    //public <T> ArrayList<T> query(Class<T> claxx, Collection<?> collection, QueryBuilder qb);
 
     /**
      * query all data of this type
      */
     public <T> ArrayList<T> query(Class<T> claxx);
-    //
-    //	public <T> List<T> query(Class<T> claxx, QueryBuilder qb);
-    //
-    //	public <T> List<T> query(Class<T> claxx, int start, int end);
-    //
-    //	public <T> List<T> query(Class<T> claxx, Collection<?> collection);
-    //
-    //	public <T> List<T> query(Class<T> claxx, Object[] objects);
-    //
-    //	public <T> List<T> query(Class<T> claxx, Map<?, ?> map);
-    //
-    //	public boolean mapping(Collection<?> c1, Collection<?> c2);
+
+    /**
+     * custom query
+     */
+    public <T> List<T> query(Class<T> claxx, QueryBuilder qb);
 
     /**
      * find and return relation between two diffirent collection.

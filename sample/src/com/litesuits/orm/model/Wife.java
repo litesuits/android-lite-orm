@@ -1,4 +1,4 @@
-package com.litesuits.android.model;
+package com.litesuits.orm.model;
 
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.Mapping.Relation;

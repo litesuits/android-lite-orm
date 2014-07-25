@@ -210,8 +210,8 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     }
 
     @Override
-    public <T> ArrayList<T> query(Class<T> claxx, Collection<?> collection, QueryBuilder qb) {
-        return null;
+    public <T> ArrayList<T> query(Class<T> claxx, QueryBuilder qb) {
+        return qb.createStatement().query(mHelper.getReadableDatabase(), claxx);
     }
 
     @Override
