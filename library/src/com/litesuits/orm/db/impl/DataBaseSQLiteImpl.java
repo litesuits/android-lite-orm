@@ -127,15 +127,20 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
 
     @Override
     public int update(Object entity) {
-        return update(entity, null);
+        return update(entity, null, null);
     }
 
     @Override
     public int update(Object entity, ConflictAlgorithm conflictAlgorithm) {
+        return update(entity, null, conflictAlgorithm);
+    }
+
+    @Override
+    public int update(Object entity, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm) {
         acquireReference();
         try {
             SQLiteDatabase db = mHelper.getWritableDatabase();
-            return SQLBuilder.buildUpdateSql(entity, conflictAlgorithm).execUpdateWithMapping(db, entity);
+            return SQLBuilder.buildUpdateSql(entity, cvs, conflictAlgorithm).execUpdateWithMapping(db, entity);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -146,18 +151,23 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
 
     @Override
     public int update(Collection<?> collection) {
-        return update(collection, null);
+        return update(collection, null, null);
     }
 
     @Override
     public int update(Collection<?> collection, ConflictAlgorithm conflictAlgorithm) {
+        return update(collection, null, conflictAlgorithm);
+    }
+
+    @Override
+    public int update(Collection<?> collection, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm) {
         acquireReference();
         try {
             if (!Checker.isEmpty(collection)) {
                 SQLiteDatabase db = mHelper.getWritableDatabase();
                 Object entity = collection.iterator().next();
-                SQLStatement stmt = SQLBuilder.buildUpdateAllSql(entity, conflictAlgorithm);
-                return stmt.execUpdateCollection(db, collection);
+                SQLStatement stmt = SQLBuilder.buildUpdateAllSql(entity, cvs, conflictAlgorithm);
+                return stmt.execUpdateCollection(db, collection, cvs);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -291,7 +301,7 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     }
 
     @Override
-    public <T> ArrayList<T> query( QueryBuilder qb) {
+    public <T> ArrayList<T> query(QueryBuilder qb) {
         return qb.createStatement().query(mHelper.getReadableDatabase(), qb.getQueryClass());
     }
 

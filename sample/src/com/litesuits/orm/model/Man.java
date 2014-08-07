@@ -3,23 +3,32 @@ package com.litesuits.orm.model;
 import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.annotation.Mapping.Relation;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Table("man")
-public class Man extends Person{
-    /************* 基础数据示例 ***************/
+public class Man extends Person {
+    /**
+     * ********** 基础数据示例 **************
+     */
 
     private boolean isLogin;
 
     private int age;
 
-    /************* Ignore 和 static final 属性将被忽略 ***************/
+    /**
+     * ********** Ignore 和 static final 属性将被忽略 **************
+     */
     @Ignore
     protected           String password = "4444";
     public static final String FINAL    = "this property will no be saved";
 
-    /************* 四种映射关系示例 ***************/
+    /**
+     * ********** 四种映射关系示例 **************
+     */
     @Mapping(Relation.ManyToMany)
     public ArrayList<Teacher> teachers;
 
@@ -33,7 +42,9 @@ public class Man extends Person{
     @Mapping(Relation.ManyToOne)
     public Company company;
 
-    /************* 约束性规则示例 ***************/
+    /**
+     * ********** 约束性规则示例 **************
+     */
 
     @Check("custom_name > 99")
     @Column("custom_name")
@@ -58,141 +69,142 @@ public class Man extends Person{
     @NotNull
     private String not_null = "not null";
 
-    /************* 其他数据类型示例 ***************/
-    public  short  us;
+    /**
+     * ********** 其他数据类型示例 **************
+     */
+    public short aShort;
 
-    public byte ub;
+    public byte aByte;
 
-    public float uf;
+    public float aFloat;
 
-    private double ud;
+    private double aDouble;
 
-    @Column("uChar")
-    public char uc;
+    public char aChar;
 
-    @Column("uDate")
     protected Date date;
 
-    private byte[] img;
+    private byte[] img = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
     public Map<Long, String> map;
 
     public Man() { }
 
-    public Man(long id, String name, int age, boolean isLogin, short us, byte ub, float uf, double ud, char uc) {
+    public Man(long id, String name, int age, boolean isLogin, short aShort, byte aByte, float aFloat, double aDouble, char aChar) {
         this.id = id;
         this.name = name;
         this.age = age;
         this.isLogin = isLogin;
-        this.us = us;
-		this.ub = ub;
-		this.uf = uf;
-		this.ud = ud;
-		this.uc = uc;
-	}
+        this.aShort = aShort;
+        this.aByte = aByte;
+        this.aFloat = aFloat;
+        this.aDouble = aDouble;
+        this.aChar = aChar;
+    }
 
-	public Man(long id, String name, int age, boolean isLogin) {
-		this.id = id;
-		this.name = name;
-		this.age = age;
-		this.isLogin = isLogin;
-	}
+    public Man(long id, String name, int age, boolean isLogin) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.isLogin = isLogin;
+    }
 
-	public long getId() {
-		return id;
-	}
+    public long getId() {
+        return id;
+    }
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public short getUs() {
-		return us;
-	}
+    public short getaShort() {
+        return aShort;
+    }
 
-	public void setUs(short us) {
-		this.us = us;
-	}
+    public void setaShort(short aShort) {
+        this.aShort = aShort;
+    }
 
-	public byte getUb() {
-		return ub;
-	}
+    public byte getaByte() {
+        return aByte;
+    }
 
-	public void setUb(byte ub) {
-		this.ub = ub;
-	}
+    public void setaByte(byte aByte) {
+        this.aByte = aByte;
+    }
 
-	public float getUf() {
-		return uf;
-	}
+    public float getaFloat() {
+        return aFloat;
+    }
 
-	public void setUf(float uf) {
-		this.uf = uf;
-	}
+    public void setaFloat(float aFloat) {
+        this.aFloat = aFloat;
+    }
 
-	public double getUd() {
-		return ud;
-	}
+    public double getaDouble() {
+        return aDouble;
+    }
 
-	public void setUd(double ud) {
-		this.ud = ud;
-	}
+    public void setaDouble(double aDouble) {
+        this.aDouble = aDouble;
+    }
 
-	public Date getDate() {
-		return date;
-	}
+    public Date getDate() {
+        return date;
+    }
 
-	public void setDate(Date date) {
-		this.date = date;
-	}
+    public void setDate(Date date) {
+        this.date = date;
+    }
 
-	public byte[] getImg() {
-		return img;
-	}
+    public byte[] getImg() {
+        return img;
+    }
 
-	public void setImg(byte[] img) {
-		this.img = img;
-	}
+    public void setImg(byte[] img) {
+        this.img = img;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public int getAge() {
-		return age;
-	}
+    public int getAge() {
+        return age;
+    }
 
-	public void setAge(int age) {
-		this.age = age;
-	}
+    public void setAge(int age) {
+        this.age = age;
+    }
 
-	public boolean isLogin() {
-		return isLogin;
-	}
+    public boolean isLogin() {
+        return isLogin;
+    }
 
-	public void setLogin(boolean isLogin) {
-		this.isLogin = isLogin;
-	}
+    public void setLogin(boolean isLogin) {
+        this.isLogin = isLogin;
+    }
 
     @Override
     public String toString() {
-        return  super.toString()+ "Man{" +
+        return "Man{" +
+                super.toString() +
                 "isLogin=" + isLogin +
                 ", age=" + age +
                 ", password='" + password + '\'' +
                 ", teachers=" + teachers +
                 ", addrList=" + addrList +
-                ", wife=" + wife +
-                ", company=" + company +
-                ", us=" + us +
-                ", ub=" + ub +
-                ", uf=" + uf +
-                ", ud=" + ud +
-                ", uc=" + uc +
+                ", wife=" + (wife == null ? "" : wife.name) +
+                ", company=" + (company == null ? "" : company.name) +
+                ", aShort=" + aShort +
+                ", aByte=" + aByte +
+                ", aFloat=" + aFloat +
+                ", aDouble=" + aDouble +
+                ", aChar=" + aChar +
                 ", date=" + date +
                 ", img=" + Arrays.toString(img) +
                 ", map=" + map +

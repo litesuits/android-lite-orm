@@ -2,6 +2,7 @@ package com.litesuits.orm.db;
 
 import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.assit.QueryBuilder;
+import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.db.model.Relation;
 
@@ -75,6 +76,14 @@ public interface DataBase {
     public int update(Object entity, ConflictAlgorithm conflictAlgorithm);
 
     /**
+     * update a single entity with conflict algorithm, and only update columns in {@link ColumnsValue}
+     * if param {@link ColumnsValue} is null, update all columns.
+     *
+     * @return the number of affected rows
+     */
+    public int update(Object entity, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm);
+
+    /**
      * update a collection
      *
      * @return the number of affected rows
@@ -87,6 +96,14 @@ public interface DataBase {
      * @return the number of affected rows
      */
     public int update(Collection<?> collection, ConflictAlgorithm conflictAlgorithm);
+
+    /**
+     * update a collection with conflict algorithm, and only update columns in {@link ColumnsValue}
+     * if param {@link ColumnsValue} is null, update all columns.
+     *
+     * @return the number of affected rows
+     */
+    public int update(Collection<?> collection, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm);
 
     /**
      * delete a single entity

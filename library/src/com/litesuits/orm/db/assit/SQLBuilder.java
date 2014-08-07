@@ -218,26 +218,28 @@ public class SQLBuilder {
     /**
      * 构建 update 语句
      */
-    public static SQLStatement buildUpdateSql(Object entity, ConflictAlgorithm algorithm) {
-        return buildUpdateSql(entity, true, algorithm);
+    public static SQLStatement buildUpdateSql(Object entity, ColumnsValue cvs, ConflictAlgorithm algorithm) {
+        return buildUpdateSql(entity, cvs, algorithm, true);
     }
 
     /**
      * 构建批量 update all 语句，sql不绑定值，执行时时会遍历绑定值。
      */
-    public static SQLStatement buildUpdateAllSql(Object entity, ConflictAlgorithm algorithm) {
-        return buildUpdateSql(entity, false, algorithm);
+    public static SQLStatement buildUpdateAllSql(Object entity, ColumnsValue cvs, ConflictAlgorithm algorithm) {
+        return buildUpdateSql(entity, cvs, algorithm, false);
     }
 
     /**
      * 构建 update SQL语句
      *
      * @param entity    实体
-     * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值
+     * @param cvs       更新的列,为NULL则更新全部
      * @param algorithm {@link ConflictAlgorithm}
+     * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值
      * @return
      */
-    private static SQLStatement buildUpdateSql(Object entity, boolean needValue, ConflictAlgorithm algorithm) {
+    private static SQLStatement buildUpdateSql(Object entity, ColumnsValue cvs,
+                                               ConflictAlgorithm algorithm, boolean needValue) {
         SQLStatement stmt = new SQLStatement();
         try {
             EntityTable table = TableUtil.getTable(entity);
@@ -252,24 +254,36 @@ public class SQLBuilder {
             sql.append(" SET ");
             // 分两部分构建SQL语句，用一个for循环完成SQL构建和值的反射获取，以提高效率。
             int size = 1, i = 0;
-            if (!Checker.isEmpty(table.pmap)) size += table.pmap.size();
             Object[] args = null;
-            if (needValue) {
-                args = new Object[size];
-                args[size - 1] = FieldUtil.getAssignedKeyObject(table.key, entity);
-            }
-
-            if (!Checker.isEmpty(table.pmap)) {
-                // 先构造主键值
+            if (cvs != null && cvs.checkColumns()) {
+                if (needValue) {
+                    size += cvs.columns.length;
+                    args = new Object[size];
+                }
+                boolean hasVal = cvs.hasValues();
+                for (; i < cvs.columns.length; i++) {
+                    if (i > 0) sql.append(",");
+                    sql.append(cvs.columns[i]).append("=?");
+                    if (needValue) {
+                        if (hasVal) args[i] = cvs.values[i];
+                        if (args[i] == null) args[i] = FieldUtil.get(table.pmap.get(cvs.columns[i]).field, entity);
+                    }
+                }
+            } else if (!Checker.isEmpty(table.pmap)) {
+                if (needValue) {
+                    size += table.pmap.size();
+                    args = new Object[size];
+                }
                 for (Entry<String, Property> en : table.pmap.entrySet()) {
-                    // 后构造列名和占位符
                     if (i > 0) sql.append(",");
                     sql.append(en.getKey()).append("=?");
-                    // 构造列值
                     if (needValue) args[i] = FieldUtil.get(en.getValue().field, entity);
                     i++;
                 }
+            } else if (needValue) {
+                args = new Object[size];
             }
+            if (needValue) args[size - 1] = FieldUtil.getAssignedKeyObject(table.key, entity);
             sql.append(" WHERE ").append(table.key.column).append("=?");
             stmt.sql = sql.toString();
             stmt.bindArgs = args;
@@ -372,7 +386,7 @@ public class SQLBuilder {
         SQLStatement stmt = new SQLStatement();
         EntityTable table = TableUtil.getTable(claxx);
         String key = table.key.column;
-        String orderBy = Checker.isEmpty(orderAscColumn)? key : orderAscColumn;
+        String orderBy = Checker.isEmpty(orderAscColumn) ? key : orderAscColumn;
         StringBuilder sb = new StringBuilder();
         sb.append("DELETE FROM ").append(table.name)
                 .append(" WHERE ").append(key)

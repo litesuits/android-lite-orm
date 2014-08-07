@@ -28,11 +28,9 @@
             android:id="@+id/sub_title"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/common_marin"
             android:padding="@dimen/common_marin"
             android:text="hello"
             android:gravity="center"
-            android:background="@drawable/selector_button"
             android:textSize="16sp" />
     </LinearLayout>
 

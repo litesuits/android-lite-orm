@@ -11,7 +11,7 @@ public enum ConflictAlgorithm {
      * any algorithm specified in a CREATE TABLE. If no algorithm is specified
      * anywhere, the ABORT algorithm is used.
      */
-    None(""),
+    None(" "),
     /**
      * When an applicable constraint violation occurs, the ROLLBACK resolution
      * algorithm aborts the current SQL statement with an SQLITE_CONSTRAINT

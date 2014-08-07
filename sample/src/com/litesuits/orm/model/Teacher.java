@@ -14,6 +14,10 @@ import java.util.ArrayList;
  */
 @Table("teacher")
 public class Teacher extends Person{
+
+    public String address = "默认地址";
+    public String phone = "";
+
     @Mapping(Relation.ManyToMany)
     private ArrayList<Man> list;
 
@@ -68,7 +72,8 @@ public class Teacher extends Person{
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("Teacher [id=" + id + ", name=" + name);
+        StringBuilder sb = new StringBuilder("Teacher [id=" + id + ", name=" + name + ", phone=" + phone+ ", " +
+                "address=" + address);
         if (list != null) {
             sb.append(", list=");
             for (Man m : list) {

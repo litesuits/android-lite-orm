@@ -9,10 +9,11 @@
         <item>Save(Insert Or Update)</item>
         <item>Insert</item>
         <item>Update</item>
+        <item>Update Column</item>
         <item>Query All</item>
         <item>Query By ID</item>
         <item>Query Any U Want</item>
-        <item>New Relation Mapping</item>
+        <item>Relation Restore</item>
         <item>Delete</item>
         <item>Delete By Index</item>
         <item>Delete All</item>

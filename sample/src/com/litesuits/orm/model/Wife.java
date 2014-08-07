@@ -6,14 +6,14 @@ import com.litesuits.orm.db.annotation.Table;
 
 /**
  * Wifi 和Man 是一对一关系
- * 
+ *
  * @author MaTianyu
- * 2014-3-7上午10:39:45
+ *         2014-3-7上午10:39:45
  */
 @Table("wife")
 public class Wife extends Person {
     public String des = "about wife";
-
+    public int age;
     @Mapping(Relation.OneToOne)
     public Man man;
 
@@ -23,5 +23,14 @@ public class Wife extends Person {
     public Wife(String name, Man man) {
         this.name = name;
         this.man = man;
+    }
+
+    @Override
+    public String toString() {
+        return "Wife{" +
+                super.toString() +
+                "des='" + des + '\'' +
+                ", man=" + (man == null ? "" : man.name) +
+                "} ";
     }
 }

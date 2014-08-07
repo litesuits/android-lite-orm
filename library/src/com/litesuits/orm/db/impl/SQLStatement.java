@@ -10,6 +10,7 @@ import com.litesuits.orm.db.assit.Querier;
 import com.litesuits.orm.db.assit.Querier.CursorParser;
 import com.litesuits.orm.db.assit.SQLBuilder;
 import com.litesuits.orm.db.assit.Transaction;
+import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.EntityTable;
 import com.litesuits.orm.db.model.MapInfo;
 import com.litesuits.orm.db.model.MapInfo.MapTable;
@@ -20,6 +21,7 @@ import com.litesuits.orm.db.utils.FieldUtil;
 import com.litesuits.orm.db.utils.TableUtil;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -134,10 +136,11 @@ public class SQLStatement implements Serializable {
      * @return
      */
     public int execInsertCollection(SQLiteDatabase db, Collection<?> list) {
-        mStatement = db.compileStatement(sql);
+        printSQL();
         db.beginTransaction();
         if (Log.isPrint) Log.d(TAG, "----> BeginTransaction[insert col]");
         try {
+            mStatement = db.compileStatement(sql);
             Iterator<?> it = list.iterator();
             boolean tableCheck = true;
             EntityTable table = null;
@@ -213,14 +216,17 @@ public class SQLStatement implements Serializable {
      * @param db
      * @return
      */
-    public int execUpdateCollection(SQLiteDatabase db, Collection<?> list) {
-        mStatement = db.compileStatement(sql);
+    public int execUpdateCollection(SQLiteDatabase db, Collection<?> list, ColumnsValue cvs) {
+        printSQL();
         db.beginTransaction();
         if (Log.isPrint) Log.d(TAG, "----> BeginTransaction[update col]");
         try {
+            mStatement = db.compileStatement(sql);
             Iterator<?> it = list.iterator();
             boolean tableCheck = true;
             EntityTable table = null;
+            boolean hasCol = cvs != null && cvs.checkColumns();
+            boolean hasVal = hasCol && cvs.hasValues();
             while (it.hasNext()) {
                 mStatement.clearBindings();
                 Object obj = it.next();
@@ -229,14 +235,25 @@ public class SQLStatement implements Serializable {
                     TableManager.getInstance().checkOrCreateTable(db, obj);
                 }
                 int j = 1;
-                if (!Checker.isEmpty(table.pmap)) {
+                // 此种情况下，bindArgs非空表明开发者设置了默认值
+                if (hasCol) {
+                    for (int i = 0; i < cvs.columns.length; i++) {
+                        Object v = null;
+                        if (hasVal) v = cvs.values[i];
+                        if (v == null) {
+                            Field field = table.pmap.get(cvs.columns[i]).field;
+                            v = FieldUtil.get(field, obj);
+                        }
+                        bind(j++, v);
+                    }
+                }else if (!Checker.isEmpty(table.pmap)) {
                     // 第一个是主键。其他属性从2开始。
                     for (Property p : table.pmap.values()) {
                         bind(j++, FieldUtil.get(p.field, obj));
                     }
                 }
                 if (table.key != null) {
-                    bind(j++, FieldUtil.getAssignedKeyObject(table.key, obj));
+                    bind(j, FieldUtil.getAssignedKeyObject(table.key, obj));
                 }
                 mStatement.executeUpdateDelete();
 

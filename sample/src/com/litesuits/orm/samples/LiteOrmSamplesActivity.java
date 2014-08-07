@@ -7,6 +7,7 @@ import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.R;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.assit.QueryBuilder;
+import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.model.*;
 
@@ -83,16 +84,17 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     }
 
     /**
-     * 0 <item>Save(Insert Or Update)</item>
-     * 1 <item>Insert</item>
-     * 2 <item>Update</item>
-     * 3 <item>Query All</item>
-     * 4 <item>Query By ID</item>
-     * 5 <item>Query Any U Want</item>
-     * 6 <item>New Relation Mapping</item>
-     * 7 <item>Delete</item>
-     * 8 <item>Delete By Index</item>
-     * 9 <item>Delete All</item>
+     * 0  <item>Save(Insert Or Update)</item>
+     * 1  <item>Insert</item>
+     * 2  <item>Update</item>
+     * 3  <item>Update Column</item>
+     * 4  <item>Query All</item>
+     * 5  <item>Query By ID</item>
+     * 6  <item>Query Any U Want</item>
+     * 7  <item>Relation Restore</item>
+     * 8  <item>Delete</item>
+     * 9  <item>Delete By Index</item>
+     * 10 <item>Delete All</item>
      *
      * @param id
      */
@@ -108,24 +110,27 @@ public class LiteOrmSamplesActivity extends BaseActivity {
                 testUpdate();
                 break;
             case 3:
-                testQueryAll();
+                testUpdateColumn();
                 break;
             case 4:
-                testQueryByID();
+                testQueryAll();
                 break;
             case 5:
-                testQueryAnyUwant();
+                testQueryByID();
                 break;
             case 6:
-                testMapping();
+                testQueryAnyUwant();
                 break;
             case 7:
-                testDelete();
+                testMapping();
                 break;
             case 8:
-                testDeleteByIndex();
+                testDelete();
                 break;
             case 9:
+                testDeleteByIndex();
+                break;
+            case 10:
                 testDeleteAll();
                 break;
             default:
@@ -133,18 +138,16 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         }
     }
 
-
     private void testSave() {
 
         db.save(uMax);
         db.save(uMin);
+
         //插入任意集合
         db.save(addrList);
     }
 
     private void testInsert() {
-        //保存任意集合
-        db.insert(teacherList, ConflictAlgorithm.Ignore);
         db.insert(uAlice, ConflictAlgorithm.Replace);
         db.insert(uComplex, ConflictAlgorithm.Rollback);
 
@@ -152,38 +155,60 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         db.insert(wife1, ConflictAlgorithm.Fail);
         db.insert(wife2, ConflictAlgorithm.Abort);
 
+        //保存任意集合
+        db.insert(teacherList, ConflictAlgorithm.Ignore);
     }
 
     private void testUpdate() {
-        uAlice.setLogin(true);
-        long c = db.save(uAlice);
-        Log.i(this, "update alice: " + c);
 
-        //交换uMin 和 uMax 的信息
-        long id = teacherList.get(0).getId();
-        teacherList.get(0).setId(teacherList.get(1).getId());
-        teacherList.get(1).setId(id);
+        //交换2个User的信息
+        long id = uMax.getId();
+        uMax.setId(uMin.getId());
+        uMin.setId(id);
 
-        // save 既可以当insert 也可以做update，非常灵活
-        c = db.save(teacherList.get(0));
-        Log.i(this, "update teacher1: " + c);
+        // save : 既可以当insert 也可以做update，非常灵活
+        long c = db.save(uMax);
+        Log.i(this, "update User Max: " + c);
 
-        c = db.update(teacherList.get(1), ConflictAlgorithm.Replace);
-        Log.i(this, "update teacher2: " + c);
-        //if (id != 0) {
-        //    //恢复
-        //    uMax.setId(uMin.getId());
-        //    uMin.setId(id);
-        //}
+        // update：仅能在已经存在时更新
+        c = db.update(uMin, ConflictAlgorithm.Replace);
+        Log.i(this, "update User Min: " + c);
 
-        uComplex.setName("Other Name ");
-        uComplex.setAge(101);
-        c = db.update(uComplex);
-        Log.i(this, "update uComplex: " + c);
-
-        //更新任意集合
-        db.update(addrList, ConflictAlgorithm.Fail);
+        //更新任意的整个集合
+        teacherList.get(0).setName("Cang Jin Kong");
+        teacherList.get(1).setName("Song Dao Feng");
+        db.update(teacherList, ConflictAlgorithm.Fail);
     }
+
+    /**
+     * 仅更新指定字段
+     */
+    private void testUpdateColumn() {
+
+        //1. 集合更新实例：
+        Teacher t1 = teacherList.get(0);
+        t1.address = "随意写个乱七八糟的地址，反正我不会更新它";
+        // 仅更新这一个字段
+        t1.phone = "168 8888 8888";
+        Teacher t2 = teacherList.get(1);
+        t2.address = "呵呵呵呵呵";
+        t2.phone = "168 0000 0000";
+
+        ColumnsValue cv = new ColumnsValue(new String[]{"phone"});
+        long c = db.update(teacherList, cv, ConflictAlgorithm.None);
+        Log.i(this, "update teacher ：" + c);
+
+
+
+        //2. 更新单个实体（强制赋指定值）示例：
+        wife1.des = "随意写个乱七八糟的描述，反正它会被覆盖";
+        wife1.bm = "实体自带值";
+        wife1.age = 18;
+        cv = new ColumnsValue(new String[]{"des", "bm","age"}, new Object[]{"外部强制赋值地址", null,20});
+        c = db.update(wife1, cv, ConflictAlgorithm.None);
+        Log.i(this, "update wife1 " + wife1.name + ": " + c);
+    }
+
 
     private void testQueryAll() {
         ArrayList<Man> query = db.queryAll(Man.class);
@@ -281,6 +306,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     }
 
     private void testDeleteAll() {
+        db.deleteAll(Address.class);
         db.deleteAll(Company.class);
         db.deleteAll(Wife.class);
     }
@@ -295,10 +321,10 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         uComplex = new Man(0, null, 0, false);
         uComplex.name = "complex";
         uComplex.setAge(18);
-        uComplex.us = 32766;
-        uComplex.ub = 126;
-        uComplex.uf = Float.MAX_VALUE;
-        uComplex.setUd(Double.MAX_VALUE);
+        uComplex.aShort = 32766;
+        uComplex.aByte = 126;
+        uComplex.aFloat = Float.MAX_VALUE;
+        uComplex.setaDouble(Double.MAX_VALUE);
         uComplex.setLogin(true);
         uComplex.setDate(new Date(System.currentTimeMillis()));
         uComplex.setImg(new byte[]{23, 34, 77, 23, 19, 11});

@@ -20,7 +20,7 @@ public class Company extends BaseModel {
 
     @PrimaryKey(AssignType.BY_MYSELF)
     @Column("_name")
-    private String name;
+    public String name;
 
     @Mapping(Relation.OneToMany)
     private ArrayList<Man> list;
