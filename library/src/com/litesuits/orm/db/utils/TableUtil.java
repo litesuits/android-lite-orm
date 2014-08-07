@@ -19,27 +19,13 @@ import java.util.ArrayList;
 /**
  * 表工具
  *
- * @author mty
- * @date 2013-6-8上午12:05:24
+ * @author MaTianyu  2013-6-8
  */
 public class TableUtil {
     public static final String TAG = TableUtil.class.getSimpleName();
 
-    ///**
-    // * 根据实体自动生成表名字
-    // *
-    // * @param entity
-    // * @return
-    // */
-    //public static String getTableName(Object entity) {
-    //    return getTableName(entity.getClass());
-    //}
-
     /**
      * 根据类自动生成表名字
-     *
-     * @param claxx
-     * @return
      */
     public static String getTableName(Class<?> claxx) {
         Table anno = claxx.getAnnotation(Table.class);
@@ -181,28 +167,4 @@ public class TableUtil {
         if (tableName1.compareTo(tableName2) < 0) return tableName1 + "_" + tableName2;
         else return tableName2 + "_" + tableName1;
     }
-
-    /**
-     * @deprecated
-     * @param column1
-     * @param key1
-     * @param column2
-     * @param key2
-     * @return
-     */
-    //public static String getMapTableDigest(String column1, Object key1, String column2, Object key2) {
-    //	return column1.compareTo(column2) < 0 ?
-    //			Encrypt.getMD5EncString(column1 + key1.toString() + column2 + key2.toString()) : Encrypt
-    //					.getMD5EncString(column2 + key2.toString() + column1 + key1.toString());
-    //}
-
-    /**
-     * @param column1
-     * @param column2
-     * @return
-     * @deprecated
-     */
-    //public static String getMapTableIdColumn(String column1, String column2) {
-    //    return "_id_hash_code";
-    //}
 }

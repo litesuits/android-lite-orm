@@ -3,14 +3,19 @@
 
     <string name="app_name">LiteOrm</string>
     <string name="title">Lite实验室:ORM</string>
-    <string name="sub_title">请在Log中查看执行结果</string>
+    <string name="sub_title">Log中查看执行结果</string>
 
     <string-array name="orm_test_list">
-        <item>新增</item>
-        <item>更新</item>
-        <item>查找</item>
+        <item>保存(Insert Or Update)</item>
+        <item>新增(Insert)</item>
+        <item>更新(Update)</item>
+        <item>查找全部</item>
+        <item>根据ID查询</item>
+        <item>任意查询</item>
+        <item>恢复关系映射</item>
         <item>删除</item>
-        <item>关系映射</item>
+        <item>按序列删除</item>
+        <item>删除全部</item>
     </string-array>
 
 </resources>

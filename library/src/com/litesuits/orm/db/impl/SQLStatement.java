@@ -71,7 +71,7 @@ public class SQLStatement implements Serializable {
     /**
      * 给sql语句的占位符(?)按序绑定值
      *
-     * @param i
+     * @param i The 1-based index to the parameter to bind null to
      * @param o
      * @throws Exception
      */
@@ -114,7 +114,6 @@ public class SQLStatement implements Serializable {
     public long execInsertWithMapping(SQLiteDatabase db, Object entity) throws Exception {
         printSQL();
         mStatement = db.compileStatement(sql);
-        long rowID = NONE;
         Object keyObj = null;
         if (!Checker.isEmpty(bindArgs)) {
             keyObj = bindArgs[0];
@@ -122,41 +121,19 @@ public class SQLStatement implements Serializable {
                 bind(i + 1, bindArgs[i]);
             }
         }
-        rowID = mStatement.executeInsert();
+        long rowID = mStatement.executeInsert();
         clearArgs();
-        if (Log.isPrint) Log.d(TAG, "SQL Execute Insert --> " + rowID);
+        if (Log.isPrint) Log.i(TAG, "SQL Execute Insert --> " + rowID);
         if (entity != null) {
-            EntityTable table = TableUtil.getTable(entity);
-            FieldUtil.setKeyValueIfneed(entity, table.key, keyObj, rowID);
-            // 插入关系映射
-            final MapInfo mapTable = SQLBuilder.buildMappingSql(entity, false);
-            if (mapTable != null && !mapTable.isEmpty()) {
-                Transaction.execute(db, new Transaction.Worker<Boolean>() {
-                    @Override
-                    public Boolean doTransaction(SQLiteDatabase db) throws Exception {
-                        for (MapTable table : mapTable.tableList) {
-                            TableManager.getInstance().checkOrCreateMappingTable(db, table.name, table.column1,
-                                    table.column2);
-                        }
-                        if (mapTable.delOldRelationSQL != null) for (SQLStatement st : mapTable.delOldRelationSQL) {
-                            long rowId = st.execDelete(db);
-                            if (Log.isPrint) Log.i(TAG, "Exec delete mapping success, nums: " + rowId);
-                        }
-                        if (mapTable.mapNewRelationSQL != null) for (SQLStatement st : mapTable.mapNewRelationSQL) {
-                            long rowId = st.execInsert(db);
-                            if (Log.isPrint) Log.i(TAG, "Exec save mapping success, nums: " + rowId);
-                        }
-                        return true;
-                    }
-                });
-            }
+            FieldUtil.setKeyValueIfneed(entity, TableUtil.getTable(entity).key, keyObj, rowID);
+            mapRelationToDb(entity, true, true, db);
         }
 
         return rowID;
     }
 
     /**
-     * 用于给对象持久化映射关系时，不可以注入ID。
+     * 目前可用于给对象持久化映射关系时，因为不传入实体所以不可以为之注入ID。
      *
      * @param db
      * @return
@@ -175,10 +152,10 @@ public class SQLStatement implements Serializable {
     public int execInsertCollection(SQLiteDatabase db, Collection<?> list) {
         mStatement = db.compileStatement(sql);
         db.beginTransaction();
-        if (Log.isPrint) Log.i(TAG, "----> BeginTransaction");
+        if (Log.isPrint) Log.d(TAG, "----> BeginTransaction[insert col]");
         try {
             Iterator<?> it = list.iterator();
-            boolean isMapTableChecked = false;
+            boolean tableCheck = true;
             EntityTable table = null;
             while (it.hasNext()) {
                 mStatement.clearBindings();
@@ -204,28 +181,90 @@ public class SQLStatement implements Serializable {
                 long rowID = mStatement.executeInsert();
                 FieldUtil.setKeyValueIfneed(obj, table.key, keyObj, rowID);
 
-                MapInfo mapTable = SQLBuilder.buildMappingSql(obj, false);
-                if (mapTable != null && !mapTable.isEmpty()) {
-                    if (!isMapTableChecked) {
-                        for (MapTable mt : mapTable.tableList) {
-                            TableManager.getInstance().checkOrCreateMappingTable(db, mt.name, mt.column1, mt.column2);
-                        }
-                        isMapTableChecked = true;
-                    }
-                    if (mapTable.delOldRelationSQL != null) for (SQLStatement st : mapTable.delOldRelationSQL) {
-                        st.execDelete(db);
-                    }
-                    if (mapTable.mapNewRelationSQL != null) for (SQLStatement st : mapTable.mapNewRelationSQL) {
-                        st.execInsert(db);
-                    }
-                }
+                mapRelationToDb(obj, true, tableCheck, db);
+                tableCheck = false;
             }
-            if (Log.isPrint) Log.d(TAG, "Exec insert " + list.size() + " rows , SQL: " + sql);
+            if (Log.isPrint) Log.i(TAG, "Exec insert " + list.size() + " rows , SQL: " + sql);
             db.setTransactionSuccessful();
-            if (Log.isPrint) Log.i(TAG, "----> BeginTransaction Successful");
+            if (Log.isPrint) Log.d(TAG, "----> BeginTransaction[insert col] Successful");
             return list.size();
         } catch (Exception e) {
-            if (Log.isPrint) Log.e(TAG, "----> BeginTransaction Failling");
+            if (Log.isPrint) Log.e(TAG, "----> BeginTransaction[insert col] Failling");
+            e.printStackTrace();
+        } finally {
+            clearArgs();
+            db.endTransaction();
+        }
+        return NONE;
+    }
+
+    /**
+     * 执行更新单个数据，返回受影响的行数
+     *
+     * @param db
+     * @param entity
+     * @return
+     * @throws Exception
+     */
+    public int execUpdateWithMapping(SQLiteDatabase db, Object entity) throws Exception {
+        printSQL();
+        mStatement = db.compileStatement(sql);
+        if (!Checker.isEmpty(bindArgs)) {
+            for (int i = 0; i < bindArgs.length; i++) {
+                bind(i + 1, bindArgs[i]);
+            }
+        }
+        int rows = mStatement.executeUpdateDelete();
+        clearArgs();
+        if (Log.isPrint) Log.i(TAG, "SQL Execute update --> " + rows);
+        if (entity != null) {
+            mapRelationToDb(entity, true, true, db);
+        }
+        return rows;
+    }
+
+    /**
+     * 执行批量更新
+     *
+     * @param db
+     * @return
+     */
+    public int execUpdateCollection(SQLiteDatabase db, Collection<?> list) {
+        mStatement = db.compileStatement(sql);
+        db.beginTransaction();
+        if (Log.isPrint) Log.d(TAG, "----> BeginTransaction[update col]");
+        try {
+            Iterator<?> it = list.iterator();
+            boolean tableCheck = true;
+            EntityTable table = null;
+            while (it.hasNext()) {
+                mStatement.clearBindings();
+                Object obj = it.next();
+                if (table == null) {
+                    table = TableUtil.getTable(obj);
+                    TableManager.getInstance().checkOrCreateTable(db, obj);
+                }
+                int j = 1;
+                if (!Checker.isEmpty(table.pmap)) {
+                    // 第一个是主键。其他属性从2开始。
+                    for (Property p : table.pmap.values()) {
+                        bind(j++, FieldUtil.get(p.field, obj));
+                    }
+                }
+                if (table.key != null) {
+                    bind(j++, FieldUtil.getAssignedKeyObject(table.key, obj));
+                }
+                mStatement.executeUpdateDelete();
+
+                mapRelationToDb(obj, true, tableCheck, db);
+                tableCheck = false;
+            }
+            if (Log.isPrint) Log.i(TAG, "Exec update " + list.size() + " rows , SQL: " + sql);
+            db.setTransactionSuccessful();
+            if (Log.isPrint) Log.d(TAG, "----> BeginTransaction[update col] Successful");
+            return list.size();
+        } catch (Exception e) {
+            if (Log.isPrint) Log.e(TAG, "----> BeginTransaction[update col] Failling");
             e.printStackTrace();
         } finally {
             clearArgs();
@@ -261,28 +300,11 @@ public class SQLStatement implements Serializable {
             }
         }
         int nums = mStatement.executeUpdateDelete();
-        if (Log.isPrint) Log.d(TAG, "SQL Execute Delete --> " + nums);
+        if (Log.isPrint) Log.i(TAG, "SQL Execute Delete --> " + nums);
         clearArgs();
         if (entity != null) {
             // 删除关系映射
-            final MapInfo mapTable = SQLBuilder.buildMappingSql(entity, true);
-            if (mapTable != null && !mapTable.isEmpty()) {
-                Transaction.execute(db, new Transaction.Worker<Boolean>() {
-                    @Override
-                    public Boolean doTransaction(SQLiteDatabase db) throws Exception {
-                        //for (MapTable table : mapTable.tableList) {
-                        //    TableManager.getInstance().checkOrCreateMappingTable(db, table.name, table.column1,
-                        //            table.column2);
-                        //}
-                        if (mapTable.delOldRelationSQL != null) for (SQLStatement st : mapTable.delOldRelationSQL) {
-                            long rowId = st.execDelete(db);
-                            if (Log.isPrint) Log.i(TAG, "Exec delete mapping success, nums: " + rowId);
-                        }
-                        return true;
-                    }
-                });
-            }
-
+            mapRelationToDb(entity, false, false, db);
         }
         return nums;
     }
@@ -304,7 +326,7 @@ public class SQLStatement implements Serializable {
             }
         }
         int nums = mStatement.executeUpdateDelete();
-        if (Log.isPrint) Log.d(TAG, "SQL Execute Delete --> " + nums);
+        if (Log.isPrint) Log.i(TAG, "SQL Execute Delete --> " + nums);
         clearArgs();
         // 删除关系映射
         MapInfo mapTable = SQLBuilder.buildMappingSql(collection.iterator().next(), true);
@@ -313,10 +335,8 @@ public class SQLStatement implements Serializable {
                 @Override
                 public Boolean doTransaction(SQLiteDatabase db) throws Exception {
                     for (Object o : collection) {
-                        MapInfo mapTable = SQLBuilder.buildMappingSql(o, true);
-                        if (mapTable.delOldRelationSQL != null) for (SQLStatement st : mapTable.delOldRelationSQL) {
-                            long rowId = st.execDelete(db);
-                        }
+                        // 删除关系映射
+                        mapRelationToDb(o, false, false, db);
                     }
                     return true;
                 }
@@ -357,14 +377,13 @@ public class SQLStatement implements Serializable {
      * For example, SELECT COUNT(*) FROM table;
      *
      * @param db
-     * @param claxx
      * @return
      */
-    public long queryForLong(SQLiteDatabase db, final Class<?> claxx) {
+    public long queryForLong(SQLiteDatabase db) {
         printSQL();
         mStatement = db.compileStatement(sql);
         long count = mStatement.simpleQueryForLong();
-        if (Log.isPrint) Log.d(TAG, "SQL Execute queryForLong --> " + count);
+        if (Log.isPrint) Log.i(TAG, "SQL Execute queryForLong --> " + count);
         clearArgs();
         return count;
     }
@@ -395,6 +414,53 @@ public class SQLStatement implements Serializable {
         return list;
     }
 
+
+    @Override
+    public String toString() {
+        return "SQLStatement [sql=" + sql + ", bindArgs=" + Arrays.toString(bindArgs) + ", mStatement=" + mStatement
+                + "]";
+    }
+    /*------------------------------ 私有方法 ------------------------------*/
+
+    /**
+     * 重新映射关系到数据库
+     *
+     * @param entity
+     * @param insertNew 仅在执行删除该实体时，此值为false
+     * @param db
+     */
+    private void mapRelationToDb(Object entity, final boolean insertNew, final boolean tableCheck, SQLiteDatabase db) {
+        // 插入关系映射
+        final MapInfo mapTable = SQLBuilder.buildMappingSql(entity, insertNew);
+        if (mapTable != null && !mapTable.isEmpty()) {
+            Transaction.execute(db, new Transaction.Worker<Boolean>() {
+                @Override
+                public Boolean doTransaction(SQLiteDatabase db) throws Exception {
+                    if (insertNew && tableCheck) {
+                        for (MapTable table : mapTable.tableList) {
+                            TableManager.getInstance().checkOrCreateMappingTable(db, table.name, table.column1,
+                                    table.column2);
+                        }
+                    }
+                    if (mapTable.delOldRelationSQL != null) {
+                        for (SQLStatement st : mapTable.delOldRelationSQL) {
+                            long rowId = st.execDelete(db);
+                            if (Log.isPrint) Log.v(TAG, "Exec delete mapping success, nums: " + rowId);
+                        }
+                    }
+                    if (insertNew && mapTable.mapNewRelationSQL != null) {
+                        for (SQLStatement st : mapTable
+                                .mapNewRelationSQL) {
+                            long rowId = st.execInsert(db);
+                            if (Log.isPrint) Log.v(TAG, "Exec save mapping success, nums: " + rowId);
+                        }
+                    }
+                    return true;
+                }
+            });
+        }
+    }
+
     private void printSQL() {
         if (Log.isPrint) Log.d(TAG, "SQL Execute: [" + sql + "] ARGS--> " + Arrays.toString(bindArgs));
     }
@@ -406,10 +472,5 @@ public class SQLStatement implements Serializable {
         mStatement = null;
     }
 
-    @Override
-    public String toString() {
-        return "SQLStatement [sql=" + sql + ", bindArgs=" + Arrays.toString(bindArgs) + ", mStatement=" + mStatement
-                + "]";
-    }
 
 }

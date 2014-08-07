@@ -3,14 +3,19 @@
 
     <string name="app_name">LiteOrm</string>
     <string name="title">LiteLab:ORM</string>
-    <string name="sub_title">See The Result in The Log </string>
+    <string name="sub_title">Result in The Log</string>
 
     <string-array name="orm_test_list">
+        <item>Save(Insert Or Update)</item>
         <item>Insert</item>
         <item>Update</item>
-        <item>Select</item>
+        <item>Query All</item>
+        <item>Query By ID</item>
+        <item>Query Any U Want</item>
+        <item>New Relation Mapping</item>
         <item>Delete</item>
-        <item>Mapping</item>
+        <item>Delete By Index</item>
+        <item>Delete All</item>
     </string-array>
 
 </resources>

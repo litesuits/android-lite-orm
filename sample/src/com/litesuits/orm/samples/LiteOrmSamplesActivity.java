@@ -6,11 +6,14 @@ import com.litesuits.android.log.Log;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.R;
 import com.litesuits.orm.db.DataBase;
+import com.litesuits.orm.db.assit.QueryBuilder;
+import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.model.*;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class LiteOrmSamplesActivity extends BaseActivity {
@@ -43,9 +46,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setSubTitile(getString(R.string.sub_title));
         mockData();
-        db = LiteOrm.via(this);
-        DataBase db = LiteOrm.newInstance(this, "dbname");
-        db.query(Man.class);
+        db = LiteOrm.newInstance(this, "liteorm.db");
     }
 
     public void onDestroy() {
@@ -82,11 +83,16 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     }
 
     /**
-     * 0<item>Insert</item>
-     * 1<item>Update</item>
-     * 2<item>Select</item>
-     * 3<item>Delete</item>
-     * 4<item>Mapping</item>
+     * 0 <item>Save(Insert Or Update)</item>
+     * 1 <item>Insert</item>
+     * 2 <item>Update</item>
+     * 3 <item>Query All</item>
+     * 4 <item>Query By ID</item>
+     * 5 <item>Query Any U Want</item>
+     * 6 <item>New Relation Mapping</item>
+     * 7 <item>Delete</item>
+     * 8 <item>Delete By Index</item>
+     * 9 <item>Delete All</item>
      *
      * @param id
      */
@@ -96,43 +102,56 @@ public class LiteOrmSamplesActivity extends BaseActivity {
                 testSave();
                 break;
             case 1:
-                testUpdate();
+                testInsert();
                 break;
             case 2:
-                testSelect();
+                testUpdate();
                 break;
             case 3:
-                testDelete();
+                testQueryAll();
                 break;
             case 4:
-                testMapping();
+                testQueryByID();
                 break;
             case 5:
+                testQueryAnyUwant();
                 break;
             case 6:
+                testMapping();
                 break;
             case 7:
+                testDelete();
                 break;
             case 8:
+                testDeleteByIndex();
                 break;
             case 9:
+                testDeleteAll();
                 break;
             default:
                 break;
         }
     }
 
-    private void testSave() {
-        db.save(teacherList);
-        db.save(addrList);
-        db.save(company);
-        db.save(wife1);
-        db.save(wife2);
 
-        long c = db.save(uAlice);
-        c = db.save(uMax);
-        c = db.save(uMin);
-        c = db.save(uComplex);
+    private void testSave() {
+
+        db.save(uMax);
+        db.save(uMin);
+        //插入任意集合
+        db.save(addrList);
+    }
+
+    private void testInsert() {
+        //保存任意集合
+        db.insert(teacherList, ConflictAlgorithm.Ignore);
+        db.insert(uAlice, ConflictAlgorithm.Replace);
+        db.insert(uComplex, ConflictAlgorithm.Rollback);
+
+        db.insert(company);
+        db.insert(wife1, ConflictAlgorithm.Fail);
+        db.insert(wife2, ConflictAlgorithm.Abort);
+
     }
 
     private void testUpdate() {
@@ -141,40 +160,37 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         Log.i(this, "update alice: " + c);
 
         //交换uMin 和 uMax 的信息
-        long id = uMin.getId();
-        uMin.setId(uMax.getId());
-        uMax.setId(id);
+        long id = teacherList.get(0).getId();
+        teacherList.get(0).setId(teacherList.get(1).getId());
+        teacherList.get(1).setId(id);
 
-        c = db.save(uMax);
-        Log.i(this, "update max: " + c);
-        c = db.save(uMin);
-        Log.i(this, "update min: " + c);
-        if (id != 0) {
-            //恢复
-            uMax.setId(uMin.getId());
-            uMin.setId(id);
-        }
+        // save 既可以当insert 也可以做update，非常灵活
+        c = db.save(teacherList.get(0));
+        Log.i(this, "update teacher1: " + c);
+
+        c = db.update(teacherList.get(1), ConflictAlgorithm.Replace);
+        Log.i(this, "update teacher2: " + c);
+        //if (id != 0) {
+        //    //恢复
+        //    uMax.setId(uMin.getId());
+        //    uMin.setId(id);
+        //}
 
         uComplex.setName("Other Name ");
         uComplex.setAge(101);
-        c = db.save(uComplex);
-        Log.i(this, "update com: " + c);
+        c = db.update(uComplex);
+        Log.i(this, "update uComplex: " + c);
+
+        //更新任意集合
+        db.update(addrList, ConflictAlgorithm.Fail);
     }
 
-    private void testSelect() {
-        long nums = db.queryCount(Address.class);
-        Log.i(this, "Address count : " + nums);
-        nums = db.queryCount(Man.class);
-        Log.i(this, "Man count : " + nums);
-        nums = db.queryCount(Company.class);
-        Log.i(this, "Company count : " + nums);
-        nums = db.queryCount(Wife.class);
-        Log.i(this, "Wife count : " + nums);
-        ArrayList<Man> query = db.query(Man.class);
-        ArrayList<Address> as = db.query(Address.class);
-        ArrayList<Wife> ws = db.query(Wife.class);
-        ArrayList<Company> cs = db.query(Company.class);
-        ArrayList<Teacher> ts = db.query(Teacher.class);
+    private void testQueryAll() {
+        ArrayList<Man> query = db.queryAll(Man.class);
+        ArrayList<Address> as = db.queryAll(Address.class);
+        ArrayList<Wife> ws = db.queryAll(Wife.class);
+        ArrayList<Company> cs = db.queryAll(Company.class);
+        ArrayList<Teacher> ts = db.queryAll(Teacher.class);
         for (Address uu : as) {
             Log.i(this, "query Address: " + uu);
         }
@@ -192,12 +208,36 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         }
     }
 
+    private void testQueryByID() {
+        Man man = db.queryById(uComplex.getId(), Man.class);
+        Log.i(this, "query id: " + uComplex.getId() + ",MAN: " + man);
+    }
+
+    private void testQueryAnyUwant() {
+
+        long nums = db.queryCount(Address.class);
+        Log.i(this, "Address All Count : " + nums);
+
+        QueryBuilder qb = new QueryBuilder()
+                .queryWho(Address.class)
+                .distinct(true)
+                .columns(new String[]{Address.COL_ADDRESS})
+                .appendOrderAscBy(Address.COL_ADDRESS)
+                .appendOrderDescBy(Address.COL_ID)
+                .where(Address.COL_ADDRESS + " like ?", new String[]{"%area"});
+        List<Address> addrList = db.query(Address.class, qb);
+        for (Address uu : addrList) {
+            Log.i(this, "Query Address: " + uu);
+        }
+
+    }
+
     private void testMapping() {
-        ArrayList<Man> mans = db.query(Man.class);
-        ArrayList<Address> as = db.query(Address.class);
-        ArrayList<Wife> ws = db.query(Wife.class);
-        ArrayList<Company> cs = db.query(Company.class);
-        ArrayList<Teacher> ts = db.query(Teacher.class);
+        ArrayList<Man> mans = db.queryAll(Man.class);
+        ArrayList<Address> as = db.queryAll(Address.class);
+        ArrayList<Wife> ws = db.queryAll(Wife.class);
+        ArrayList<Company> cs = db.queryAll(Company.class);
+        ArrayList<Teacher> ts = db.queryAll(Teacher.class);
         db.mapping(mans, as);
         db.mapping(mans, ws);
         db.mapping(mans, cs);
@@ -226,14 +266,20 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         db.delete(uAlice);
         db.delete(uComplex);
 
+        // delete 任意 collection
         db.delete(teacherList);
 
-        db.delete(company);
+    }
 
+    private void testDeleteByIndex() {
+        // 最后一个参数可为null，默认按ID升序排列
+        // 按id升序，删除[2, size-1]，结果：仅保留第一个和最后一个
+        db.delete(Address.class, 2, addrList.size() - 1, Address.COL_ID);
+    }
+
+    private void testDeleteAll() {
+        db.deleteAll(Company.class);
         db.deleteAll(Wife.class);
-
-        // 仅保留一个地址，后边的全部删除
-        db.delete(Address.class, 1, Integer.MAX_VALUE);
     }
 
     private void mockData() {
@@ -253,6 +299,9 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         uComplex.setLogin(true);
         uComplex.setDate(new Date(System.currentTimeMillis()));
         uComplex.setImg(new byte[]{23, 34, 77, 23, 19, 11});
+        uComplex.def_bool = true;
+        uComplex.def_int = 922;
+        uComplex.conflict = "cutom";
 
         uComplex.map = new HashMap<Long, String>();
         uComplex.map.put(1002L, "1002 sdfsd324443534534534");
@@ -264,12 +313,12 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         addrList.add(new Address("1 Xihu Hangzhou China"));
         addrList.add(new Address("2 Hangzhou China"));
         addrList.add(new Address("3 Nanjing China"));
-        addrList.add(new Address("4 sssss"));
-        addrList.add(new Address("5 bbbbbb"));
-        addrList.add(new Address("6 ccccc"));
-        addrList.add(new Address("7 dddddd"));
-        addrList.add(new Address("8 eeeee"));
-        addrList.add(new Address("9 fffff"));
+        addrList.add(new Address("4 sssss area"));
+        addrList.add(new Address("5 bbbbbbn area"));
+        addrList.add(new Address("6 ccccc area"));
+        addrList.add(new Address("7 dddddd area"));
+        addrList.add(new Address("8 eeeee area"));
+        addrList.add(new Address("9 fffff area"));
         uMax.addrList = addrList;
 
         // N to N

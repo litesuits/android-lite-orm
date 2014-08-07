@@ -3,11 +3,8 @@ package com.litesuits.orm.db.assit;
 import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.annotation.PrimaryKey.AssignType;
 import com.litesuits.orm.db.impl.SQLStatement;
-import com.litesuits.orm.db.model.EntityTable;
-import com.litesuits.orm.db.model.MapInfo;
+import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.model.MapInfo.MapTable;
-import com.litesuits.orm.db.model.MapProperty;
-import com.litesuits.orm.db.model.Property;
 import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
@@ -21,6 +18,10 @@ import java.util.List;
 import java.util.Map.Entry;
 
 public class SQLBuilder {
+
+    private static final int INSERT  = 1;
+    private static final int REPLACE = 2;
+    //private static final int UPDATE  = 3;
 
     /**
      * 构建【获取SQLite全部表】sql语句
@@ -87,13 +88,12 @@ public class SQLBuilder {
                     sb.append(" ");
                     sb.append(DataUtil.getSQLDataType(f));
 
+                    if (f.getAnnotation(NotNull.class) != null) {
+                        sb.append(" NOT NULL ");
+                    }
                     if (f.getAnnotation(Default.class) != null) {
                         sb.append(" DEFAULT ");
                         sb.append(f.getAnnotation(Default.class).value());
-                    }
-
-                    if (f.getAnnotation(NotNull.class) != null) {
-                        sb.append(" NOT NULL ");
                     }
                     if (f.getAnnotation(Unique.class) != null) {
                         sb.append(" UNIQUE ");
@@ -121,47 +121,281 @@ public class SQLBuilder {
     }
 
     /**
-     * 构建insert&update语句
+     * 构建 insert 语句
+     */
+    public static SQLStatement buildInsertSql(Object entity, ConflictAlgorithm algorithm) {
+        return buildInsertSql(entity, true, INSERT, algorithm);
+    }
+
+    /**
+     * 构建批量 insert all 语句，sql不绑定值，执行时时会遍历绑定值。
+     */
+    public static SQLStatement buildInsertAllSql(Object entity, ConflictAlgorithm algorithm) {
+        return buildInsertSql(entity, false, INSERT, algorithm);
+    }
+
+    /**
+     * 构建 replace 语句
+     */
+    public static SQLStatement buildReplaceSql(Object entity) {
+        return buildInsertSql(entity, true, REPLACE, null);
+    }
+
+    /**
+     * 构建批量 replace all 语句，sql不绑定值，执行时时会遍历绑定值。
+     */
+    public static SQLStatement buildReplaceAllSql(Object entity) {
+        return buildInsertSql(entity, false, REPLACE, null);
+    }
+
+    /**
+     * 构建 insert SQL语句
      *
-     * @param entity
+     * @param entity    实体
+     * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值
+     * @param type      {@link #INSERT}  or {@link #REPLACE}
+     * @param algorithm {@link ConflictAlgorithm}
      * @return
      */
-    public static SQLStatement buildSaveSql(Object entity) {
+    private static SQLStatement buildInsertSql(Object entity, boolean needValue,
+                                               int type, ConflictAlgorithm algorithm) {
         SQLStatement stmt = new SQLStatement();
         try {
             EntityTable table = TableUtil.getTable(entity);
             StringBuilder sql = new StringBuilder(128);
-            sql.append("REPLACE INTO ");
+            switch (type) {
+                case INSERT:
+                    sql.append("INSERT");
+                    if (algorithm != null) {
+                        sql.append(algorithm.getAlgorithm()).append("INTO ");
+                    } else {
+                        sql.append(" INTO ");
+                    }
+                    break;
+                case REPLACE:
+                    sql.append("REPLACE INTO ");
+                    break;
+                default:
+                    sql.append("INSERT");
+                    if (algorithm != null) {
+                        sql.append(algorithm.getAlgorithm()).append("INTO ");
+                    } else {
+                        sql.append(" INTO ");
+                    }
+            }
             sql.append(table.name);
             sql.append(" ( ");
-            // 构造主键
             sql.append(table.key.column);
             // 分两部分构建SQL语句，用一个for循环完成SQL构建和值的反射获取，以提高效率。
             StringBuilder value = new StringBuilder();
             value.append(" ) VALUES ( ?");
+            int size = 1, i = 0;
+            if (!Checker.isEmpty(table.pmap)) size += table.pmap.size();
             Object[] args = null;
-            if (Checker.isEmpty(table.pmap)) {
-                // 仅构造主键值
-                args = new Object[]{FieldUtil.getAssignedKeyObject(table.key, entity)};
-            } else {
-                // 先构造主键值
-                args = new Object[table.pmap.size() + 1];
-                int i = 0;
-                args[i] = FieldUtil.getAssignedKeyObject(table.key, entity);
+            if (needValue) {
+                args = new Object[size];
+                args[i++] = FieldUtil.getAssignedKeyObject(table.key, entity);
+            }
+            if (!Checker.isEmpty(table.pmap)) {
                 for (Entry<String, Property> en : table.pmap.entrySet()) {
                     // 后构造列名和占位符
                     sql.append(",").append(en.getKey());
                     value.append(",?");
                     // 构造列值
-                    args[++i] = FieldUtil.get(en.getValue().field, entity);
+                    if (needValue) args[i] = FieldUtil.get(en.getValue().field, entity);
+                    i++;
                 }
             }
             sql.append(value).append(" )");
+            stmt.bindArgs = args;
+            stmt.sql = sql.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return stmt;
+    }
+
+    /**
+     * 构建 update 语句
+     */
+    public static SQLStatement buildUpdateSql(Object entity, ConflictAlgorithm algorithm) {
+        return buildUpdateSql(entity, true, algorithm);
+    }
+
+    /**
+     * 构建批量 update all 语句，sql不绑定值，执行时时会遍历绑定值。
+     */
+    public static SQLStatement buildUpdateAllSql(Object entity, ConflictAlgorithm algorithm) {
+        return buildUpdateSql(entity, false, algorithm);
+    }
+
+    /**
+     * 构建 update SQL语句
+     *
+     * @param entity    实体
+     * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值
+     * @param algorithm {@link ConflictAlgorithm}
+     * @return
+     */
+    private static SQLStatement buildUpdateSql(Object entity, boolean needValue, ConflictAlgorithm algorithm) {
+        SQLStatement stmt = new SQLStatement();
+        try {
+            EntityTable table = TableUtil.getTable(entity);
+            StringBuilder sql = new StringBuilder(128);
+            sql.append("UPDATE");
+            if (algorithm != null) {
+                sql.append(algorithm.getAlgorithm());
+            } else {
+                sql.append(" ");
+            }
+            sql.append(table.name);
+            sql.append(" SET ");
+            // 分两部分构建SQL语句，用一个for循环完成SQL构建和值的反射获取，以提高效率。
+            int size = 1, i = 0;
+            if (!Checker.isEmpty(table.pmap)) size += table.pmap.size();
+            Object[] args = null;
+            if (needValue) {
+                args = new Object[size];
+                args[size - 1] = FieldUtil.getAssignedKeyObject(table.key, entity);
+            }
+
+            if (!Checker.isEmpty(table.pmap)) {
+                // 先构造主键值
+                for (Entry<String, Property> en : table.pmap.entrySet()) {
+                    // 后构造列名和占位符
+                    if (i > 0) sql.append(",");
+                    sql.append(en.getKey()).append("=?");
+                    // 构造列值
+                    if (needValue) args[i] = FieldUtil.get(en.getValue().field, entity);
+                    i++;
+                }
+            }
+            sql.append(" WHERE ").append(table.key.column).append("=?");
             stmt.sql = sql.toString();
             stmt.bindArgs = args;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return stmt;
+    }
+
+    /**
+     * 构建删除sql语句
+     *
+     * @param entity
+     * @return
+     */
+    public static SQLStatement buildDeleteSql(Object entity) {
+        SQLStatement stmt = new SQLStatement();
+        try {
+            EntityTable table = TableUtil.getTable(entity);
+            if (table.key != null) {
+                stmt.sql = "DELETE FROM " + table.name + " WHERE " + table.key.column + " = ?";
+                stmt.bindArgs = new String[]{String.valueOf(FieldUtil.get(table.key.field, entity))};
+            } else if (!Checker.isEmpty(table.pmap)) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("DELETE FROM ")
+                        .append(table.name)
+                        .append(" WHERE ");
+                Object[] args = new Object[table.pmap.size()];
+                int i = 0;
+                for (Entry<String, Property> en : table.pmap.entrySet()) {
+                    if (i == 0) {
+                        sb.append(en.getKey()).append("=?");
+                    } else {
+                        sb.append(" and ").append(en.getKey()).append("=?");
+                    }
+                    args[i++] = FieldUtil.get(en.getValue().field, entity);
+                }
+                stmt.sql = sb.toString();
+                stmt.bindArgs = args;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return stmt;
+    }
+
+    /**
+     * 构建批量删除sql语句
+     *
+     * @param collection
+     * @return
+     */
+    public static SQLStatement buildDeleteSql(Collection<?> collection) {
+        SQLStatement stmt = new SQLStatement();
+        try {
+            StringBuilder sb = new StringBuilder(256);
+            EntityTable table = null;
+            Object[] args = new Object[collection.size()];
+            int i = 0;
+            for (Object entity : collection) {
+                if (i == 0) {
+                    table = TableUtil.getTable(entity);
+                    sb.append("DELETE FROM ").append(table.name).append(" WHERE ")
+                            .append(table.key.column).append(" IN (");
+                    sb.append("?");
+                } else {
+                    sb.append(",?");
+                }
+                args[i++] = FieldUtil.get(table.key.field, entity);
+            }
+            sb.append(")");
+            stmt.sql = sb.toString();
+            stmt.bindArgs = args;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return stmt;
+    }
+
+    /**
+     * 构建全部删除sql语句
+     *
+     * @param claxx
+     * @return
+     */
+    public static SQLStatement buildDeleteAllSql(Class<?> claxx) {
+        SQLStatement stmt = new SQLStatement();
+        EntityTable table = TableUtil.getTable(claxx);
+        stmt.sql = "DELETE FROM " + table.name;
+        return stmt;
+    }
+
+    /**
+     * 构建部分删除sql语句
+     *
+     * @param claxx
+     * @return
+     */
+    public static SQLStatement buildDeleteSql(Class<?> claxx, int start, int end, String orderAscColumn) {
+        SQLStatement stmt = new SQLStatement();
+        EntityTable table = TableUtil.getTable(claxx);
+        String key = table.key.column;
+        String orderBy = Checker.isEmpty(orderAscColumn)? key : orderAscColumn;
+        StringBuilder sb = new StringBuilder();
+        sb.append("DELETE FROM ").append(table.name)
+                .append(" WHERE ").append(key)
+                .append(" IN ( SELECT ").append(key)
+                .append(" FROM ").append(table.name)
+                .append(" ORDER BY ").append(orderBy)
+                .append(" ASC LIMIT ").append(start)
+                .append(",").append(end)
+                .append(")");
+        stmt.sql = sb.toString();
+        return stmt;
+    }
+
+    /**
+     * 构建添加列语句
+     *
+     * @param tableName
+     * @param column
+     * @return
+     */
+    public static SQLStatement buildAddColumnSql(String tableName, String column) {
+        SQLStatement stmt = new SQLStatement();
+        stmt.sql = "ALTER TABLE " + tableName + " ADD " + column;
         return stmt;
     }
 
@@ -201,7 +435,7 @@ public class SQLBuilder {
      * @param entity
      * @return
      */
-    public static MapInfo buildMappingSql(Object entity, boolean onlyDelete) {
+    public static MapInfo buildMappingSql(Object entity, boolean insertNew) {
         EntityTable table1 = TableUtil.getTable(entity);
         if (!Checker.isEmpty(table1.mappingList)) {
             try {
@@ -219,7 +453,7 @@ public class SQLBuilder {
                     SQLStatement st = buildMappingDeleteSql(key1, table1, table2);
                     mapInfo.addDelOldRelationSQL(st);
 
-                    if (!onlyDelete) {
+                    if (insertNew) {
                         // also insert new mapping relation
                         Object mapObject = FieldUtil.get(map.field, entity);
                         if (mapObject != null) {
@@ -345,192 +579,47 @@ public class SQLBuilder {
         return null;
     }
 
-
     /**
-     * 构建插入sql语句
-     *
-     * @param entity
-     * @return
-     * @throws Exception
+     * 构建查询关系映射语句
      */
-    public static SQLStatement buildInsertSql(Object entity) {
-        SQLStatement stmt = new SQLStatement();
-        try {
-            EntityTable table = TableUtil.getTable(entity);
-            StringBuilder sql = new StringBuilder(128);
-            sql.append("INSERT INTO ").append(table.name).append(" ( ").append(table.key.column);
-            // 新构建一个String，从而用一个for循环完成列名、占位符、列值的获取，以提高效率。
-            StringBuilder value = new StringBuilder();
-            value.append(" ) VALUES ( ?");
-            Object[] args = null;
-            if (Checker.isEmpty(table.pmap)) {
-                // 仅构造主键值
-                if (!table.key.isAssignedBySystem()) {
-                    args = new Object[]{FieldUtil.get(table.key.field, entity)};
-                }
-            } else {
-                // 先构造主键值
-                args = new Object[table.pmap.size() + 1];
-                int i = 0;
-                if (!table.key.isAssignedBySystem()) {
-                    args[i] = FieldUtil.get(table.key.field, entity);
-                }
-                for (Entry<String, Property> en : table.pmap.entrySet()) {
-                    // 后构造列名和占位符
-                    sql.append(",").append(en.getKey());
-                    value.append(",?");
-                    // 构造列值
-                    args[++i] = FieldUtil.get(en.getValue().field, entity);
-                }
-            }
-            sql.append(value).append(" )");
-            stmt.sql = sql.toString();
-            stmt.bindArgs = args;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return stmt;
-    }
-
-    /**
-     * 构建插入sql语句,不绑定值，用于批量插入时，重新遍历绑定值。
-     *
-     * @param entity
-     * @return
-     */
-    public static SQLStatement buildSaveAllSql(Object entity) {
-        SQLStatement stmt = new SQLStatement();
-        try {
-            StringBuilder sql = new StringBuilder(128);
-            // 如果空指针异常，当场捕获。
-            EntityTable table = TableUtil.getTable(entity.getClass());
-            sql.append("REPLACE INTO ").append(table.name).append(" ( ").append(table.key.column);
-            // 新构建一个String，从而用一个for循环完成列名、占位符、列值的获取，以提高效率。
-            StringBuilder value = new StringBuilder();
-            value.append(" ) VALUES ( ?");
-            if (!Checker.isEmpty(table.pmap)) {
-                for (String key : table.pmap.keySet()) {
-                    // 后构造列名和占位符
-                    sql.append(",").append(key);
-                    value.append(",?");
-                }
-            }
-            sql.append(value).append(" )");
-            stmt.sql = sql.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return stmt;
-    }
-
-    /**
-     * 构建删除sql语句
-     *
-     * @param entity
-     * @return
-     */
-    public static SQLStatement buildDeleteSql(Object entity) {
-        SQLStatement stmt = new SQLStatement();
-        try {
-            EntityTable table = TableUtil.getTable(entity);
-            if (table.key != null) {
-                stmt.sql = "DELETE FROM " + table.name + " WHERE " + table.key.column + " = ?";
-                stmt.bindArgs = new String[]{String.valueOf(FieldUtil.get(table.key.field, entity))};
-            } else if (!Checker.isEmpty(table.pmap)) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("DELETE FROM ")
-                        .append(table.name)
-                        .append(" WHERE ");
-                Object[] args = new Object[table.pmap.size()];
-                int i = 0;
-                for (Entry<String, Property> en : table.pmap.entrySet()) {
-                    if (i == 0) {
-                        sb.append(en.getKey()).append("=?");
-                    } else {
-                        sb.append(" and ").append(en.getKey()).append("=?");
-                    }
-                    args[i++] = FieldUtil.get(en.getValue().field, entity);
-                }
-                stmt.sql = sb.toString();
-                stmt.bindArgs = args;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return stmt;
-    }
-
-    /**
-     * 构建批量删除sql语句
-     *
-     * @param collection
-     * @return
-     */
-    public static SQLStatement buildDeleteSql(Collection<?> collection) {
-        SQLStatement stmt = new SQLStatement();
-        try {
-            StringBuilder sb = new StringBuilder(256);
-            EntityTable table = null;
-            Object[] args = new Object[collection.size()];
-            int i = 0;
-            for (Object entity : collection) {
+    public static SQLStatement buildQueryRelationSql(Class class1, Class class2, List<String> key1List,
+                                                     List<String> key2List) {
+        final EntityTable table1 = TableUtil.getTable(class1);
+        final EntityTable table2 = TableUtil.getTable(class2);
+        QueryBuilder builder = new QueryBuilder(class1).queryMappingInfo(class2);
+        ArrayList<String> keyList = new ArrayList<String>();
+        StringBuilder sb = null;
+        if (!Checker.isEmpty(key1List)) {
+            sb = new StringBuilder();
+            sb.append(table1.name);
+            sb.append(" IN ( ");
+            for (int i = 0, size = key1List.size(); i < size; i++) {
                 if (i == 0) {
-                    table = TableUtil.getTable(entity);
-                    sb.append("DELETE FROM ").append(table.name).append(" WHERE ")
-                            .append(table.key.column).append(" IN (");
                     sb.append("?");
                 } else {
                     sb.append(",?");
                 }
-                args[i++] = FieldUtil.get(table.key.field, entity);
+            }
+            sb.append(" ) ");
+            keyList.addAll(key1List);
+        }
+        if (!Checker.isEmpty(key2List)) {
+            if (sb == null) sb = new StringBuilder();
+            else sb.append(" AND ");
+
+            sb.append(table2.name);
+            sb.append(" IN (");
+            for (int i = 0, size = key2List.size(); i < size; i++) {
+                if (i == 0) {
+                    sb.append("?");
+                } else {
+                    sb.append(",?");
+                }
             }
             sb.append(")");
-            stmt.sql = sb.toString();
-            stmt.bindArgs = args;
-        } catch (Exception e) {
-            e.printStackTrace();
+            keyList.addAll(key2List);
         }
-        return stmt;
-    }
-
-    /**
-     * 构建全部删除sql语句
-     *
-     * @param claxx
-     * @return
-     */
-    public static SQLStatement buildDeleteAllSql(Class<?> claxx) {
-        SQLStatement stmt = new SQLStatement();
-        EntityTable table = TableUtil.getTable(claxx);
-        stmt.sql = "DELETE FROM " + table.name;
-        return stmt;
-    }
-
-    /**
-     * 构建部分删除sql语句
-     *
-     * @param claxx
-     * @return
-     */
-    public static SQLStatement buildDeleteSql(Class<?> claxx, int start, int end) {
-        SQLStatement stmt = new SQLStatement();
-        EntityTable table = TableUtil.getTable(claxx);
-        end = end == Integer.MAX_VALUE ? -1 : end - start;
-        stmt.sql = "DELETE FROM " + table.name + " WHERE " + table.key.column + " IN ("
-                + "SELECT " + table.key.column + " FROM " + table.name + " LIMIT " + start + "," + end + ")";
-        return stmt;
-    }
-
-    /**
-     * 构建添加列语句
-     *
-     * @param tableName
-     * @param column
-     * @return
-     */
-    public static SQLStatement buildAddColumnSql(String tableName, String column) {
-        SQLStatement stmt = new SQLStatement();
-        stmt.sql = "ALTER TABLE " + tableName + " ADD " + column;
-        return stmt;
+        if (sb != null) builder.where(sb.toString(), keyList.toArray(new String[0]));
+        return builder.createStatement();
     }
 }

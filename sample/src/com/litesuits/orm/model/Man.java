@@ -42,14 +42,18 @@ public class Man extends Person{
     @Collate("NOCASE")
     private String _collate;
 
-    @Conflict(Conflict.Strategy.IGNORE)
     @Column("_conlict")
+    @Default("SQL默认值")
     @NotNull
-    @Default("默认值")
-    private String conflict;
+    public String conflict;
 
     @Default("true")
-    private boolean def;
+    @NotNull
+    public Boolean def_bool;
+
+    @Default("911")
+    @NotNull
+    public Integer def_int;
 
     @NotNull
     private String not_null = "not null";

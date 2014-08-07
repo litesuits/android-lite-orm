@@ -2,6 +2,7 @@ package com.litesuits.orm.db;
 
 import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.assit.QueryBuilder;
+import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.db.model.Relation;
 
 import java.util.ArrayList;
@@ -17,59 +18,145 @@ import java.util.List;
 public interface DataBase {
 
     /**
-     * insert or update a single entity
+     * save: insert or update a single entity
+     *
+     * @return the number of rows affected by this SQL statement execution.
      */
     public long save(Object entity);
 
     /**
-     * insert or update a collection
+     * save: insert or update a collection
+     *
+     * @return the number of affected rows
      */
     public int save(Collection<?> collection);
 
     /**
+     * insert a single entity
+     *
+     * @return the number of rows affected by this SQL statement execution.
+     */
+    public long insert(Object entity);
+
+
+    /**
+     * insert a single entity with conflict algorithm
+     *
+     * @return the number of rows affected by this SQL statement execution.
+     */
+    public long insert(Object entity, ConflictAlgorithm conflictAlgorithm);
+
+    /**
+     * insert a collection
+     *
+     * @return the number of affected rows
+     */
+    public int insert(Collection<?> collection);
+
+    /**
+     * insert a collection with conflict algorithm
+     *
+     * @return the number of affected rows
+     */
+    public int insert(Collection<?> collection, ConflictAlgorithm conflictAlgorithm);
+
+    /**
+     * update a single entity
+     *
+     * @return the number of affected rows
+     */
+    public int update(Object entity);
+
+    /**
+     * update a single entity with conflict algorithm
+     *
+     * @return the number of affected rows
+     */
+    public int update(Object entity, ConflictAlgorithm conflictAlgorithm);
+
+    /**
+     * update a collection
+     *
+     * @return the number of affected rows
+     */
+    public int update(Collection<?> collection);
+
+    /**
+     * update a collection with conflict algorithm
+     *
+     * @return the number of affected rows
+     */
+    public int update(Collection<?> collection, ConflictAlgorithm conflictAlgorithm);
+
+    /**
      * delete a single entity
+     *
+     * @return the number of affected rows
      */
     public int delete(Object entity);
 
     /**
      * delete all rows
+     *
+     * @return the number of affected rows
      */
     public int deleteAll(Class<?> claxx);
 
     /**
      * <b>start must >=0 and smaller than end</b>
-     * <p>delete from start to the end, <b>(start,end].</b>
+     * <p>delete from start to the end, <b>[start,end].</b>
      * <p>set end={@link Integer#MAX_VALUE} will delete all rows from the start
+     *
+     * @return the number of affected rows
      */
-    public int delete(Class<?> claxx, int start, int end);
+    public int delete(Class<?> claxx, int start, int end, String orderAscColumn);
 
     /**
      * delete a collection
+     *
+     * @return the number of affected rows
      */
     public int delete(Collection<?> collection);
 
     /**
      * query count of table rows and return
+     *
+     * @return the count of query result
      */
     public long queryCount(Class<?> claxx);
 
     /**
-     * query entity and put it into list
+     * custom query
+     *
+     * @return the query result list
      */
-    //public <T> ArrayList<T> query(Class<T> claxx, Collection<?> collection, QueryBuilder qb);
+    public <T> ArrayList<T> query(Class<T> claxx, QueryBuilder qb);
+
+    /**
+     * query entity by long id
+     *
+     * @return the query result
+     */
+    public <T> T queryById(long id, Class<T> clazz);
+
+    /**
+     * query entity by string id
+     *
+     * @return the query result
+     */
+    public <T> T queryById(String id, Class<T> clazz);
 
     /**
      * query all data of this type
+     *
+     * @return the query result list
      */
-    public <T> ArrayList<T> query(Class<T> claxx);
-
-    /**
-     * custom query
-     */
-    public <T> List<T> query(Class<T> claxx, QueryBuilder qb);
+    public <T> ArrayList<T> queryAll(Class<T> claxx);
 
     /**
      * find and return relation between two diffirent collection.
+     *
+     * @return the relation list of class1 and class2;
      */
     public ArrayList<Relation> queryRelation(Class class1, Class class2, List<String> key1List, List<String> key2List);
 

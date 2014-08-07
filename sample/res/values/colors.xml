@@ -21,8 +21,8 @@
     <color name="text">#000000</color>
     <color name="main_bkg">#E3DBCF</color>
     <color name="button">#FFFFFF</color>
-    <color name="button_disable">#9C8E8E</color>
-    <color name="button_press">#F1F1F1</color>
+    <color name="button_disable">#f1f1f1</color>
+    <color name="button_press">#efefef</color>
     <color name="button_text">#000000</color>
   <!--   <color name="button_text">#698CD6</color> -->
 

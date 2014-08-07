@@ -15,7 +15,6 @@ public class Person extends  BaseModel{
     @Column("_id")
     protected long id;
 
-    @Unique
     @NotNull
     @Conflict(Conflict.Strategy.FAIL)
     public String name;
