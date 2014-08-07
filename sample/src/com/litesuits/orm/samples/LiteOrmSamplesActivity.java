@@ -218,14 +218,17 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         long nums = db.queryCount(Address.class);
         Log.i(this, "Address All Count : " + nums);
 
-        QueryBuilder qb = new QueryBuilder()
-                .queryWho(Address.class)
-                .distinct(true)
+        QueryBuilder qb = new QueryBuilder(Address.class)
                 .columns(new String[]{Address.COL_ADDRESS})
                 .appendOrderAscBy(Address.COL_ADDRESS)
                 .appendOrderDescBy(Address.COL_ID)
                 .where(Address.COL_ADDRESS + " like ?", new String[]{"%area"});
-        List<Address> addrList = db.query(Address.class, qb);
+
+        nums = db.queryCount(qb);
+        Log.i(this, "Address All Count : " + nums);
+
+        List<Address> addrList = db.query(qb);
+
         for (Address uu : addrList) {
             Log.i(this, "Query Address: " + uu);
         }

@@ -45,22 +45,6 @@ public class SQLStatement implements Serializable {
      */
     public SQLiteStatement mStatement;
 
-    //	/**
-    //	 * 持久化映射关系的SQL语句（多对一、一对多、多对多）
-    //	 */
-    //	public ArrayList<SQLStatement> mMappingList;
-
-    /**
-     * 实体表，insert时用到它，以判断主键类型；query时用到，以注入实体信息。
-     * 减少依赖，废弃之
-     */
-    // public EntityTable mEntityTable;
-
-    /**
-     * 实体类型，query时用到它，以构造对象。
-     * 减少依赖，废弃之
-     */
-    // public Class<?> mEntityClass;
     public SQLStatement() {}
 
     public SQLStatement(String sql, Object[] args) {
@@ -381,10 +365,21 @@ public class SQLStatement implements Serializable {
      */
     public long queryForLong(SQLiteDatabase db) {
         printSQL();
-        mStatement = db.compileStatement(sql);
-        long count = mStatement.simpleQueryForLong();
-        if (Log.isPrint) Log.i(TAG, "SQL Execute queryForLong --> " + count);
-        clearArgs();
+        long count = 0;
+        try {
+            mStatement = db.compileStatement(sql);
+            if (bindArgs != null) {
+                for (int i = 0; i < bindArgs.length; i++) {
+                    bind(i + 1, bindArgs[i]);
+                }
+            }
+            count = mStatement.simpleQueryForLong();
+            if (Log.isPrint) Log.i(TAG, "SQL Execute queryForLong --> " + count);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            clearArgs();
+        }
         return count;
     }
 

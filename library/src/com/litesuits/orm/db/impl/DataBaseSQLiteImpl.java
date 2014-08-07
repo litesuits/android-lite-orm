@@ -273,9 +273,14 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
 
     @Override
     public long queryCount(Class<?> claxx) {
+        return queryCount(new QueryBuilder(claxx));
+    }
+
+    @Override
+    public long queryCount(QueryBuilder qb) {
         acquireReference();
         try {
-            SQLStatement stmt = new QueryBuilder(claxx).createStatementForCount();
+            SQLStatement stmt = qb.createStatementForCount();
             return stmt.queryForLong(mHelper.getReadableDatabase());
         } catch (Exception e) {
             e.printStackTrace();
@@ -286,8 +291,8 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     }
 
     @Override
-    public <T> ArrayList<T> query(Class<T> claxx, QueryBuilder qb) {
-        return qb.queryWho(claxx).createStatement().query(mHelper.getReadableDatabase(), claxx);
+    public <T> ArrayList<T> query( QueryBuilder qb) {
+        return qb.createStatement().query(mHelper.getReadableDatabase(), qb.getQueryClass());
     }
 
     @Override
@@ -401,7 +406,7 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
                     if (ClassUtil.isCollection(fieldClass)) {
                         itemClass = FieldUtil.getGenericType(mp.field);
                     } else {
-                        throw new RuntimeException("OneToMany and ManyToMany Relation, You must use array or collection object");
+                        throw new RuntimeException("OneToMany and ManyToMany Relation, You must use collection object");
                     }
                 } else {
                     itemClass = fieldClass;
@@ -452,7 +457,7 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
                                         }
                                         col.add(obj2);
                                     } else {
-                                        throw new RuntimeException("OneToMany and ManyToMany Relation, You must use array or collection object");
+                                        throw new RuntimeException("OneToMany and ManyToMany Relation, You must use collection object");
                                     }
                                 } else {
                                     FieldUtil.set(mp.field, obj1, obj2);

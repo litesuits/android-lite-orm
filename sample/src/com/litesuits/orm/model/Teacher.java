@@ -25,6 +25,23 @@ public class Teacher extends Person{
         this.list = list;
     }
 
+    ///**
+    // * 让我们来隐藏真正的密码
+    // */
+    //@Ignore
+    //private String realPassword;
+    //
+    ///**
+    // * 真正被保存的是buildValue所构建的内容
+    // */
+    //private ColumnValue password = new ColumnValue() {
+    //    @Override
+    //    public CharSequence buildValue() {
+    //        return Base64.encodeToString(realPassword.getBytes(), Base64.DEFAULT);
+    //    }
+    //};
+
+
     public long getId() {
         return id;
     }
@@ -51,13 +68,13 @@ public class Teacher extends Person{
 
     @Override
     public String toString() {
-		StringBuilder sb = new StringBuilder("Teacher [id=" + id + ", name=" + name);
-		if (list != null) {
-			sb.append(", list=");
-			for (Man m : list) {
-				sb.append(m.getName() + ", ");
-			}
-		}
+        StringBuilder sb = new StringBuilder("Teacher [id=" + id + ", name=" + name);
+        if (list != null) {
+            sb.append(", list=");
+            for (Man m : list) {
+                sb.append(m.getName() + ", ");
+            }
+        }
 		return sb.toString();
 	}
 }

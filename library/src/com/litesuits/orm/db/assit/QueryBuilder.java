@@ -22,9 +22,13 @@ public class QueryBuilder {
     private String   having;
     private String   order;
     private String   limit;
-    private String[] whereArgs;
+    private Object[] whereArgs;
 
-    public QueryBuilder() {
+    private QueryBuilder() {
+    }
+
+    public Class getQueryClass() {
+        return clazz;
     }
 
     public QueryBuilder(Class claxx) {
@@ -41,7 +45,7 @@ public class QueryBuilder {
         return this;
     }
 
-    public QueryBuilder where(String where, String[] whereArgs) {
+    public QueryBuilder where(String where, Object[] whereArgs) {
         this.where = where;
         this.whereArgs = whereArgs;
         return this;
@@ -114,19 +118,19 @@ public class QueryBuilder {
     }
 
     public QueryBuilder appendOrderAscBy(String column) {
-        if(order == null) {
+        if (order == null) {
             order = column + " ASC";
-        }else{
-            order += ", "+column + " ASC";
+        } else {
+            order += ", " + column + " ASC";
         }
         return this;
     }
 
     public QueryBuilder appendOrderDescBy(String column) {
-        if(order == null) {
+        if (order == null) {
             order = column + " DESC";
-        }else{
-            order += ", "+column + " DESC";
+        } else {
+            order += ", " + column + " DESC";
         }
         return this;
     }
@@ -160,23 +164,36 @@ public class QueryBuilder {
 
         StringBuilder query = new StringBuilder(120);
 
-        query.append("SELECT");
+        query.append("SELECT ");
         if (distinct) {
-            query.append(" DISTINCT ");
+            query.append("DISTINCT ");
         }
         if (!Checker.isEmpty(columns)) {
             appendColumns(query, columns);
         } else {
-            query.append(" * ");
+            query.append("* ");
         }
         query.append("FROM ");
-
         query.append(getTableName());
-        appendClause(query, " WHERE ", where);
-        appendClause(query, " GROUP BY ", group);
-        appendClause(query, " HAVING ", having);
-        appendClause(query, " ORDER BY ", order);
-        appendClause(query, " LIMIT ", limit);
+        appendWhere(query);
+
+        SQLStatement stmt = new SQLStatement();
+        stmt.sql = query.toString();
+        stmt.bindArgs = whereArgs;
+        return stmt;
+    }
+
+
+    /**
+     * Build a statement that returns a 1 by 1 table with a numeric value.
+     * SELECT COUNT(*) FROM table;
+     *
+     * @return
+     */
+    public SQLStatement createStatementForCount() {
+        StringBuilder query = new StringBuilder(120);
+        query.append("SELECT COUNT(*) FROM ").append(getTableName());
+        appendWhere(query);
 
         SQLStatement stmt = new SQLStatement();
         stmt.sql = query.toString();
@@ -191,16 +208,12 @@ public class QueryBuilder {
             return TableUtil.getMapTableName(clazz, clazzMapping);
     }
 
-    /**
-     * Build a statement that returns a 1 by 1 table with a numeric value.
-     * SELECT COUNT(*) FROM table;
-     *
-     * @return
-     */
-    public SQLStatement createStatementForCount() {
-        SQLStatement stmt = new SQLStatement();
-        stmt.sql = "SELECT COUNT(*) FROM " + getTableName();
-        return stmt;
+    private void appendWhere(StringBuilder query) {
+        appendClause(query, " WHERE ", where);
+        appendClause(query, " GROUP BY ", group);
+        appendClause(query, " HAVING ", having);
+        appendClause(query, " ORDER BY ", order);
+        appendClause(query, " LIMIT ", limit);
     }
 
     /**
@@ -231,11 +244,12 @@ public class QueryBuilder {
 
             if (column != null) {
                 if (i > 0) {
-                    s.append(", ");
+                    s.append(",");
                 }
                 s.append(column);
             }
         }
-        s.append(' ');
+        s.append(" ");
     }
+
 }

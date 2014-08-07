@@ -109,7 +109,7 @@ public interface DataBase {
      *
      * @return the number of affected rows
      */
-    public int delete(Class<?> claxx, int start, int end, String orderAscColumn);
+    public int delete(Class<?> claxx, int start, int end, String orderAscColu);
 
     /**
      * delete a collection
@@ -126,11 +126,18 @@ public interface DataBase {
     public long queryCount(Class<?> claxx);
 
     /**
+     * query count of your sql query result rows and return
+     *
+     * @return the count of query result
+     */
+    public long queryCount(QueryBuilder qb);
+
+    /**
      * custom query
      *
      * @return the query result list
      */
-    public <T> ArrayList<T> query(Class<T> claxx, QueryBuilder qb);
+    public <T> ArrayList<T> query(QueryBuilder qb);
 
     /**
      * query entity by long id
