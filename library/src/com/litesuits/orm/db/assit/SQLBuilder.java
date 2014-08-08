@@ -1,5 +1,6 @@
 package com.litesuits.orm.db.assit;
 
+import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.annotation.PrimaryKey.AssignType;
 import com.litesuits.orm.db.impl.SQLStatement;
@@ -8,7 +9,6 @@ import com.litesuits.orm.db.model.MapInfo.MapTable;
 import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
-import com.litesuits.orm.db.utils.TableUtil;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -161,7 +161,7 @@ public class SQLBuilder {
                                                int type, ConflictAlgorithm algorithm) {
         SQLStatement stmt = new SQLStatement();
         try {
-            EntityTable table = TableUtil.getTable(entity);
+            EntityTable table = TableManager.getTable(entity);
             StringBuilder sql = new StringBuilder(128);
             switch (type) {
                 case INSERT:
@@ -242,7 +242,7 @@ public class SQLBuilder {
                                                ConflictAlgorithm algorithm, boolean needValue) {
         SQLStatement stmt = new SQLStatement();
         try {
-            EntityTable table = TableUtil.getTable(entity);
+            EntityTable table = TableManager.getTable(entity);
             StringBuilder sql = new StringBuilder(128);
             sql.append("UPDATE");
             if (algorithm != null) {
@@ -302,7 +302,7 @@ public class SQLBuilder {
     public static SQLStatement buildDeleteSql(Object entity) {
         SQLStatement stmt = new SQLStatement();
         try {
-            EntityTable table = TableUtil.getTable(entity);
+            EntityTable table = TableManager.getTable(entity);
             if (table.key != null) {
                 stmt.sql = "DELETE FROM " + table.name + " WHERE " + table.key.column + " = ?";
                 stmt.bindArgs = new String[]{String.valueOf(FieldUtil.get(table.key.field, entity))};
@@ -345,7 +345,7 @@ public class SQLBuilder {
             int i = 0;
             for (Object entity : collection) {
                 if (i == 0) {
-                    table = TableUtil.getTable(entity);
+                    table = TableManager.getTable(entity);
                     sb.append("DELETE FROM ").append(table.name).append(" WHERE ")
                             .append(table.key.column).append(" IN (");
                     sb.append("?");
@@ -371,7 +371,7 @@ public class SQLBuilder {
      */
     public static SQLStatement buildDeleteAllSql(Class<?> claxx) {
         SQLStatement stmt = new SQLStatement();
-        EntityTable table = TableUtil.getTable(claxx);
+        EntityTable table = TableManager.getTable(claxx);
         stmt.sql = "DELETE FROM " + table.name;
         return stmt;
     }
@@ -382,9 +382,9 @@ public class SQLBuilder {
      * @param claxx
      * @return
      */
-    public static SQLStatement buildDeleteSql(Class<?> claxx, int start, int end, String orderAscColumn) {
+    public static SQLStatement buildDeleteSql(Class<?> claxx, long start, long end, String orderAscColumn) {
         SQLStatement stmt = new SQLStatement();
-        EntityTable table = TableUtil.getTable(claxx);
+        EntityTable table = TableManager.getTable(claxx);
         String key = table.key.column;
         String orderBy = Checker.isEmpty(orderAscColumn) ? key : orderAscColumn;
         StringBuilder sb = new StringBuilder();
@@ -420,14 +420,14 @@ public class SQLBuilder {
      * @return
      */
     public static MapInfo buildDelAllMappingSql(Class claxx) {
-        EntityTable table1 = TableUtil.getTable(claxx);
+        EntityTable table1 = TableManager.getTable(claxx);
         if (!Checker.isEmpty(table1.mappingList)) {
             try {
                 MapInfo mapInfo = new MapInfo();
                 for (MapProperty map : table1.mappingList) {
-                    EntityTable table2 = TableUtil.getTable(getTypeByRelation(map));
+                    EntityTable table2 = TableManager.getTable(getTypeByRelation(map));
                     // add map table info
-                    String mapTableName = TableUtil.getMapTableName(table1, table2);
+                    String mapTableName = TableManager.getMapTableName(table1, table2);
                     MapTable mi = new MapTable(mapTableName, table1.name, table2.name);
                     mapInfo.addTable(mi);
 
@@ -450,16 +450,16 @@ public class SQLBuilder {
      * @return
      */
     public static MapInfo buildMappingSql(Object entity, boolean insertNew) {
-        EntityTable table1 = TableUtil.getTable(entity);
+        EntityTable table1 = TableManager.getTable(entity);
         if (!Checker.isEmpty(table1.mappingList)) {
             try {
                 Object key1 = FieldUtil.get(table1.key.field, entity);
                 if (key1 == null) return null;
                 MapInfo mapInfo = new MapInfo();
                 for (MapProperty map : table1.mappingList) {
-                    EntityTable table2 = TableUtil.getTable(getTypeByRelation(map));
+                    EntityTable table2 = TableManager.getTable(getTypeByRelation(map));
                     // add map table info
-                    String mapTableName = TableUtil.getMapTableName(table1, table2);
+                    String mapTableName = TableManager.getMapTableName(table1, table2);
                     MapTable mi = new MapTable(mapTableName, table1.name, table2.name);
                     mapInfo.addTable(mi);
 
@@ -507,7 +507,7 @@ public class SQLBuilder {
     private static SQLStatement buildMappingDeleteAllSql(EntityTable table1, EntityTable table2)
             throws IllegalArgumentException, IllegalAccessException {
         if (table2 != null) {
-            String mapTableName = TableUtil.getMapTableName(table1, table2);
+            String mapTableName = TableManager.getMapTableName(table1, table2);
             SQLStatement stmt = new SQLStatement();
             stmt.sql = "DELETE FROM " + mapTableName;
             return stmt;
@@ -518,7 +518,7 @@ public class SQLBuilder {
     private static SQLStatement buildMappingDeleteSql(Object key1, EntityTable table1, EntityTable table2)
             throws IllegalArgumentException, IllegalAccessException {
         if (table2 != null) {
-            String mapTableName = TableUtil.getMapTableName(table1, table2);
+            String mapTableName = TableManager.getMapTableName(table1, table2);
             SQLStatement stmt = new SQLStatement();
             stmt.sql = "DELETE FROM " + mapTableName + " WHERE " + table1.name + " = ?";
             stmt.bindArgs = new Object[]{key1};
@@ -530,7 +530,7 @@ public class SQLBuilder {
     private static SQLStatement buildMappingToManySql(Object key1, EntityTable table1, EntityTable table2, Object obj)
             throws IllegalArgumentException, IllegalAccessException {
         if (obj instanceof Collection<?>) {
-            String mapTableName = TableUtil.getMapTableName(table1, table2);
+            String mapTableName = TableManager.getMapTableName(table1, table2);
             Collection<?> coll = (Collection<?>) obj;
             if (!coll.isEmpty()) {
                 boolean isF = true;
@@ -577,7 +577,7 @@ public class SQLBuilder {
             throws IllegalArgumentException, IllegalAccessException {
         Object key2 = FieldUtil.getAssignedKeyObject(table2.key, obj);
         if (key2 != null) {
-            String mapTableName = TableUtil.getMapTableName(table1, table2);
+            String mapTableName = TableManager.getMapTableName(table1, table2);
             StringBuilder sql = new StringBuilder(128);
             sql.append("INSERT INTO ")
                     .append(mapTableName)
@@ -598,8 +598,8 @@ public class SQLBuilder {
      */
     public static SQLStatement buildQueryRelationSql(Class class1, Class class2, List<String> key1List,
                                                      List<String> key2List) {
-        final EntityTable table1 = TableUtil.getTable(class1);
-        final EntityTable table2 = TableUtil.getTable(class2);
+        final EntityTable table1 = TableManager.getTable(class1);
+        final EntityTable table2 = TableManager.getTable(class2);
         QueryBuilder builder = new QueryBuilder(class1).queryMappingInfo(class2);
         ArrayList<String> keyList = new ArrayList<String>();
         StringBuilder sb = null;

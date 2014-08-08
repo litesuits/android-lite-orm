@@ -309,6 +309,8 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         db.deleteAll(Address.class);
         db.deleteAll(Company.class);
         db.deleteAll(Wife.class);
+        db.deleteAll(Man.class);
+        db.deleteAll(Teacher.class);
     }
 
     private void mockData() {

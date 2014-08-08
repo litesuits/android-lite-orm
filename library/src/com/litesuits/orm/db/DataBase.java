@@ -17,7 +17,6 @@ import java.util.List;
  * @date 2013-6-2上午2:37:56
  */
 public interface DataBase {
-
     /**
      * save: insert or update a single entity
      *
@@ -126,7 +125,7 @@ public interface DataBase {
      *
      * @return the number of affected rows
      */
-    public int delete(Class<?> claxx, int start, int end, String orderAscColu);
+    public int delete(Class<?> claxx, long start, long end, String orderAscColu);
 
     /**
      * delete a collection
@@ -199,6 +198,10 @@ public interface DataBase {
      */
     public SQLiteDatabase getWritableDatabase();
 
+    /**
+     * 获取表管理对象
+     */
+    public TableManager getTableManager();
     /**
      * 关闭数据库，清空缓存。
      */

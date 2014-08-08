@@ -18,7 +18,6 @@ import com.litesuits.orm.db.model.Property;
 import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
-import com.litesuits.orm.db.utils.TableUtil;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -97,7 +96,7 @@ public class SQLStatement implements Serializable {
      * @return
      * @throws Exception
      */
-    public long execInsertWithMapping(SQLiteDatabase db, Object entity) throws Exception {
+    public long execInsertWithMapping(SQLiteDatabase db, Object entity, TableManager tableManager) throws Exception {
         printSQL();
         mStatement = db.compileStatement(sql);
         Object keyObj = null;
@@ -111,8 +110,8 @@ public class SQLStatement implements Serializable {
         clearArgs();
         if (Log.isPrint) Log.i(TAG, "SQL Execute Insert --> " + rowID);
         if (entity != null) {
-            FieldUtil.setKeyValueIfneed(entity, TableUtil.getTable(entity).key, keyObj, rowID);
-            mapRelationToDb(entity, true, true, db);
+            FieldUtil.setKeyValueIfneed(entity, TableManager.getTable(entity).key, keyObj, rowID);
+            mapRelationToDb(entity, true, true, db, tableManager);
         }
 
         return rowID;
@@ -126,7 +125,7 @@ public class SQLStatement implements Serializable {
      * @throws Exception
      */
     public long execInsert(SQLiteDatabase db) throws Exception {
-        return execInsertWithMapping(db, null);
+        return execInsertWithMapping(db, null, null);
     }
 
     /**
@@ -135,7 +134,7 @@ public class SQLStatement implements Serializable {
      * @param db
      * @return
      */
-    public int execInsertCollection(SQLiteDatabase db, Collection<?> list) {
+    public int execInsertCollection(SQLiteDatabase db, Collection<?> list, TableManager tableManager) {
         printSQL();
         db.beginTransaction();
         if (Log.isPrint) Log.d(TAG, "----> BeginTransaction[insert col]");
@@ -149,8 +148,8 @@ public class SQLStatement implements Serializable {
                 Object obj = it.next();
 
                 if (table == null) {
-                    table = TableUtil.getTable(obj);
-                    TableManager.getInstance().checkOrCreateTable(db, obj);
+                    table = TableManager.getTable(obj);
+                    tableManager.checkOrCreateTable(db, obj);
                 }
 
                 int j = 1;
@@ -168,7 +167,7 @@ public class SQLStatement implements Serializable {
                 long rowID = mStatement.executeInsert();
                 FieldUtil.setKeyValueIfneed(obj, table.key, keyObj, rowID);
 
-                mapRelationToDb(obj, true, tableCheck, db);
+                mapRelationToDb(obj, true, tableCheck, db, tableManager);
                 tableCheck = false;
             }
             if (Log.isPrint) Log.i(TAG, "Exec insert " + list.size() + " rows , SQL: " + sql);
@@ -193,7 +192,7 @@ public class SQLStatement implements Serializable {
      * @return
      * @throws Exception
      */
-    public int execUpdateWithMapping(SQLiteDatabase db, Object entity) throws Exception {
+    public int execUpdateWithMapping(SQLiteDatabase db, Object entity, TableManager tableManager) throws Exception {
         printSQL();
         mStatement = db.compileStatement(sql);
         if (!Checker.isEmpty(bindArgs)) {
@@ -205,7 +204,7 @@ public class SQLStatement implements Serializable {
         clearArgs();
         if (Log.isPrint) Log.i(TAG, "SQL Execute update --> " + rows);
         if (entity != null) {
-            mapRelationToDb(entity, true, true, db);
+            mapRelationToDb(entity, true, true, db, tableManager);
         }
         return rows;
     }
@@ -216,7 +215,7 @@ public class SQLStatement implements Serializable {
      * @param db
      * @return
      */
-    public int execUpdateCollection(SQLiteDatabase db, Collection<?> list, ColumnsValue cvs) {
+    public int execUpdateCollection(SQLiteDatabase db, Collection<?> list, ColumnsValue cvs, TableManager tableManager) {
         printSQL();
         db.beginTransaction();
         if (Log.isPrint) Log.d(TAG, "----> BeginTransaction[update col]");
@@ -231,8 +230,8 @@ public class SQLStatement implements Serializable {
                 mStatement.clearBindings();
                 Object obj = it.next();
                 if (table == null) {
-                    table = TableUtil.getTable(obj);
-                    TableManager.getInstance().checkOrCreateTable(db, obj);
+                    table = TableManager.getTable(obj);
+                    tableManager.checkOrCreateTable(db, obj);
                 }
                 int j = 1;
                 // 此种情况下，bindArgs非空表明开发者设置了默认值
@@ -246,7 +245,7 @@ public class SQLStatement implements Serializable {
                         }
                         bind(j++, v);
                     }
-                }else if (!Checker.isEmpty(table.pmap)) {
+                } else if (!Checker.isEmpty(table.pmap)) {
                     // 第一个是主键。其他属性从2开始。
                     for (Property p : table.pmap.values()) {
                         bind(j++, FieldUtil.get(p.field, obj));
@@ -257,7 +256,7 @@ public class SQLStatement implements Serializable {
                 }
                 mStatement.executeUpdateDelete();
 
-                mapRelationToDb(obj, true, tableCheck, db);
+                mapRelationToDb(obj, true, tableCheck, db, tableManager);
                 tableCheck = false;
             }
             if (Log.isPrint) Log.i(TAG, "Exec update " + list.size() + " rows , SQL: " + sql);
@@ -282,7 +281,7 @@ public class SQLStatement implements Serializable {
      * @throws Exception
      */
     public int execDelete(SQLiteDatabase db) throws Exception {
-        return execDeleteWithMapping(db, null);
+        return execDeleteWithMapping(db, null, null);
     }
 
     /**
@@ -292,7 +291,7 @@ public class SQLStatement implements Serializable {
      * @param db
      * @throws Exception
      */
-    public int execDeleteWithMapping(final SQLiteDatabase db, Object entity) throws Exception {
+    public int execDeleteWithMapping(final SQLiteDatabase db, Object entity, TableManager tableManager) throws Exception {
         printSQL();
         mStatement = db.compileStatement(sql);
         if (bindArgs != null) {
@@ -305,7 +304,7 @@ public class SQLStatement implements Serializable {
         clearArgs();
         if (entity != null) {
             // 删除关系映射
-            mapRelationToDb(entity, false, false, db);
+            mapRelationToDb(entity, false, false, db, tableManager);
         }
         return nums;
     }
@@ -317,7 +316,7 @@ public class SQLStatement implements Serializable {
      * @param db
      * @throws Exception
      */
-    public int execDeleteCollection(final SQLiteDatabase db, final Collection<?> collection) throws Exception {
+    public int execDeleteCollection(final SQLiteDatabase db, final Collection<?> collection, final TableManager tableManager) throws Exception {
         printSQL();
         // 删除全部数据
         mStatement = db.compileStatement(sql);
@@ -337,7 +336,7 @@ public class SQLStatement implements Serializable {
                 public Boolean doTransaction(SQLiteDatabase db) throws Exception {
                     for (Object o : collection) {
                         // 删除关系映射
-                        mapRelationToDb(o, false, false, db);
+                        mapRelationToDb(o, false, false, db, tableManager);
                     }
                     return true;
                 }
@@ -411,7 +410,7 @@ public class SQLStatement implements Serializable {
         printSQL();
         final ArrayList<T> list = new ArrayList<T>();
         try {
-            final EntityTable table = TableUtil.getTable(claxx, false);
+            final EntityTable table = TableManager.getTable(claxx, false);
             Querier.doQuery(db, this, new CursorParser() {
                 @Override
                 public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
@@ -441,7 +440,7 @@ public class SQLStatement implements Serializable {
      * @param insertNew 仅在执行删除该实体时，此值为false
      * @param db
      */
-    private void mapRelationToDb(Object entity, final boolean insertNew, final boolean tableCheck, SQLiteDatabase db) {
+    private void mapRelationToDb(Object entity, final boolean insertNew, final boolean tableCheck, SQLiteDatabase db, final TableManager tableManager) {
         // 插入关系映射
         final MapInfo mapTable = SQLBuilder.buildMappingSql(entity, insertNew);
         if (mapTable != null && !mapTable.isEmpty()) {
@@ -450,7 +449,7 @@ public class SQLStatement implements Serializable {
                 public Boolean doTransaction(SQLiteDatabase db) throws Exception {
                     if (insertNew && tableCheck) {
                         for (MapTable table : mapTable.tableList) {
-                            TableManager.getInstance().checkOrCreateMappingTable(db, table.name, table.column1,
+                            tableManager.checkOrCreateMappingTable(db, table.name, table.column1,
                                     table.column2);
                         }
                     }

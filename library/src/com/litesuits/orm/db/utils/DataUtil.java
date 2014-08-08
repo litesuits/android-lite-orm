@@ -176,7 +176,7 @@ public class DataUtil implements Serializable {
                 p = table.key;
             }
             if (p == null) {
-                if (Log.isPrint) Log.e(TAG, "Cursor中有该对象不存在的属性！列名：" + col + "的数据没有注入实体中");
+                if (Log.isPrint) Log.w(TAG, "数据库字段[" + col + "]已在实体中被移除");
                 continue;
             }
             f = p.field;

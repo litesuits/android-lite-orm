@@ -1,7 +1,7 @@
 package com.litesuits.orm.db.assit;
 
+import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.impl.SQLStatement;
-import com.litesuits.orm.db.utils.TableUtil;
 
 import java.util.regex.Pattern;
 
@@ -179,7 +179,7 @@ public class QueryBuilder {
 
         SQLStatement stmt = new SQLStatement();
         stmt.sql = query.toString();
-        stmt.bindArgs = whereArgs;
+        stmt.bindArgs = transToStringArray(whereArgs);
         return stmt;
     }
 
@@ -197,15 +197,26 @@ public class QueryBuilder {
 
         SQLStatement stmt = new SQLStatement();
         stmt.sql = query.toString();
-        stmt.bindArgs = whereArgs;
+        stmt.bindArgs = transToStringArray(whereArgs);
         return stmt;
+    }
+
+    private String[] transToStringArray(Object[] args) {
+        if (args != null && args.length > 0) {
+            String[] arr = new String[args.length];
+            for (int i = 0; i < arr.length; i++) {
+                arr[i] = String.valueOf(args[i]);
+            }
+            return arr;
+        }
+        return null;
     }
 
     private String getTableName() {
         if (clazzMapping == null)
-            return TableUtil.getTableName(clazz);
+            return TableManager.getTableName(clazz);
         else
-            return TableUtil.getMapTableName(clazz, clazzMapping);
+            return TableManager.getMapTableName(clazz, clazzMapping);
     }
 
     private void appendWhere(StringBuilder query) {
