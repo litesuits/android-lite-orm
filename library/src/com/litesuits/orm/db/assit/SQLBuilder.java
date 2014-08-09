@@ -68,7 +68,10 @@ public class SQLBuilder {
                 sb.append(table.key.column).append(" ").append(DataUtil.INTEGER)
                         .append(" PRIMARY KEY AUTOINCREMENT ");
             } else {
-                sb.append(table.key.column).append(" PRIMARY KEY ");
+                sb.append(table.key.column)
+                        .append(" ")
+                        .append(DataUtil.getSQLDataType(table.key.field))
+                        .append(" PRIMARY KEY ");
             }
         }
         if (!Checker.isEmpty(table.pmap)) {

@@ -199,12 +199,11 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         Log.i(this, "update teacher ：" + c);
 
 
-
         //2. 更新单个实体（强制赋指定值）示例：
         wife1.des = "随意写个乱七八糟的描述，反正它会被覆盖";
         wife1.bm = "实体自带值";
         wife1.age = 18;
-        cv = new ColumnsValue(new String[]{"des", "bm","age"}, new Object[]{"外部强制赋值地址", null,20});
+        cv = new ColumnsValue(new String[]{"des", "bm", "age"}, new Object[]{"外部强制赋值地址", null, 20});
         c = db.update(wife1, cv, ConflictAlgorithm.None);
         Log.i(this, "update wife1 " + wife1.name + ": " + c);
     }

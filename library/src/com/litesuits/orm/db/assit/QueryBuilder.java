@@ -203,6 +203,7 @@ public class QueryBuilder {
 
     private String[] transToStringArray(Object[] args) {
         if (args != null && args.length > 0) {
+            if (args instanceof String[]) return (String[]) args;
             String[] arr = new String[args.length];
             for (int i = 0; i < arr.length; i++) {
                 arr[i] = String.valueOf(args[i]);

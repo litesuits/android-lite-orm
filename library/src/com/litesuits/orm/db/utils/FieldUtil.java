@@ -40,6 +40,14 @@ public class FieldUtil {
                 || isIgnored(f) || f.isSynthetic();
     }
 
+    public static boolean isLong(Field field) {
+        return field.getType() == long.class || field.getType() == Long.class;
+    }
+
+    public static boolean isInteger(Field field) {
+        return field.getType() == int.class || field.getType() != Integer.class;
+    }
+
     /**
      * 判断是否序列化
      *

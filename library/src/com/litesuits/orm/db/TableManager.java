@@ -358,12 +358,13 @@ public final class TableManager {
                 if (key != null) {
                     // 主键不加入属性Map
                     table.key = new com.litesuits.orm.db.model.PrimaryKey(p, key.value());
-                    // 主键为系统分配，必须为Long型
+                    // 主键为系统分配,对类型有要求
                     if (table.key.isAssignedBySystem()) {
-                        if (table.key.field.getType() != Long.class && table.key.field.getType() != long.class) {
+                        if (!FieldUtil.isLong(table.key.field) && !FieldUtil.isInteger(table.key.field)) {
                             throw new RuntimeException(
                                     PrimaryKey.AssignType.AUTO_INCREMENT
-                                            + "要求主键属性必须是Long型( the primary key should be Long or long...)\n 提示：把你的主键设置为Long或long型"
+                                            + "要求主键属性必须是long或者int( the primary key should be long or int...)\n " +
+                                            "提示：把你的主键设置为long或int型"
                             );
                         }
                     }
