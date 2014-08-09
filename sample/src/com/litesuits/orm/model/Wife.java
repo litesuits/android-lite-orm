@@ -17,8 +17,8 @@ public class Wife extends Person {
     @Mapping(Relation.OneToOne)
     public Man man;
 
-    public Wife() {
-    }
+    //public Wife() {
+    //}
 
     public Wife(String name, Man man) {
         this.name = name;

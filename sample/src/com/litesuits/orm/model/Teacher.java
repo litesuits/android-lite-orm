@@ -21,8 +21,8 @@ public class Teacher extends Person{
     @Mapping(Relation.ManyToMany)
     private ArrayList<Man> list;
 
-    public Teacher() {
-    }
+    //public Teacher() {
+    //}
 
     public Teacher(String name, ArrayList<Man> list) {
         this.name = name;

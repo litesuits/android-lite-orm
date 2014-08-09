@@ -25,7 +25,7 @@ public class Company extends BaseModel {
     @Mapping(Relation.OneToMany)
     private ArrayList<Man> list;
 
-    public Company() { }
+    //public Company() { }
 
     public Company(String name, ArrayList<Man> list) {
         this.name = name;

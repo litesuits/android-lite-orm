@@ -88,7 +88,6 @@ public class Man extends Person {
 
     public Map<Long, String> map;
 
-    public Man() { }
 
     public Man(long id, String name, int age, boolean isLogin, short aShort, byte aByte, float aFloat, double aDouble, char aChar) {
         this.id = id;
@@ -101,6 +100,8 @@ public class Man extends Person {
         this.aDouble = aDouble;
         this.aChar = aChar;
     }
+
+    //public Man() { }
 
     public Man(long id, String name, int age, boolean isLogin) {
         this.id = id;

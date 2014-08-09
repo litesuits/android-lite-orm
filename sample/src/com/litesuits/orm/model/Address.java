@@ -24,8 +24,8 @@ public class Address extends BaseModel{
     @Column(COL_ADDRESS)
     public String address;
 
-    public Address() {
-    }
+    //public Address() {
+    //}
 
     public Address(String address) {
         this.address = address;
