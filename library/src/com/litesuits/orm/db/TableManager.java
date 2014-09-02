@@ -54,14 +54,18 @@ public final class TableManager {
 
     /**
      * 检测表是否建立，没有则建一张新表。
-     *
-     * @param db
-     * @param entity
      */
     public EntityTable checkOrCreateTable(SQLiteDatabase db, Object entity) {
+        return checkOrCreateTable(db, entity.getClass());
+    }
+
+    /**
+     * 检测表是否建立，没有则建一张新表。
+     */
+    public EntityTable checkOrCreateTable(SQLiteDatabase db, Class claxx) {
         // 关键点1：初始化全部数据库表
         initAllTablesFromSQLite(db);
-        EntityTable table = getTable(entity);
+        EntityTable table = getTable(claxx);
         // table lock synchronized
         synchronized (table) {
             // 关键点2:判断表是否存在，是否需要新加列。
@@ -329,8 +333,9 @@ public final class TableManager {
     /**
      * 获取缓存实体表信息
      */
-    public static EntityTable getTable(Class<?> claxx, boolean needPK) {
+    public static synchronized EntityTable getTable(Class<?> claxx, boolean needPK) {
         EntityTable table = getEntityTable(claxx.getName());
+        //if(Log.isPrint)Log.i(TAG, "table : " + table + "  , claxx: " + claxx);
         if (table == null) {
             table = new EntityTable();
             putEntityTable(claxx.getName(), table);
@@ -346,6 +351,7 @@ public final class TableManager {
                 Property p = new Property();
                 p.field = f;
                 // 获取列名,每个属性都有，没有注解默认取属性名
+                //if(Log.isPrint)Log.i(TAG, "Column : " + Column.class+ "  field: "+ f);
                 Column col = f.getAnnotation(Column.class);
                 if (col != null) {
                     p.column = col.value();
@@ -354,6 +360,7 @@ public final class TableManager {
                 }
 
                 // 主键判断
+                //if(Log.isPrint)Log.i(TAG, "PrimaryKey : " + PrimaryKey.class + "  field: "+ f + " asst:" + AssignType.AUTO_INCREMENT);
                 PrimaryKey key = f.getAnnotation(PrimaryKey.class);
                 if (key != null) {
                     // 主键不加入属性Map
@@ -370,6 +377,7 @@ public final class TableManager {
                     }
                 } else {
                     //ORM handle
+                    //if(Log.isPrint)Log.i(TAG, "Mapping : " + Mapping.class+ " field: "+ f);
                     Mapping mapping = f.getAnnotation(Mapping.class);
                     if (mapping != null) {
                         table.addMapping(new MapProperty(p, mapping.value()));

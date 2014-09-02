@@ -138,7 +138,7 @@ public class FieldUtil {
     public static List<Field> getAllDeclaredFields(Class<?> claxx) {
         // find all field.
         LinkedList<Field> fieldList = new LinkedList<Field>();
-        while (claxx != null) {
+        while (claxx != null && claxx != Object.class) {
             Field[] fs = claxx.getDeclaredFields();
             for (int i = 0; i < fs.length; i++) {
                 Field f = fs[i];

@@ -289,8 +289,10 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     public long queryCount(QueryBuilder qb) {
         acquireReference();
         try {
+            SQLiteDatabase db = mHelper.getReadableDatabase();
+            mTableManager.checkOrCreateTable(db, qb.getQueryClass());
             SQLStatement stmt = qb.createStatementForCount();
-            return stmt.queryForLong(mHelper.getReadableDatabase());
+            return stmt.queryForLong(db);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -301,7 +303,9 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
 
     @Override
     public <T> ArrayList<T> query(QueryBuilder qb) {
-        return qb.createStatement().query(mHelper.getReadableDatabase(), qb.getQueryClass());
+        SQLiteDatabase db = mHelper.getReadableDatabase();
+        mTableManager.checkOrCreateTable(db, qb.getQueryClass());
+        return qb.createStatement().query(db, qb.getQueryClass());
     }
 
     @Override
@@ -313,9 +317,11 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     public <T> T queryById(String id, Class<T> claxx) {
         acquireReference();
         try {
+            SQLiteDatabase db = mHelper.getReadableDatabase();
+            mTableManager.checkOrCreateTable(db, claxx);
             EntityTable table = TableManager.getTable(claxx);
             SQLStatement stmt = new QueryBuilder(claxx).where(table.key.column + "=?", new String[]{id}).createStatement();
-            ArrayList<T> list = stmt.query(mHelper.getReadableDatabase(), claxx);
+            ArrayList<T> list = stmt.query(db, claxx);
             if (!Checker.isEmpty(list)) {
                 return list.get(0);
             }

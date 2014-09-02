@@ -2,7 +2,7 @@ package com.litesuits.orm.db.assit;
 
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.annotation.*;
-import com.litesuits.orm.db.annotation.PrimaryKey.AssignType;
+import com.litesuits.orm.db.annotation.PrimaryKey;
 import com.litesuits.orm.db.impl.SQLStatement;
 import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.model.MapInfo.MapTable;
@@ -64,7 +64,7 @@ public class SQLBuilder {
         boolean hasKey = false;
         if (table.key != null) {
             hasKey = true;
-            if (table.key.assign == AssignType.AUTO_INCREMENT) {
+            if (table.key.assign == PrimaryKey.AssignType.AUTO_INCREMENT) {
                 sb.append(table.key.column).append(" ").append(DataUtil.INTEGER)
                         .append(" PRIMARY KEY AUTOINCREMENT ");
             } else {
