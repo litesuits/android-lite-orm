@@ -44,7 +44,7 @@ public class SQLStatement implements Serializable {
     /**
      * sql语句执行者，私有(private)。
      */
-    public SQLiteStatement mStatement;
+    private SQLiteStatement mStatement;
 
     public SQLStatement() {}
 
@@ -355,8 +355,8 @@ public class SQLStatement implements Serializable {
      */
     public boolean execute(SQLiteDatabase db) {
         printSQL();
-        mStatement = db.compileStatement(sql);
         try {
+            mStatement = db.compileStatement(sql);
             if (bindArgs != null) {
                 for (int i = 0; i < bindArgs.length; i++) {
                     bind(i + 1, bindArgs[i]);

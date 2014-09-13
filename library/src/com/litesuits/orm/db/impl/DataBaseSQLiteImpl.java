@@ -47,6 +47,11 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     }
 
     @Override
+    public void execute(SQLiteDatabase db, SQLStatement statement) {
+        if(statement != null) statement.execute(db);
+    }
+
+    @Override
     public long save(Object entity) {
         acquireReference();
         try {

@@ -2,6 +2,7 @@ package com.litesuits.orm.db;
 
 import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.assit.QueryBuilder;
+import com.litesuits.orm.db.impl.SQLStatement;
 import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.db.model.Relation;
@@ -17,6 +18,12 @@ import java.util.List;
  * @date 2013-6-2上午2:37:56
  */
 public interface DataBase {
+    /**
+     * Execute this SQL statement, if it is not a SELECT / INSERT / DELETE / UPDATE, for example
+     * CREATE / DROP table, view, trigger, index etc.
+     */
+    public void execute(SQLiteDatabase db, SQLStatement statement);
+
     /**
      * save: insert or update a single entity
      *
@@ -202,6 +209,7 @@ public interface DataBase {
      * 获取表管理对象
      */
     public TableManager getTableManager();
+
     /**
      * 关闭数据库，清空缓存。
      */
