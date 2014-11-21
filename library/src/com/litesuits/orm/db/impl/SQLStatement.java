@@ -460,8 +460,7 @@ public class SQLStatement implements Serializable {
                         }
                     }
                     if (insertNew && mapTable.mapNewRelationSQL != null) {
-                        for (SQLStatement st : mapTable
-                                .mapNewRelationSQL) {
+                        for (SQLStatement st : mapTable.mapNewRelationSQL) {
                             long rowId = st.execInsert(db);
                             if (Log.isPrint) Log.v(TAG, "Exec save mapping success, nums: " + rowId);
                         }

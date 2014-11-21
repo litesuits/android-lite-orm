@@ -246,13 +246,12 @@ public class LiteOrmSamplesActivity extends BaseActivity {
                 .columns(new String[]{Address.COL_ADDRESS})
                 .appendOrderAscBy(Address.COL_ADDRESS)
                 .appendOrderDescBy(Address.COL_ID)
+                .distinct(true)
                 .where(Address.COL_ADDRESS + " like ?", new String[]{"%area"});
 
         nums = db.queryCount(qb);
         Log.i(this, "Address All Count : " + nums);
-
         List<Address> addrList = db.query(qb);
-
         for (Address uu : addrList) {
             Log.i(this, "Query Address: " + uu);
         }
@@ -260,11 +259,13 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     }
 
     private void testMapping() {
+        // 先找出来相关的实体
         ArrayList<Man> mans = db.queryAll(Man.class);
         ArrayList<Address> as = db.queryAll(Address.class);
         ArrayList<Wife> ws = db.queryAll(Wife.class);
         ArrayList<Company> cs = db.queryAll(Company.class);
         ArrayList<Teacher> ts = db.queryAll(Teacher.class);
+        // 为它们映射关系
         db.mapping(mans, as);
         db.mapping(mans, ws);
         db.mapping(mans, cs);
