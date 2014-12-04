@@ -231,7 +231,7 @@ public class DataUtil implements Serializable {
             ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
             return ois.readObject();
         } finally {
-            ois.close();
+            if(ois !=null) ois.close();
         }
     }
 
@@ -249,7 +249,7 @@ public class DataUtil implements Serializable {
             oos.writeObject(obj);
             return bos.toByteArray();
         } finally {
-            oos.close();
+            if(oos != null)oos.close();
         }
     }
 

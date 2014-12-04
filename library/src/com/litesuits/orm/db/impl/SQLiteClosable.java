@@ -39,7 +39,7 @@ public abstract class SQLiteClosable implements Closeable {
 	 * @see #onAllReferencesReleased()
 	 */
 	public void releaseReference() {
-		boolean refCountIsZero = false;
+		boolean refCountIsZero;
 		synchronized (this) {
 			refCountIsZero = --mReferenceCount == 0;
 		}

@@ -3,6 +3,7 @@ package com.litesuits.orm.db.impl;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Build;
 import com.litesuits.android.log.Log;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.assit.Checker;
@@ -36,11 +37,11 @@ public class SQLStatement implements Serializable {
     /**
      * sql语句
      */
-    public String          sql;
+    public  String          sql;
     /**
      * sql语句中占位符对应的参数
      */
-    public Object[]        bindArgs;
+    public  Object[]        bindArgs;
     /**
      * sql语句执行者，私有(private)。
      */
@@ -60,7 +61,7 @@ public class SQLStatement implements Serializable {
      * @param o
      * @throws Exception
      */
-    public void bind(int i, Object o) throws Exception {
+    protected void bind(int i, Object o) throws Exception {
         switch (DataUtil.getType(o)) {
             case DataUtil.FIELD_TYPE_NULL:
                 mStatement.bindNull(i);
@@ -200,7 +201,12 @@ public class SQLStatement implements Serializable {
                 bind(i + 1, bindArgs[i]);
             }
         }
-        int rows = mStatement.executeUpdateDelete();
+        int rows = 1;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            mStatement.execute();
+        } else {
+            rows = mStatement.executeUpdateDelete();
+        }
         clearArgs();
         if (Log.isPrint) Log.i(TAG, "SQL Execute update --> " + rows);
         if (entity != null) {
@@ -254,7 +260,7 @@ public class SQLStatement implements Serializable {
                 if (table.key != null) {
                     bind(j, FieldUtil.getAssignedKeyObject(table.key, obj));
                 }
-                mStatement.executeUpdateDelete();
+                mStatement.execute();
 
                 mapRelationToDb(obj, true, tableCheck, db, tableManager);
                 tableCheck = false;
@@ -299,7 +305,12 @@ public class SQLStatement implements Serializable {
                 bind(i + 1, bindArgs[i]);
             }
         }
-        int nums = mStatement.executeUpdateDelete();
+        int nums = 1;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            mStatement.execute();
+        } else {
+            nums = mStatement.executeUpdateDelete();
+        }
         if (Log.isPrint) Log.i(TAG, "SQL Execute Delete --> " + nums);
         clearArgs();
         if (entity != null) {
@@ -325,7 +336,12 @@ public class SQLStatement implements Serializable {
                 bind(i + 1, bindArgs[i]);
             }
         }
-        int nums = mStatement.executeUpdateDelete();
+        int nums = collection.size();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            mStatement.execute();
+        } else {
+            nums = mStatement.executeUpdateDelete();
+        }
         if (Log.isPrint) Log.i(TAG, "SQL Execute Delete --> " + nums);
         clearArgs();
         // 删除关系映射

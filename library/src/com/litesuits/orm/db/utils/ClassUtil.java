@@ -36,19 +36,19 @@ public class ClassUtil {
      * @throws Exception
      */
     public static <T> T newInstance(Class<T> claxx) throws Exception {
-        Constructor[] cons = claxx.getDeclaredConstructors();
-        for (Constructor<T> c : cons) {
+        Constructor<?>[] cons = claxx.getDeclaredConstructors();
+        for (Constructor<?> c : cons) {
             Class[] cls = c.getParameterTypes();
             if (cls.length == 0) {
                 c.setAccessible(true);
-                return c.newInstance();
+                return (T) c.newInstance();
             } else {
                 Object[] objs = new Object[cls.length];
                 for (int i = 0; i < cls.length; i++) {
                     objs[i] = getDefaultPrimiticeValue(cls[i]);
                 }
                 c.setAccessible(true);
-                return c.newInstance(objs);
+                return (T) c.newInstance(objs);
             }
         }
         return null;
