@@ -1,0 +1,17 @@
+# 使用注解
+-keepattributes *Annotation*,Signature
+
+# 保持混淆时类的实名及行号(--------------- 调试时打开 --------------)
+-keepattributes SourceFile,LineNumberTable
+
+# 枚举需要keep see http://proguard.sourceforge.net/manual/examples.html#enumerations
+-keepclassmembers enum * {
+    **[] $VALUES;
+    public *;
+}
+
+#Orm混淆建议：
+# 1. 给你要持久化的每一个Java（Model）类设置一个表名：即为类添加@Table("table_name")注解。
+# 2. 给你要持久化的每一个属性（成员变量）设置一个列名： 即为属性加@Column("column_name")注解。
+# 满足1、2则可以将你要持久化的类和者属性随意混淆；
+# 反之，则需要将你要持久化的类和属性keep住，不可混淆。
