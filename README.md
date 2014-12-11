@@ -70,10 +70,30 @@ Archiver超级轻量、专注，你甚至看不到任何包括线程在内的其
 而这一切，就是为了还原面向对象本应有的体验，让增加的部分，并未增加。
 
 
-##个人开源站点：http://litesuits.com/
+关于作者（About Author）
+-----
+我的博客 ：[http://vmatianyu.cn](http://vmatianyu.cn/)
 
-因为刚对外开源，请恕我没有详细文档(github上有samples)，可能会有没预料到得bug，希望踊跃提建议和问题哦。
-QQ交流群： 47357508    欢迎大牛入群交流，入群可以写明你的目的或研究方向~
+我的开源站点 ：[http://litesuits.com](http://litesuits.com/)
 
-一篇EOE发的帖子  
-【Archiver：极简且智能的 android ORM 框架库 (专注数据库)】http://www.eoeandroid.com/thread-538203-1-1.html
+点击加入QQ群: [47357508](http://jq.qq.com/?_wv=1027&k=Z7l0Av)
+
+我的论坛帖子
+-----
+[LiteHttp：极简且智能的 android HTTP 框架库 (专注于网络)](http://www.eoeandroid.com/thread-326584-1-1.html)
+
+[LiteOrm：极简且智能的 android ORM 框架库 (专注数据库)](http://www.eoeandroid.com/thread-538203-1-1.html)
+
+[LiteAsync：强势的 android 异步 框架库 (专注异步与并发)](http://www.eoeandroid.com/thread-538212-1-1.html)
+
+[LiteCommon：丰富通用的android工具类库(专注于基础组件)](http://www.eoeandroid.com/thread-538212-1-1.html)
+
+我的博客帖子
+-----
+[关于java的线程并发和锁的总结](http://www.vmatianyu.cn/summary-of-the-java-thread-concurrency-and-locking.html)
+
+[android开发技术经验总结60条](http://www.vmatianyu.cn/summarization-of-technical-experience.html)
+
+[聚划算android客户端1期教训总结](http://www.vmatianyu.cn/poly-effective-client-1-issues-lessons.html)
+
+[移动互联网产品设计小结](http://www.vmatianyu.cn/summary-of-mobile-internet-product-design.html)
