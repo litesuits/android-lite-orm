@@ -25,6 +25,20 @@ public interface DataBase {
     public void execute(SQLiteDatabase db, SQLStatement statement);
 
     /**
+     * drop a table
+     *
+     * @return true if droped successfully.
+     */
+    public boolean dropTable(Object entity);
+
+    /**
+     * drop a table
+     *
+     * @return true if droped successfully.
+     */
+    public boolean dropTable(String tableName);
+
+    /**
      * save: insert or update a single entity
      *
      * @return the number of rows affected by this SQL statement execution.

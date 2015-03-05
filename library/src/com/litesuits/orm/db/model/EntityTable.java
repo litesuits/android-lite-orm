@@ -30,7 +30,7 @@ public class EntityTable implements Serializable {
      */
     public LinkedHashMap<String, Property> pmap;
     /**
-     * 多对一属性列表
+     * N对N 关系映射表
      */
     public ArrayList<MapProperty>          mappingList;
 

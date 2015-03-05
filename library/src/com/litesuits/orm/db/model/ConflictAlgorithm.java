@@ -1,7 +1,6 @@
 package com.litesuits.orm.db.model;
 
 /**
- * @author MaTianyu
  * @date 2014-08-07
  */
 

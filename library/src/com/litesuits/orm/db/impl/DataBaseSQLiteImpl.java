@@ -36,8 +36,7 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
 
     private DataBaseSQLiteImpl(DataBaseConfig config) {
         mConfig = config;
-        mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(), mConfig.dbName
-                , null, mConfig.dbVersion, config.onUpdateListener);
+        mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(), mConfig.dbName, null, mConfig.dbVersion, config.onUpdateListener);
         mConfig.context = null;
         mTableManager = new TableManager();
     }
@@ -48,7 +47,35 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
 
     @Override
     public void execute(SQLiteDatabase db, SQLStatement statement) {
-        if(statement != null) statement.execute(db);
+        if (statement != null) {
+            statement.execute(db);
+        }
+    }
+
+    @Override
+    public boolean dropTable(Object entity) {
+        acquireReference();
+        try {
+            return SQLBuilder.buildDropTable(TableManager.getTable(entity)).execute(mHelper.getWritableDatabase());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            releaseReference();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean dropTable(String tableName) {
+        acquireReference();
+        try {
+            return SQLBuilder.buildDropTable(tableName).execute(mHelper.getWritableDatabase());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            releaseReference();
+        }
+        return false;
     }
 
     @Override
@@ -217,7 +244,9 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
                             for (Object entity : collection) {
                                 delete(entity, db);
                             }
-                            if (Log.isPrint) Log.i(TAG, "Exec delete(no primarykey) ：" + collection.size());
+                            if (Log.isPrint) {
+                                Log.i(TAG, "Exec delete(no primarykey) ：" + collection.size());
+                            }
                             return collection.size();
                         }
                     });
@@ -248,7 +277,9 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
                         if (mapTable.delOldRelationSQL != null) {
                             for (SQLStatement st : mapTable.delOldRelationSQL) {
                                 long rowId = st.execDelete(db);
-                                if (Log.isPrint) Log.i(TAG, "Exec delete mapping success, nums: " + rowId);
+                                if (Log.isPrint) {
+                                    Log.i(TAG, "Exec delete mapping success, nums: " + rowId);
+                                }
                             }
                         }
                         return true;
@@ -273,7 +304,9 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
         acquireReference();
         try {
             if (start < 0 || end < start) { throw new RuntimeException("start must >=0 and smaller than end"); }
-            if (start != 0) start -= 1;
+            if (start != 0) {
+                start -= 1;
+            }
             end = end == Integer.MAX_VALUE ? -1 : end - start;
             SQLStatement stmt = SQLBuilder.buildDeleteSql(claxx, start, end, orderAscColumn);
             return stmt.execDelete(mHelper.getWritableDatabase());
@@ -372,7 +405,9 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
 
     @Override
     public <E, T> boolean mapping(Collection<E> col1, Collection<T> col2) {
-        if (Checker.isEmpty(col1) || Checker.isEmpty(col2)) return false;
+        if (Checker.isEmpty(col1) || Checker.isEmpty(col2)) {
+            return false;
+        }
         acquireReference();
         try {
             return keepMapping(col1, col2) | keepMapping(col2, col1);
@@ -438,33 +473,26 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
                 }
                 if (itemClass == claxx2) {
                     ArrayList<String> key1List = new ArrayList<String>();
-                    for (Object e : col1) {
-                        if (e != null) {
-                            Object key1 = FieldUtil.get(table1.key.field, e);
+                    HashMap<String, Object> map1 = new HashMap<String, Object>();
+                    // 构建第1个对象的key集合以及value映射
+                    for (Object o1 : col1) {
+                        if (o1 != null) {
+                            Object key1 = FieldUtil.get(table1.key.field, o1);
                             if (key1 != null) {
-                                key1List.add(String.valueOf(key1));
+                                key1List.add(key1.toString());
+                                map1.put(key1.toString(), o1);
                             }
                         }
                     }
                     ArrayList<Relation> mapList = queryRelation(claxx1, claxx2, key1List, null);
                     if (!Checker.isEmpty(mapList)) {
-                        HashMap<String, Object> map1 = new HashMap<String, Object>();
                         HashMap<String, Object> map2 = new HashMap<String, Object>();
-                        for (Relation m : mapList) {
-                            for (Object e : col1) {
-                                if (e != null) {
-                                    Object key1 = FieldUtil.get(table1.key.field, e);
-                                    if (key1 != null && key1.toString().equals(m.key1)) {
-                                        map1.put(m.key1, e);
-                                    }
-                                }
-                            }
-                            for (Object t : col2) {
-                                if (t != null) {
-                                    Object key2 = FieldUtil.get(table2.key.field, t);
-                                    if (key2 != null && key2.toString().equals(m.key2)) {
-                                        map2.put(m.key2, t);
-                                    }
+                        // 构建第2个对象的value映射
+                        for (Object o2 : col2) {
+                            if (o2 != null) {
+                                Object key2 = FieldUtil.get(table2.key.field, o2);
+                                if (key2 != null) {
+                                    map2.put(key2.toString(), o2);
                                 }
                             }
                         }

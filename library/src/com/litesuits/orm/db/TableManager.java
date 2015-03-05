@@ -88,8 +88,7 @@ public final class TableManager {
      * @param column2
      * @return
      */
-    public void checkOrCreateMappingTable(SQLiteDatabase db, String tableName, String column1,
-                                          String column2) {
+    public void checkOrCreateMappingTable(SQLiteDatabase db, String tableName, String column1, String column2) {
         // 关键点1：初始化全部数据库表
         initAllTablesFromSQLite(db);
         EntityTable table = getMappingTable(tableName, column1, column2);
@@ -114,31 +113,49 @@ public final class TableManager {
         if (!Checker.isEmpty(mSqlTableList)) {
             for (SQLiteTable sqlTable : mSqlTableList) {
                 if (entityTable.name.equals(sqlTable.name)) {
-                    if (Log.isPrint) Log.d(TAG, "Table [" + entityTable.name + "] Exist");
+                    if (Log.isPrint) {
+                        Log.d(TAG, "Table [" + entityTable.name + "] Exist");
+                    }
                     if (!sqlTable.isTableChecked) {
                         // 表仅进行一次检查，检验是否有新字段加入。
                         sqlTable.isTableChecked = true;
-                        if (Log.isPrint) Log.d(TAG, "Table [" + entityTable.name + "] check column now.");
-                        ArrayList<String> newColumns = null;
+                        if (Log.isPrint) {
+                            Log.i(TAG, "Table [" + entityTable.name + "] check column now.");
+                        }
+                        if (entityTable.key != null) {
+                            if (!sqlTable.columns.contains(entityTable.key.column)) {
+                                SQLStatement stmt = SQLBuilder.buildDropTable(sqlTable.name);
+                                stmt.execute(db);
+                                if (Log.isPrint) {
+                                    Log.i(TAG, "Table [" + entityTable.name + "] Primary Key has changed, " +
+                                            "so drop and recreate it later.");
+                                }
+                                return false;
+                            }
+                        }
                         if (entityTable.pmap != null) {
+                            ArrayList<String> newColumns = new ArrayList<String>();
                             for (String col : entityTable.pmap.keySet()) {
                                 if (!sqlTable.columns.contains(col)) {
-                                    if (newColumns == null) newColumns = new ArrayList<String>();
                                     newColumns.add(col);
                                 }
                             }
-                        }
-                        if (!Checker.isEmpty(newColumns)) {
-                            sqlTable.columns.addAll(newColumns);
-                            int sum = insertNewColunms(db, entityTable.name, newColumns);
-                            if (Log.isPrint) Log.i(TAG, "Table [" + entityTable.name + "] add " + sum + " new column");
+                            if (!Checker.isEmpty(newColumns)) {
+                                sqlTable.columns.addAll(newColumns);
+                                int sum = insertNewColunms(db, entityTable.name, newColumns);
+                                if (Log.isPrint) {
+                                    Log.i(TAG, "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
+                                }
+                            }
                         }
                     }
                     return true;
                 }
             }
         }
-        if (Log.isPrint) Log.d(TAG, "Table [" + entityTable.name + "] Not Exist");
+        if (Log.isPrint) {
+            Log.d(TAG, "Table [" + entityTable.name + "] Not Exist");
+        }
         return false;
     }
 
@@ -148,17 +165,23 @@ public final class TableManager {
      * @param table
      */
     private void putSqlTableIntoList(EntityTable table) {
-        if (Log.isPrint) Log.i(TAG, "Table [" + table.name + "] Create Success");
+        if (Log.isPrint) {
+            Log.i(TAG, "Table [" + table.name + "] Create Success");
+        }
         SQLiteTable sqlTable = new SQLiteTable();
         sqlTable.name = table.name;
         sqlTable.columns = new ArrayList<String>();
-        if (table.key != null) sqlTable.columns.add(table.key.column);
+        if (table.key != null) {
+            sqlTable.columns.add(table.key.column);
+        }
         if (table.pmap != null) {
             for (String col : table.pmap.keySet()) {
                 sqlTable.columns.add(col);
             }
         }
-        if (mSqlTableList != null) mSqlTableList.add(sqlTable);
+        if (mSqlTableList != null) {
+            mSqlTableList.add(sqlTable);
+        }
     }
 
     /**
@@ -168,7 +191,9 @@ public final class TableManager {
      */
     private void initAllTablesFromSQLite(SQLiteDatabase db) {
         synchronized (this) {
-            if (Checker.isEmpty(mSqlTableList)) mSqlTableList = getAllTablesFromSQLite(db);
+            if (Checker.isEmpty(mSqlTableList)) {
+                mSqlTableList = getAllTablesFromSQLite(db);
+            }
         }
     }
 
@@ -212,7 +237,9 @@ public final class TableManager {
         SQLStatement st = SQLBuilder.buildTableObtainAll();
         final EntityTable table = getTable(SQLiteTable.class, false);
         final ArrayList<SQLiteTable> list = new ArrayList<SQLiteTable>();
-        if (Log.isPrint) Log.i(TAG, "Initialize SQL table start--------------------->");
+        if (Log.isPrint) {
+            Log.i(TAG, "Initialize SQL table start--------------------->");
+        }
         Querier.doQuery(db, st, new Querier.CursorParser() {
             @Override
             public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
@@ -224,11 +251,15 @@ public final class TableManager {
                     colS = transformSqlToColumns(sqlTable.sql);
                 }
                 sqlTable.columns = colS;
-                if (Log.isPrint) Log.d(TAG, "Find One SQL Table: " + sqlTable);
+                if (Log.isPrint) {
+                    Log.d(TAG, "Find One SQL Table: " + sqlTable);
+                }
                 list.add(sqlTable);
             }
         });
-        if (Log.isPrint) Log.i(TAG, "Initialize SQL table end  ---------------------> " + list.size());
+        if (Log.isPrint) {
+            Log.i(TAG, "Initialize SQL table end  ---------------------> " + list.size());
+        }
         return list;
     }
 
@@ -241,9 +272,10 @@ public final class TableManager {
      * @return
      */
     public ArrayList<String> getAllColumnsFromSQLite(SQLiteDatabase db, final String tableName) {
-        SQLStatement st = SQLBuilder.buildColumnsObtainAll(tableName);
         final EntityTable table = getTable(SQLiteColumn.class, false);
         final ArrayList<String> list = new ArrayList<String>();
+
+        SQLStatement st = SQLBuilder.buildColumnsObtainAll(tableName);
         Querier.doQuery(db, st, new Querier.CursorParser() {
             @Override
             public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
@@ -252,6 +284,7 @@ public final class TableManager {
                 list.add(col.name);
             }
         });
+
         return list;
     }
 
@@ -368,11 +401,8 @@ public final class TableManager {
                     // 主键为系统分配,对类型有要求
                     if (table.key.isAssignedBySystem()) {
                         if (!FieldUtil.isLong(table.key.field) && !FieldUtil.isInteger(table.key.field)) {
-                            throw new RuntimeException(
-                                    PrimaryKey.AssignType.AUTO_INCREMENT
-                                            + "要求主键属性必须是long或者int( the primary key should be long or int...)\n " +
-                                            "提示：把你的主键设置为long或int型"
-                            );
+                            throw new RuntimeException(PrimaryKey.AssignType.AUTO_INCREMENT + "要求主键属性必须是long或者int( the primary key should be long or int...)\n " +
+                                    "提示：把你的主键设置为long或int型");
                         }
                     }
                 } else {
@@ -388,8 +418,7 @@ public final class TableManager {
             }
         }
         if (needPK && table.key == null) {
-            throw new RuntimeException(
-                    "你必须设置主键(you must set the primary key...)\n 提示：在对象的属性上加PrimaryKey注解来设置主键。");
+            throw new RuntimeException("你必须设置主键(you must set the primary key...)\n 提示：在对象的属性上加PrimaryKey注解来设置主键。");
         }
         return table;
     }
@@ -415,8 +444,11 @@ public final class TableManager {
     }
 
     public static String getMapTableName(String tableName1, String tableName2) {
-        if (tableName1.compareTo(tableName2) < 0) return tableName1 + "_" + tableName2;
-        else return tableName2 + "_" + tableName1;
+        if (tableName1.compareTo(tableName2) < 0) {
+            return tableName1 + "_" + tableName2;
+        } else {
+            return tableName2 + "_" + tableName1;
+        }
     }
 
 }
