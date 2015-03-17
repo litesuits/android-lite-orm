@@ -143,20 +143,18 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         db.save(uMax);
         db.save(uMin);
 
+        db.save(company);
+        db.save(wife1);
+        db.save(wife2);
         //插入任意集合
         db.save(addrList);
+        //保存任意集合
+        db.save(teacherList);
     }
 
     private void testInsert() {
         db.insert(uAlice, ConflictAlgorithm.Replace);
         db.insert(uComplex, ConflictAlgorithm.Rollback);
-
-        db.insert(company);
-        db.insert(wife1, ConflictAlgorithm.Fail);
-        db.insert(wife2, ConflictAlgorithm.Abort);
-
-        //保存任意集合
-        db.insert(teacherList, ConflictAlgorithm.Ignore);
     }
 
     private void testUpdate() {
@@ -368,8 +366,10 @@ public class LiteOrmSamplesActivity extends BaseActivity {
 
         // 1 To 1
         wife1 = new Wife("Echo", uComplex);
+        wife1.type = Wife.Type.enumOne;
         uComplex.wife = wife1;
         wife2 = new Wife("Yamaidi", uMax);
+        wife2.type = Wife.Type.enumTwo;
         uMax.wife = wife2;
 
         // N To 1

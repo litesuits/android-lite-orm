@@ -13,15 +13,34 @@ import java.util.regex.Pattern;
  */
 public class QueryBuilder {
     private static final Pattern limitPattern = Pattern.compile("\\s*\\d+\\s*(,\\s*\\d+\\s*)?");
-    private Class    clazz;
-    private Class    clazzMapping;
-    private boolean  distinct;
-    private String   where;
+
+    public static final String ASC = " ASC";
+    public static final String DESC = " DESC";
+    public static final String AND = " AND ";
+    public static final String OR = " OR ";
+
+    public static final String WHERE = " WHERE ";
+    public static final String GROUP_BY = " GROUP BY ";
+    public static final String HAVING = " HAVING ";
+    public static final String ORDER_BY = " ORDER BY ";
+    public static final String LIMIT = " LIMIT ";
+    public static final String SELECT_COUNT = "SELECT COUNT(*) FROM ";
+    public static final String SELECT = "SELECT ";
+    public static final String DISTINCT = " DISTINCT ";
+    public static final String ASTERISK = " * ";
+    public static final String FROM = " FROM ";
+    public static final String EQUAL_HOLDER = "=?";
+    public static final String COMMA_HOLDER = ",?";
+
+    private Class clazz;
+    private Class clazzMapping;
+    private boolean distinct;
+    private String where;
     private String[] columns;
-    private String   group;
-    private String   having;
-    private String   order;
-    private String   limit;
+    private String group;
+    private String having;
+    private String order;
+    private String limit;
     private Object[] whereArgs;
 
     private QueryBuilder() {
@@ -45,11 +64,91 @@ public class QueryBuilder {
         return this;
     }
 
+    /**
+     * @param where     "id = ?";
+     *                  "id in(?,?,?)";
+     *                  "id LIKE %?"
+     * @param whereArgs new String[]{"",""};
+     *                  new Integer[]{1,2}
+     * @return
+     */
     public QueryBuilder where(String where, Object[] whereArgs) {
         this.where = where;
         this.whereArgs = whereArgs;
         return this;
     }
+
+    /**
+     * @param whereString "id = ?";
+     *                    or "id in(?,?,?)";
+     *                    or "id LIKE %?";
+     *                    ...
+     * @param value       new String[]{"",""};
+     *                    or new Integer[]{1,2};
+     *                    ...
+     * @param connect     NULL or "AND" or "OR"
+     * @return this
+     */
+    public QueryBuilder appendWhere(String connect, String whereString, Object... value) {
+        if (where == null || connect == null) {
+            where = whereString;
+            whereArgs = value;
+        } else {
+            where += connect + whereString;
+            Object[] newWhere = new Object[whereArgs.length + value.length];
+            System.arraycopy(whereArgs, 0, newWhere, 0, whereArgs.length);
+            System.arraycopy(value, 0, newWhere, whereArgs.length, value.length);
+            this.whereArgs = newWhere;
+        }
+        return this;
+    }
+
+    /**
+     * build as " column = ? "
+     */
+    public QueryBuilder setWhereEquals(String column, Object value) {
+        where = null;
+        whereArgs = null;
+        return appendWhere(OR, column + COMMA_HOLDER, value);
+    }
+
+    /**
+     * build as " or column = ? "
+     */
+    public QueryBuilder orWhereEquals(String column, Object value) {
+        return appendWhere(OR, column + COMMA_HOLDER, value);
+    }
+
+    /**
+     * build as " and column = ? "
+     */
+    public QueryBuilder andWhereEquals(String column, Object[] value) {
+        return appendWhere(AND, column + COMMA_HOLDER, value);
+    }
+
+    /**
+     * build as " column in(?,?...) "
+     */
+    public QueryBuilder setWhereIn(String column, Object[] value) {
+        where = null;
+        whereArgs = null;
+        return appendWhere(OR, buildWhereIn(column, value.length), value);
+    }
+
+    /**
+     * build as " or column in(?,?...) "
+     */
+    public QueryBuilder orWhereIn(String column, Object[] value) {
+        return appendWhere(OR, buildWhereIn(column, value.length), value);
+    }
+
+    /**
+     * build as " and column in(?,?...) "
+     */
+    public QueryBuilder andWhereIn(String column, Object[] value) {
+        return appendWhere(AND, buildWhereIn(column, value.length), value);
+    }
+
 
     /**
      * 需要返回的列，不填写默认全部，即select * 。
@@ -117,20 +216,21 @@ public class QueryBuilder {
         return this;
     }
 
+
     public QueryBuilder appendOrderAscBy(String column) {
         if (order == null) {
-            order = column + " ASC";
+            order = column + ASC;
         } else {
-            order += ", " + column + " ASC";
+            order += ", " + column + ASC;
         }
         return this;
     }
 
     public QueryBuilder appendOrderDescBy(String column) {
         if (order == null) {
-            order = column + " DESC";
+            order = column + DESC;
         } else {
-            order += ", " + column + " DESC";
+            order += ", " + column + DESC;
         }
         return this;
     }
@@ -145,14 +245,17 @@ public class QueryBuilder {
         return this;
     }
 
+
     /**
      * 构建查询语句
      *
      * @return
      */
     public SQLStatement createStatement() {
-        if (clazz == null) throw new IllegalArgumentException("U Must Set A Query Entity Class By queryWho(Class) or " +
-                "QueryBuilder(Class)");
+        if (clazz == null) {
+            throw new IllegalArgumentException("U Must Set A Query Entity Class By queryWho(Class) or " +
+                    "QueryBuilder(Class)");
+        }
         if (Checker.isEmpty(group) && !Checker.isEmpty(having)) {
             throw new IllegalArgumentException(
                     "HAVING仅允许在有GroupBy的时候使用(HAVING clauses are only permitted when using a groupBy clause)");
@@ -164,16 +267,16 @@ public class QueryBuilder {
 
         StringBuilder query = new StringBuilder(120);
 
-        query.append("SELECT ");
+        query.append(SELECT);
         if (distinct) {
-            query.append("DISTINCT ");
+            query.append(DISTINCT);
         }
         if (!Checker.isEmpty(columns)) {
             appendColumns(query, columns);
         } else {
-            query.append("* ");
+            query.append(ASTERISK);
         }
-        query.append("FROM ");
+        query.append(FROM);
         query.append(getTableName());
         appendWhere(query);
 
@@ -183,7 +286,6 @@ public class QueryBuilder {
         return stmt;
     }
 
-
     /**
      * Build a statement that returns a 1 by 1 table with a numeric value.
      * SELECT COUNT(*) FROM table;
@@ -192,7 +294,7 @@ public class QueryBuilder {
      */
     public SQLStatement createStatementForCount() {
         StringBuilder query = new StringBuilder(120);
-        query.append("SELECT COUNT(*) FROM ").append(getTableName());
+        query.append(SELECT_COUNT).append(getTableName());
         appendWhere(query);
 
         SQLStatement stmt = new SQLStatement();
@@ -203,7 +305,9 @@ public class QueryBuilder {
 
     private String[] transToStringArray(Object[] args) {
         if (args != null && args.length > 0) {
-            if (args instanceof String[]) return (String[]) args;
+            if (args instanceof String[]) {
+                return (String[]) args;
+            }
             String[] arr = new String[args.length];
             for (int i = 0; i < arr.length; i++) {
                 arr[i] = String.valueOf(args[i]);
@@ -214,18 +318,19 @@ public class QueryBuilder {
     }
 
     private String getTableName() {
-        if (clazzMapping == null)
+        if (clazzMapping == null) {
             return TableManager.getTableName(clazz);
-        else
+        } else {
             return TableManager.getMapTableName(clazz, clazzMapping);
+        }
     }
 
     private void appendWhere(StringBuilder query) {
-        appendClause(query, " WHERE ", where);
-        appendClause(query, " GROUP BY ", group);
-        appendClause(query, " HAVING ", having);
-        appendClause(query, " ORDER BY ", order);
-        appendClause(query, " LIMIT ", limit);
+        appendClause(query, WHERE, where);
+        appendClause(query, GROUP_BY, group);
+        appendClause(query, HAVING, having);
+        appendClause(query, ORDER_BY, order);
+        appendClause(query, LIMIT, limit);
     }
 
     /**
@@ -262,6 +367,16 @@ public class QueryBuilder {
             }
         }
         s.append(" ");
+    }
+
+
+    private String buildWhereIn(String column, int num) {
+        StringBuilder sb = new StringBuilder("IN (?");
+        for (int i = 1; i < num; i++) {
+            sb.append(COMMA_HOLDER);
+
+        }
+        return sb.append(")").toString();
     }
 
 }

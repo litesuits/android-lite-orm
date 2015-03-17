@@ -17,8 +17,11 @@ public class Wife extends Person {
     @Mapping(Relation.OneToOne)
     public Man man;
 
-    //public Wife() {
-    //}
+    public enum Type{
+        enumOne,
+        enumTwo
+    }
+    public Type type;
 
     public Wife(String name, Man man) {
         this.name = name;
@@ -28,9 +31,10 @@ public class Wife extends Person {
     @Override
     public String toString() {
         return "Wife{" +
-                super.toString() +
                 "des='" + des + '\'' +
+                "type='" + type + '\'' +
                 ", man=" + (man == null ? "" : man.name) +
+                super.toString() +
                 "} ";
     }
 }

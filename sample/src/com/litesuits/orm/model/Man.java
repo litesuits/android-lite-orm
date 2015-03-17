@@ -193,7 +193,6 @@ public class Man extends Person {
     @Override
     public String toString() {
         return "Man{" +
-                super.toString() +
                 "isLogin=" + isLogin +
                 ", age=" + age +
                 ", password='" + password + '\'' +
@@ -209,6 +208,7 @@ public class Man extends Person {
                 ", date=" + date +
                 ", img=" + Arrays.toString(img) +
                 ", map=" + map +
+                super.toString() +
                 "} ";
     }
 
