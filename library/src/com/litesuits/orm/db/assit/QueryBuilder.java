@@ -107,9 +107,7 @@ public class QueryBuilder {
      * build as " column = ? "
      */
     public QueryBuilder setWhereEquals(String column, Object value) {
-        where = null;
-        whereArgs = null;
-        return appendWhere(OR, column + COMMA_HOLDER, value);
+        return appendWhere(null, column + COMMA_HOLDER, value);
     }
 
     /**
@@ -132,7 +130,7 @@ public class QueryBuilder {
     public QueryBuilder setWhereIn(String column, Object[] value) {
         where = null;
         whereArgs = null;
-        return appendWhere(OR, buildWhereIn(column, value.length), value);
+        return appendWhere(null, buildWhereIn(column, value.length), value);
     }
 
     /**
