@@ -12,9 +12,13 @@ public class WhereBuilder {
     public static final String NOTHING = "";
     public static final String WHERE = " WHERE ";
     public static final String EQUAL_HOLDER = "=?";
+    public static final String NOT_EQUAL_HOLDER = "!=?";
+    public static final String GREATER_THAN_HOLDER = ">?";
+    public static final String LESS_THAN_HOLDER = "<?";
     public static final String COMMA_HOLDER = ",?";
     public static final String AND = " AND ";
     public static final String OR = " OR ";
+    public static final String NOT = " NOT ";
     public static final String DELETE = "DELETE FROM ";
 
     private String where;
@@ -51,6 +55,115 @@ public class WhereBuilder {
     }
 
     /**
+     * @param where     "id = ?";
+     *                  "id in(?,?,?)";
+     *                  "id LIKE %?"
+     * @param whereArgs new String[]{"",""};
+     *                  new Integer[]{1,2}
+     * @return
+     */
+    public WhereBuilder and(String where, Object[] whereArgs) {
+        return appendWhere(AND, where, whereArgs);
+    }
+
+    /**
+     * @param where     "id = ?";
+     *                  "id in(?,?,?)";
+     *                  "id LIKE %?"
+     * @param whereArgs new String[]{"",""};
+     *                  new Integer[]{1,2}
+     * @return
+     */
+    public WhereBuilder or(String where, Object[] whereArgs) {
+        return appendWhere(OR, where, whereArgs);
+    }
+
+    public WhereBuilder and() {
+        if (where != null) {
+            where += AND;
+        }
+        return this;
+    }
+
+    public WhereBuilder or() {
+        if (where != null) {
+            where += OR;
+        }
+        return this;
+    }
+
+    public WhereBuilder not() {
+        if (where != null) {
+            where += NOT;
+        }
+        return this;
+    }
+
+    /**
+     * build as " column != ? "
+     */
+    public WhereBuilder noEquals(String column, Object value) {
+        return appendWhere(null, column + NOT_EQUAL_HOLDER, value);
+    }
+
+    /**
+     * build as " column > ? "
+     */
+    public WhereBuilder greaterThan(String column, Object value) {
+        return appendWhere(null, column + GREATER_THAN_HOLDER, value);
+    }
+
+    /**
+     * build as " column < ? "
+     */
+    public WhereBuilder lessThan(String column, Object value) {
+        return appendWhere(null, column + LESS_THAN_HOLDER, value);
+    }
+
+    /**
+     * build as " column = ? "
+     */
+    public WhereBuilder equals(String column, Object value) {
+        return appendWhere(null, column + EQUAL_HOLDER, value);
+    }
+
+    /**
+     * build as " or column = ? "
+     */
+    public WhereBuilder orEquals(String column, Object value) {
+        return appendWhere(OR, column + EQUAL_HOLDER, value);
+    }
+
+    /**
+     * build as " and column = ? "
+     */
+    public WhereBuilder andEquals(String column, Object value) {
+        return appendWhere(AND, column + EQUAL_HOLDER, value);
+    }
+
+    /**
+     * build as " column in(?,?...) "
+     */
+    public WhereBuilder in(String column, Object[] value) {
+        return appendWhere(null, buildWhereIn(column, value.length), value);
+    }
+
+    /**
+     * build as " or column in(?,?...) "
+     */
+    public WhereBuilder orIn(String column, Object[] value) {
+        return appendWhere(OR, buildWhereIn(column, value.length), value);
+    }
+
+    /**
+     * build as " and column in(?,?...) "
+     */
+    public WhereBuilder andIn(String column, Object[] value) {
+        return appendWhere(AND, buildWhereIn(column, value.length), value);
+    }
+
+
+    /**
      * @param whereString "id = ?";
      *                    or "id in(?,?,?)";
      *                    or "id LIKE %?";
@@ -58,11 +171,11 @@ public class WhereBuilder {
      * @param value       new String[]{"",""};
      *                    or new Integer[]{1,2};
      *                    ...
-     * @param connect     NULL or " AND " or " OR "
+     * @param connect     NULL or " AND " or " OR " or " NOT "
      * @return this
      */
-    public WhereBuilder appendWhere(String connect, String whereString, Object... value) {
-        if (where == null || connect == null) {
+    private WhereBuilder appendWhere(String connect, String whereString, Object... value) {
+        if (where == null) {
             where = whereString;
             whereArgs = value;
         } else {
@@ -73,50 +186,6 @@ public class WhereBuilder {
             this.whereArgs = newWhere;
         }
         return this;
-    }
-
-    /**
-     * build as " column = ? "
-     */
-    public WhereBuilder setWhereEquals(String column, Object value) {
-        return appendWhere(null, column + EQUAL_HOLDER, value);
-    }
-
-    /**
-     * build as " or column = ? "
-     */
-    public WhereBuilder orWhereEquals(String column, Object value) {
-        return appendWhere(OR, column + EQUAL_HOLDER, value);
-    }
-
-    /**
-     * build as " and column = ? "
-     */
-    public WhereBuilder andWhereEquals(String column, Object value) {
-        return appendWhere(AND, column + EQUAL_HOLDER, value);
-    }
-
-    /**
-     * build as " column in(?,?...) "
-     */
-    public WhereBuilder setWhereIn(String column, Object[] value) {
-        where = null;
-        whereArgs = null;
-        return appendWhere(null, buildWhereIn(column, value.length), value);
-    }
-
-    /**
-     * build as " or column in(?,?...) "
-     */
-    public WhereBuilder orWhereIn(String column, Object[] value) {
-        return appendWhere(OR, buildWhereIn(column, value.length), value);
-    }
-
-    /**
-     * build as " and column in(?,?...) "
-     */
-    public WhereBuilder andWhereIn(String column, Object[] value) {
-        return appendWhere(AND, buildWhereIn(column, value.length), value);
     }
 
     public String[] transToStringArray() {

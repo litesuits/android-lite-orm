@@ -42,7 +42,7 @@ public class QueryBuilder {
     private String having;
     private String order;
     private String limit;
-    private WhereBuilder whereBuilder = new WhereBuilder();
+    private WhereBuilder whereBuilder;
 
     public QueryBuilder() {
     }
@@ -73,6 +73,10 @@ public class QueryBuilder {
         return this;
     }
 
+    public WhereBuilder getwhereBuilder() {
+        return whereBuilder;
+    }
+
     /**
      * @param where     "id = ?";
      *                  "id in(?,?,?)";
@@ -82,68 +86,44 @@ public class QueryBuilder {
      * @return
      */
     public QueryBuilder where(String where, Object[] whereArgs) {
+        if (whereBuilder == null) {
+            whereBuilder = new WhereBuilder();
+        }
         whereBuilder.where(where, whereArgs);
         return this;
     }
 
     /**
-     * @param whereString "id = ?";
-     *                    or "id in(?,?,?)";
-     *                    or "id LIKE %?";
-     *                    ...
-     * @param value       new String[]{"",""};
-     *                    or new Integer[]{1,2};
-     *                    ...
-     * @param connect     NULL or "AND" or "OR"
-     * @return this
+     * @param where     "id = ?";
+     *                  "id in(?,?,?)";
+     *                  "id LIKE %?"
+     * @param whereArgs new String[]{"",""};
+     *                  new Integer[]{1,2}
+     * @return
      */
-    public QueryBuilder appendWhere(String connect, String whereString, Object... value) {
-        whereBuilder.appendWhere(connect, whereString, value);
+    public QueryBuilder andWhere(String where, Object[] whereArgs) {
+        if (whereBuilder == null) {
+            whereBuilder = new WhereBuilder();
+        }
+        whereBuilder.and(where, whereArgs);
         return this;
     }
 
     /**
-     * build as " column = ? "
+     * @param where     "id = ?";
+     *                  "id in(?,?,?)";
+     *                  "id LIKE %?"
+     * @param whereArgs new String[]{"",""};
+     *                  new Integer[]{1,2}
+     * @return
      */
-    public QueryBuilder setWhereEquals(String column, Object value) {
-        return appendWhere(null, column + EQUAL_HOLDER, value);
+    public QueryBuilder orWhere(String where, Object[] whereArgs) {
+        if (whereBuilder == null) {
+            whereBuilder = new WhereBuilder();
+        }
+        whereBuilder.or(where, whereArgs);
+        return this;
     }
-
-    /**
-     * build as " or column = ? "
-     */
-    public QueryBuilder orWhereEquals(String column, Object value) {
-        return appendWhere(OR, column + EQUAL_HOLDER, value);
-    }
-
-    /**
-     * build as " and column = ? "
-     */
-    public QueryBuilder andWhereEquals(String column, Object[] value) {
-        return appendWhere(AND, column + EQUAL_HOLDER, value);
-    }
-
-    /**
-     * build as " column in(?,?...) "
-     */
-    public QueryBuilder setWhereIn(String column, Object[] value) {
-        return appendWhere(null, buildWhereIn(column, value.length), value);
-    }
-
-    /**
-     * build as " or column in(?,?...) "
-     */
-    public QueryBuilder orWhereIn(String column, Object[] value) {
-        return appendWhere(OR, buildWhereIn(column, value.length), value);
-    }
-
-    /**
-     * build as " and column in(?,?...) "
-     */
-    public QueryBuilder andWhereIn(String column, Object[] value) {
-        return appendWhere(AND, buildWhereIn(column, value.length), value);
-    }
-
 
     /**
      * 需要返回的列，不填写默认全部，即select * 。
@@ -271,8 +251,11 @@ public class QueryBuilder {
         } else {
             query.append(ASTERISK);
         }
-        query.append(FROM).append(getTableName()).append(whereBuilder.createWhereString(clazz));
+        query.append(FROM).append(getTableName());
 
+        if (whereBuilder != null) {
+            query.append(whereBuilder.createWhereString(clazz));
+        }
         appendClause(query, GROUP_BY, group);
         appendClause(query, HAVING, having);
         appendClause(query, ORDER_BY, order);
@@ -280,7 +263,9 @@ public class QueryBuilder {
 
         SQLStatement stmt = new SQLStatement();
         stmt.sql = query.toString();
-        stmt.bindArgs = whereBuilder.transToStringArray();
+        if (whereBuilder != null) {
+            stmt.bindArgs = whereBuilder.transToStringArray();
+        }
         return stmt;
     }
 
@@ -292,11 +277,13 @@ public class QueryBuilder {
      */
     public SQLStatement createStatementForCount() {
         StringBuilder query = new StringBuilder(120);
-        query.append(SELECT_COUNT).append(getTableName()).append(whereBuilder.createWhereString(clazz));
-
+        query.append(SELECT_COUNT).append(getTableName());
         SQLStatement stmt = new SQLStatement();
+        if (whereBuilder != null) {
+            query.append(whereBuilder.createWhereString(clazz));
+            stmt.bindArgs = whereBuilder.transToStringArray();
+        }
         stmt.sql = query.toString();
-        stmt.bindArgs = whereBuilder.transToStringArray();
         return stmt;
     }
 

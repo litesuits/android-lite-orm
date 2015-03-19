@@ -243,21 +243,29 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         //AND关系 获取 南京的香港路
         QueryBuilder qb = new QueryBuilder(Address.class)
                 .where(WhereBuilder.create()
-                        .setWhereEquals(Address.COL_ADDRESS, "香港路")
-                        .andWhereEquals(Address.COL_CITY, "南京"));
+                        .equals(Address.COL_ADDRESS, "香港路")
+                        .andEquals(Address.COL_CITY, "南京"));
         printAddress(db.<Address>query(qb));
 
         //OR关系 获取所有 地址为香港路 ，和 青岛 的所有地址
         qb = new QueryBuilder(Address.class)
                 .where(WhereBuilder.create()
-                        .setWhereEquals(Address.COL_ADDRESS, "香港路")
-                        .orWhereEquals(Address.COL_CITY, "青岛"));
+                        .equals(Address.COL_ADDRESS, "香港路")
+                        .orEquals(Address.COL_CITY, "青岛"));
         printAddress(db.<Address>query(qb));
 
         //IN语句 获取所有 城市为杭州 和 北京 的地址
         qb = new QueryBuilder(Address.class)
                 .where(WhereBuilder.create()
-                        .setWhereIn(Address.COL_CITY, new String[]{"杭州", "北京"}));
+                        .in(Address.COL_CITY, new String[]{"杭州", "北京"}));
+        printAddress(db.<Address>query(qb));
+
+        //IN语句 获取所有 非香港路 并且 ID>10
+        qb = new QueryBuilder(Address.class)
+                .where(WhereBuilder.create()
+                        .noEquals(Address.COL_ADDRESS, "香港路")
+                        .and()
+                        .greaterThan(Address.COL_ID, 10));
         printAddress(db.<Address>query(qb));
     }
 
@@ -348,19 +356,26 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     private void testDeleteByWhereBuilder() {
         //AND关系 删掉 南京 的 香港路
         db.delete(Address.class, WhereBuilder.create()
-                .setWhereEquals(Address.COL_ADDRESS, "香港路")
-                .andWhereEquals(Address.COL_CITY, "南京"));
+                .equals(Address.COL_ADDRESS, "香港路")
+                .andEquals(Address.COL_CITY, "南京"));
         printAllAddress();
 
         //OR关系 删掉所有地址为 香港路 ，同时删掉 青岛的所有地址
         db.delete(Address.class, WhereBuilder.create()
-                .setWhereEquals(Address.COL_ADDRESS, "香港路")
-                .orWhereEquals(Address.COL_CITY, "青岛"));
+                .equals(Address.COL_ADDRESS, "香港路")
+                .orEquals(Address.COL_CITY, "青岛"));
         printAllAddress();
 
-        //IN语句 删掉所有城市为 杭州 和 北京的地址
+        //IN语句 删掉所有城市为 杭州 或 北京的地址
         db.delete(Address.class, WhereBuilder.create()
-                .setWhereIn(Address.COL_CITY, new String[]{"杭州", "北京"}));
+                .in(Address.COL_CITY, new String[]{"杭州", "北京"}));
+        printAllAddress();
+
+        //IN语句 删掉所有 非香港路 并且 ID>10
+        db.delete(Address.class, WhereBuilder.create()
+                .equals(Address.COL_ADDRESS, "夫子庙")
+                .and()
+                .greaterThan(Address.COL_ID, 3));
         printAllAddress();
     }
 

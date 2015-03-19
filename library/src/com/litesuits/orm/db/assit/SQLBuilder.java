@@ -592,7 +592,7 @@ public class SQLBuilder {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             SQLStatement stmt = new SQLStatement();
             WhereBuilder whereBuilder = new WhereBuilder();
-            whereBuilder.setWhereIn(table1.name, collection1.toArray());
+            whereBuilder.in(table1.name, collection1.toArray());
             stmt.sql = "DELETE FROM " + mapTableName + whereBuilder.createWhereString(table1.claxx);
             return stmt;
         }
