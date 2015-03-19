@@ -19,7 +19,7 @@ public class QueryBuilder {
     public static final String AND = " AND ";
     public static final String OR = " OR ";
 
-    public static final String WHERE = " WHERE ";
+
     public static final String GROUP_BY = " GROUP BY ";
     public static final String HAVING = " HAVING ";
     public static final String ORDER_BY = " ORDER BY ";
@@ -27,7 +27,7 @@ public class QueryBuilder {
     public static final String SELECT_COUNT = "SELECT COUNT(*) FROM ";
     public static final String SELECT = "SELECT ";
     public static final String DISTINCT = " DISTINCT ";
-    public static final String ASTERISK = " * ";
+    public static final String ASTERISK = "*";
     public static final String FROM = " FROM ";
     public static final String EQUAL_HOLDER = "=?";
     public static final String COMMA_HOLDER = ",?";
@@ -35,15 +35,16 @@ public class QueryBuilder {
     private Class clazz;
     private Class clazzMapping;
     private boolean distinct;
-    private String where;
     private String[] columns;
+    //private String where;
+    //private Object[] whereArgs;
     private String group;
     private String having;
     private String order;
     private String limit;
-    private Object[] whereArgs;
+    private WhereBuilder whereBuilder = new WhereBuilder();
 
-    private QueryBuilder() {
+    public QueryBuilder() {
     }
 
     public Class getQueryClass() {
@@ -54,13 +55,21 @@ public class QueryBuilder {
         queryWho(claxx);
     }
 
+    public static QueryBuilder create(Class claxx) {
+        return new QueryBuilder(claxx);
+    }
+
     public static QueryBuilder get(Class claxx) {
-        QueryBuilder builder = new QueryBuilder(claxx);
-        return builder;
+        return create(claxx);
     }
 
     public QueryBuilder queryWho(Class claxx) {
         this.clazz = claxx;
+        return this;
+    }
+
+    public QueryBuilder where(WhereBuilder builder) {
+        this.whereBuilder = builder;
         return this;
     }
 
@@ -73,8 +82,7 @@ public class QueryBuilder {
      * @return
      */
     public QueryBuilder where(String where, Object[] whereArgs) {
-        this.where = where;
-        this.whereArgs = whereArgs;
+        whereBuilder.where(where, whereArgs);
         return this;
     }
 
@@ -90,16 +98,7 @@ public class QueryBuilder {
      * @return this
      */
     public QueryBuilder appendWhere(String connect, String whereString, Object... value) {
-        if (where == null || connect == null) {
-            where = whereString;
-            whereArgs = value;
-        } else {
-            where += connect + whereString;
-            Object[] newWhere = new Object[whereArgs.length + value.length];
-            System.arraycopy(whereArgs, 0, newWhere, 0, whereArgs.length);
-            System.arraycopy(value, 0, newWhere, whereArgs.length, value.length);
-            this.whereArgs = newWhere;
-        }
+        whereBuilder.appendWhere(connect, whereString, value);
         return this;
     }
 
@@ -107,29 +106,27 @@ public class QueryBuilder {
      * build as " column = ? "
      */
     public QueryBuilder setWhereEquals(String column, Object value) {
-        return appendWhere(null, column + COMMA_HOLDER, value);
+        return appendWhere(null, column + EQUAL_HOLDER, value);
     }
 
     /**
      * build as " or column = ? "
      */
     public QueryBuilder orWhereEquals(String column, Object value) {
-        return appendWhere(OR, column + COMMA_HOLDER, value);
+        return appendWhere(OR, column + EQUAL_HOLDER, value);
     }
 
     /**
      * build as " and column = ? "
      */
     public QueryBuilder andWhereEquals(String column, Object[] value) {
-        return appendWhere(AND, column + COMMA_HOLDER, value);
+        return appendWhere(AND, column + EQUAL_HOLDER, value);
     }
 
     /**
      * build as " column in(?,?...) "
      */
     public QueryBuilder setWhereIn(String column, Object[] value) {
-        where = null;
-        whereArgs = null;
         return appendWhere(null, buildWhereIn(column, value.length), value);
     }
 
@@ -166,14 +163,14 @@ public class QueryBuilder {
      * @return
      */
     public QueryBuilder appendColumns(String[] columns) {
-        int oldSize = this.columns == null ? 0 : this.columns.length;
-        int newsize = columns == null ? 0 : columns.length;
-        String[] newCol = new String[oldSize + newsize];
-
-        System.arraycopy(this.columns, 0, newCol, 0, oldSize);
-        System.arraycopy(columns, 0, newCol, oldSize, newsize);
-
-        this.columns = newCol;
+        if (this.columns != null) {
+            String[] newCols = new String[this.columns.length + columns.length];
+            System.arraycopy(this.columns, 0, newCols, 0, this.columns.length);
+            System.arraycopy(columns, 0, newCols, this.columns.length, columns.length);
+            this.columns = newCols;
+        } else {
+            this.columns = columns;
+        }
         return this;
     }
 
@@ -274,13 +271,16 @@ public class QueryBuilder {
         } else {
             query.append(ASTERISK);
         }
-        query.append(FROM);
-        query.append(getTableName());
-        appendWhere(query);
+        query.append(FROM).append(getTableName()).append(whereBuilder.createWhereString(clazz));
+
+        appendClause(query, GROUP_BY, group);
+        appendClause(query, HAVING, having);
+        appendClause(query, ORDER_BY, order);
+        appendClause(query, LIMIT, limit);
 
         SQLStatement stmt = new SQLStatement();
         stmt.sql = query.toString();
-        stmt.bindArgs = transToStringArray(whereArgs);
+        stmt.bindArgs = whereBuilder.transToStringArray();
         return stmt;
     }
 
@@ -292,27 +292,12 @@ public class QueryBuilder {
      */
     public SQLStatement createStatementForCount() {
         StringBuilder query = new StringBuilder(120);
-        query.append(SELECT_COUNT).append(getTableName());
-        appendWhere(query);
+        query.append(SELECT_COUNT).append(getTableName()).append(whereBuilder.createWhereString(clazz));
 
         SQLStatement stmt = new SQLStatement();
         stmt.sql = query.toString();
-        stmt.bindArgs = transToStringArray(whereArgs);
+        stmt.bindArgs = whereBuilder.transToStringArray();
         return stmt;
-    }
-
-    private String[] transToStringArray(Object[] args) {
-        if (args != null && args.length > 0) {
-            if (args instanceof String[]) {
-                return (String[]) args;
-            }
-            String[] arr = new String[args.length];
-            for (int i = 0; i < arr.length; i++) {
-                arr[i] = String.valueOf(args[i]);
-            }
-            return arr;
-        }
-        return null;
     }
 
     private String getTableName() {
@@ -321,14 +306,6 @@ public class QueryBuilder {
         } else {
             return TableManager.getMapTableName(clazz, clazzMapping);
         }
-    }
-
-    private void appendWhere(StringBuilder query) {
-        appendClause(query, WHERE, where);
-        appendClause(query, GROUP_BY, group);
-        appendClause(query, HAVING, having);
-        appendClause(query, ORDER_BY, order);
-        appendClause(query, LIMIT, limit);
     }
 
     /**
@@ -369,7 +346,7 @@ public class QueryBuilder {
 
 
     private String buildWhereIn(String column, int num) {
-        StringBuilder sb = new StringBuilder("IN (?");
+        StringBuilder sb = new StringBuilder(column).append(" IN (?");
         for (int i = 1; i < num; i++) {
             sb.append(COMMA_HOLDER);
 

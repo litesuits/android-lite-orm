@@ -58,6 +58,7 @@ public class SQLBuilder {
     public static SQLStatement buildDropTable(EntityTable table) {
         return new SQLStatement("DROP TABLE " + table.name, null);
     }
+
     /**
      * 构建【表删除】sql语句
      *
@@ -258,7 +259,7 @@ public class SQLBuilder {
      * @param entity    实体
      * @param cvs       更新的列,为NULL则更新全部
      * @param algorithm {@link ConflictAlgorithm}
-     * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值
+     * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值（批量更新时，仅构建sql语句，插入操作时循环赋值）
      * @return
      */
     private static SQLStatement buildUpdateSql(Object entity, ColumnsValue cvs, ConflictAlgorithm algorithm, boolean needValue) {
@@ -487,6 +488,39 @@ public class SQLBuilder {
     /**
      * 构建关系映射语句
      *
+     * @return
+     */
+    public static MapInfo buildDelArrayMappingSql(Collection<?> col) {
+        if (col == null) {
+            return null;
+        }
+        EntityTable table1 = TableManager.getTable(col.iterator().next());
+        if (!Checker.isEmpty(table1.mappingList)) {
+            try {
+                MapInfo mapInfo = new MapInfo();
+                for (MapProperty map : table1.mappingList) {
+                    EntityTable table2 = TableManager.getTable(getTypeByRelation(map));
+                    // add map table info
+                    String mapTableName = TableManager.getMapTableName(table1, table2);
+                    MapTable mi = new MapTable(mapTableName, table1.name, table2.name);
+                    mapInfo.addTable(mi);
+
+                    // add delete mapping sql to map info
+                    SQLStatement st = buildMappingDeleteArraySql(table1, table2, col);
+                    mapInfo.addDelOldRelationSQL(st);
+                }
+                return mapInfo;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 构建关系映射语句
+     * 1. 如果是插入或更新数据，先删除旧映射，再建立新映射。
+     * 2. 如果是删除，直接删除就映射即可。
      * @param entity
      * @return
      */
@@ -551,6 +585,20 @@ public class SQLBuilder {
         return calxx;
     }
 
+    private static SQLStatement buildMappingDeleteArraySql(EntityTable table1, EntityTable table2,
+                                                           Collection<?> collection1) throws IllegalArgumentException,
+            IllegalAccessException {
+        if (table2 != null) {
+            String mapTableName = TableManager.getMapTableName(table1, table2);
+            SQLStatement stmt = new SQLStatement();
+            WhereBuilder whereBuilder = new WhereBuilder();
+            whereBuilder.setWhereIn(table1.name, collection1.toArray());
+            stmt.sql = "DELETE FROM " + mapTableName + whereBuilder.createWhereString(table1.claxx);
+            return stmt;
+        }
+        return null;
+    }
+
     private static SQLStatement buildMappingDeleteAllSql(EntityTable table1, EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
         if (table2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
@@ -596,7 +644,8 @@ public class SQLBuilder {
                 Object[] args = list.toArray();
                 if (!Checker.isEmpty(args)) {
                     StringBuilder sql = new StringBuilder(256);
-                    sql.append("INSERT INTO ").append(mapTableName).append(" (").append(table1.name).append(",").append(table2.name).append(") VALUES ").append(values);
+                    sql.append("REPLACE INTO ").append(mapTableName).append(" (").append(table1.name).append("," +
+                            "").append(table2.name).append(") VALUES ").append(values);
                     SQLStatement stmt = new SQLStatement();
                     stmt.sql = sql.toString();
                     stmt.bindArgs = args;

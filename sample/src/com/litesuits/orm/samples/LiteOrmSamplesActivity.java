@@ -7,6 +7,7 @@ import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.R;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.assit.QueryBuilder;
+import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.model.*;
@@ -29,15 +30,15 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     /**
      * man:teacher -> n:n
      */
-    static ArrayList<Teacher>             teacherList;
+    static ArrayList<Teacher> teacherList;
     /**
      * man:company -> n:1
      */
-    static Company                        company;
+    static Company company;
     /**
      * man:wife -> 1:1
      */
-    static Wife                           wife1, wife2;
+    static Wife wife1, wife2;
 
     /**
      * 在{@link BaseActivity#onCreate(Bundle)}中设置视图
@@ -84,17 +85,19 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     }
 
     /**
-     * 0  <item>Save(Insert Or Update)</item>
-     * 1  <item>Insert</item>
-     * 2  <item>Update</item>
-     * 3  <item>Update Column</item>
-     * 4  <item>Query All</item>
-     * 5  <item>Query By ID</item>
-     * 6  <item>Query Any U Want</item>
-     * 7  <item>Relation Restore</item>
-     * 8  <item>Delete</item>
-     * 9  <item>Delete By Index</item>
-     * 10 <item>Delete All</item>
+     * <item>Save(Insert Or Update)</item>
+     * <item>Insert</item>
+     * <item>Update</item>
+     * <item>Update Column</item>
+     * <item>Query All</item>
+     * <item>Query By WhereBuilder</item>
+     * <item>Query By ID</item>
+     * <item>Query Any U Want</item>
+     * <item>Relation Restore</item>
+     * <item>Delete</item>
+     * <item>Delete By Index</item>
+     * <item>Delete By WhereBuilder</item>
+     * <item>Delete All</item>
      *
      * @param id
      */
@@ -116,21 +119,27 @@ public class LiteOrmSamplesActivity extends BaseActivity {
                 testQueryAll();
                 break;
             case 5:
-                testQueryByID();
+                testQueryByWhere();
                 break;
             case 6:
-                testQueryAnyUwant();
+                testQueryByID();
                 break;
             case 7:
-                testMapping();
+                testQueryAnyUwant();
                 break;
             case 8:
-                testDelete();
+                testMapping();
                 break;
             case 9:
-                testDeleteByIndex();
+                testDelete();
                 break;
             case 10:
+                testDeleteByIndex();
+                break;
+            case 11:
+                testDeleteByWhereBuilder();
+                break;
+            case 12:
                 testDeleteAll();
                 break;
             default:
@@ -230,9 +239,41 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         }
     }
 
+    private void testQueryByWhere() {
+        //AND关系 获取 南京的香港路
+        QueryBuilder qb = new QueryBuilder(Address.class)
+                .where(WhereBuilder.create()
+                        .setWhereEquals(Address.COL_ADDRESS, "香港路")
+                        .andWhereEquals(Address.COL_CITY, "南京"));
+        printAddress(db.<Address>query(qb));
+
+        //OR关系 获取所有 地址为香港路 ，和 青岛 的所有地址
+        qb = new QueryBuilder(Address.class)
+                .where(WhereBuilder.create()
+                        .setWhereEquals(Address.COL_ADDRESS, "香港路")
+                        .orWhereEquals(Address.COL_CITY, "青岛"));
+        printAddress(db.<Address>query(qb));
+
+        //IN语句 获取所有 城市为杭州 和 北京 的地址
+        qb = new QueryBuilder(Address.class)
+                .where(WhereBuilder.create()
+                        .setWhereIn(Address.COL_CITY, new String[]{"杭州", "北京"}));
+        printAddress(db.<Address>query(qb));
+    }
+
     private void testQueryByID() {
         Man man = db.queryById(uComplex.getId(), Man.class);
         Log.i(this, "query id: " + uComplex.getId() + ",MAN: " + man);
+    }
+
+    private void printAllAddress() {
+        printAddress(db.queryAll(Address.class));
+    }
+
+    private void printAddress(List<Address> addrList) {
+        for (Address uu : addrList) {
+            Log.i(this, "Address: " + uu);
+        }
     }
 
     private void testQueryAnyUwant() {
@@ -245,7 +286,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
                 .appendOrderAscBy(Address.COL_ADDRESS)
                 .appendOrderDescBy(Address.COL_ID)
                 .distinct(true)
-                .where(Address.COL_ADDRESS + " like ?", new String[]{"%area"});
+                .where(Address.COL_ADDRESS + "=?", new String[]{"香港路"});
 
         nums = db.queryCount(qb);
         Log.i(this, "Address All Count : " + nums);
@@ -255,6 +296,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         }
 
     }
+
 
     private void testMapping() {
         // 先找出来相关的实体
@@ -303,6 +345,25 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         db.delete(Address.class, 2, addrList.size() - 1, Address.COL_ID);
     }
 
+    private void testDeleteByWhereBuilder() {
+        //AND关系 删掉 南京 的 香港路
+        db.delete(Address.class, WhereBuilder.create()
+                .setWhereEquals(Address.COL_ADDRESS, "香港路")
+                .andWhereEquals(Address.COL_CITY, "南京"));
+        printAllAddress();
+
+        //OR关系 删掉所有地址为 香港路 ，同时删掉 青岛的所有地址
+        db.delete(Address.class, WhereBuilder.create()
+                .setWhereEquals(Address.COL_ADDRESS, "香港路")
+                .orWhereEquals(Address.COL_CITY, "青岛"));
+        printAllAddress();
+
+        //IN语句 删掉所有城市为 杭州 和 北京的地址
+        db.delete(Address.class, WhereBuilder.create()
+                .setWhereIn(Address.COL_CITY, new String[]{"杭州", "北京"}));
+        printAllAddress();
+    }
+
     private void testDeleteAll() {
         db.deleteAll(Address.class);
         db.deleteAll(Company.class);
@@ -312,7 +373,9 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     }
 
     private void mockData() {
-        if (uAlice != null) return;
+        if (uAlice != null) {
+            return;
+        }
         uAlice = new Man(0, "alice", 18, false, (short) 12345, (byte) 123, 0.56f, 123.456d, 'c');
         uMax = new Man(0, "max", 99, false, Short.MAX_VALUE, Byte.MAX_VALUE, Float.MAX_VALUE, Double.MAX_VALUE,
                 Character.MAX_VALUE);
@@ -339,15 +402,17 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         uComplex.map.put(1005L, "1005 dfsfd324443534534534");
         // 1 to N
         addrList = new ConcurrentLinkedQueue<Address>();
-        addrList.add(new Address("1 Xihu Hangzhou China"));
-        addrList.add(new Address("2 Hangzhou China"));
-        addrList.add(new Address("3 Nanjing China"));
-        addrList.add(new Address("4 sssss area"));
-        addrList.add(new Address("5 bbbbbbn area"));
-        addrList.add(new Address("6 ccccc area"));
-        addrList.add(new Address("7 dddddd area"));
-        addrList.add(new Address("8 eeeee area"));
-        addrList.add(new Address("9 fffff area"));
+        addrList.add(new Address("1 西湖  ", "杭州"));
+        addrList.add(new Address("2 武林  ", "杭州"));
+        addrList.add(new Address("3 西二旗", "北京"));
+        addrList.add(new Address("4 公主坟", "北京"));
+        addrList.add(new Address("夫子庙", "南京"));
+        addrList.add(new Address("中山陵", "南京"));
+        addrList.add(new Address("香港路", "南京"));
+        addrList.add(new Address("香港路", "杭州"));
+        addrList.add(new Address("香港路", "青岛"));
+        addrList.add(new Address("海尔路", "青岛"));
+        addrList.add(new Address("海信路", "青岛"));
         uMax.addrList = addrList;
 
         // N to N

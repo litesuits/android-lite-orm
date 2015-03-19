@@ -46,10 +46,24 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     }
 
     @Override
-    public void execute(SQLiteDatabase db, SQLStatement statement) {
-        if (statement != null) {
-            statement.execute(db);
+    public SQLStatement createSQLStatement(String sql, Object[] bindArgs) {
+        return new SQLStatement(sql, bindArgs);
+    }
+
+    @Override
+    public boolean execute(SQLiteDatabase db, SQLStatement statement) {
+        acquireReference();
+        try {
+            if (statement != null) {
+                return statement.execute(db);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            releaseReference();
         }
+        return false;
+
     }
 
     @Override
@@ -215,17 +229,13 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     public int delete(Object entity) {
         acquireReference();
         try {
-            return delete(entity, mHelper.getWritableDatabase());
+            return SQLBuilder.buildDeleteSql(entity).execDeleteWithMapping(mHelper.getWritableDatabase(), entity, mTableManager);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             releaseReference();
         }
         return SQLStatement.NONE;
-    }
-
-    private int delete(Object entity, SQLiteDatabase db) throws Exception {
-        return SQLBuilder.buildDeleteSql(entity).execDeleteWithMapping(db, entity, mTableManager);
     }
 
     @Override
@@ -242,7 +252,7 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
                         @Override
                         public Integer doTransaction(SQLiteDatabase db) throws Exception {
                             for (Object entity : collection) {
-                                delete(entity, db);
+                                SQLBuilder.buildDeleteSql(entity).execDeleteWithMapping(db, entity, mTableManager);
                             }
                             if (Log.isPrint) {
                                 Log.i(TAG, "Exec delete(no primarykey) ：" + collection.size());
@@ -252,6 +262,25 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
                     });
                     return size == null ? 0 : size;
                 }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            releaseReference();
+        }
+        return SQLStatement.NONE;
+    }
+
+    @Override
+    public int delete(Class<?> claxx, WhereBuilder where) {
+        acquireReference();
+        try {
+            EntityTable table = TableManager.getTable(claxx);
+            if (table.key != null && !Checker.isEmpty(table.mappingList)) {
+                List<?> list = query(QueryBuilder.create(claxx).columns(new String[]{table.key.column}).where(where));
+                delete(list);
+            } else {
+                return where.createStatementDelete(claxx).execDelete(mHelper.getWritableDatabase());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -328,7 +357,6 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
         acquireReference();
         try {
             SQLiteDatabase db = mHelper.getReadableDatabase();
-            mTableManager.checkOrCreateTable(db, qb.getQueryClass());
             SQLStatement stmt = qb.createStatementForCount();
             return stmt.queryForLong(db);
         } catch (Exception e) {
@@ -342,7 +370,6 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     @Override
     public <T> ArrayList<T> query(QueryBuilder qb) {
         SQLiteDatabase db = mHelper.getReadableDatabase();
-        mTableManager.checkOrCreateTable(db, qb.getQueryClass());
         return qb.createStatement().query(db, qb.getQueryClass());
     }
 
@@ -356,7 +383,6 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
         acquireReference();
         try {
             SQLiteDatabase db = mHelper.getReadableDatabase();
-            mTableManager.checkOrCreateTable(db, claxx);
             EntityTable table = TableManager.getTable(claxx);
             SQLStatement stmt = new QueryBuilder(claxx).where(table.key.column + "=?", new String[]{id}).createStatement();
             ArrayList<T> list = stmt.query(db, claxx);

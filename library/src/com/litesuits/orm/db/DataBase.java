@@ -2,6 +2,7 @@ package com.litesuits.orm.db;
 
 import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.assit.QueryBuilder;
+import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.impl.SQLStatement;
 import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
@@ -19,10 +20,15 @@ import java.util.List;
  */
 public interface DataBase {
     /**
+     * build a sql statement with sql and args.
+     */
+    public SQLStatement createSQLStatement(String sql, Object[] bindArgs);
+
+    /**
      * Execute this SQL statement, if it is not a SELECT / INSERT / DELETE / UPDATE, for example
      * CREATE / DROP table, view, trigger, index etc.
      */
-    public void execute(SQLiteDatabase db, SQLStatement statement);
+    public boolean execute(SQLiteDatabase db, SQLStatement statement);
 
     /**
      * drop a table
@@ -154,6 +160,13 @@ public interface DataBase {
      * @return the number of affected rows
      */
     public int delete(Collection<?> collection);
+
+    /**
+     * delete by custem where syntax
+     *
+     * @return the number of affected rows
+     */
+    public int delete(Class<?> claxx, WhereBuilder where);
 
     /**
      * query count of table rows and return
