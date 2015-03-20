@@ -8,7 +8,6 @@ import com.litesuits.orm.db.impl.SQLStatement;
  * @date 2015-03-18
  */
 public class WhereBuilder {
-    public static final String BLANK = " ";
     public static final String NOTHING = "";
     public static final String WHERE = " WHERE ";
     public static final String EQUAL_HOLDER = "=?";
@@ -16,10 +15,14 @@ public class WhereBuilder {
     public static final String GREATER_THAN_HOLDER = ">?";
     public static final String LESS_THAN_HOLDER = "<?";
     public static final String COMMA_HOLDER = ",?";
+    public static final String HOLDER = "?";
     public static final String AND = " AND ";
     public static final String OR = " OR ";
     public static final String NOT = " NOT ";
     public static final String DELETE = "DELETE FROM ";
+    private static final String PARENTHESES_LEFT = "(";
+    private static final String PARENTHESES_RIGHT = ")";
+    private static final String IN = " IN ";
 
     private String where;
     private Object[] whereArgs;
@@ -179,7 +182,10 @@ public class WhereBuilder {
             where = whereString;
             whereArgs = value;
         } else {
-            where += connect + whereString;
+            if (connect != null) {
+                where += connect;
+            }
+            where += whereString;
             Object[] newWhere = new Object[whereArgs.length + value.length];
             System.arraycopy(whereArgs, 0, newWhere, 0, whereArgs.length);
             System.arraycopy(value, 0, newWhere, whereArgs.length, value.length);
@@ -235,11 +241,10 @@ public class WhereBuilder {
     }
 
     private String buildWhereIn(String column, int num) {
-        StringBuilder sb = new StringBuilder(column).append(" IN (?");
+        StringBuilder sb = new StringBuilder(column).append(IN).append(PARENTHESES_LEFT).append(HOLDER);
         for (int i = 1; i < num; i++) {
             sb.append(COMMA_HOLDER);
-
         }
-        return sb.append(") ").toString();
+        return sb.append(PARENTHESES_RIGHT).toString();
     }
 }

@@ -265,7 +265,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
                 .where(WhereBuilder.create()
                         .noEquals(Address.COL_ADDRESS, "香港路")
                         .and()
-                        .greaterThan(Address.COL_ID, 10));
+                        .greaterThan(Address.COL_ID, 5));
         printAddress(db.<Address>query(qb));
     }
 
@@ -375,7 +375,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         db.delete(Address.class, WhereBuilder.create()
                 .equals(Address.COL_ADDRESS, "夫子庙")
                 .and()
-                .greaterThan(Address.COL_ID, 3));
+                .greaterThan(Address.COL_ID, 5));
         printAllAddress();
     }
 

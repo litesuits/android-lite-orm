@@ -23,8 +23,8 @@ public class Man extends Person {
      * ********** Ignore 和 static final 属性将被忽略 **************
      */
     @Ignore
-    protected           String password = "4444";
-    public static final String FINAL    = "this property will no be saved";
+    protected String password = "4444";
+    public static final String FINAL = "this property will no be saved";
 
     /**
      * ********** 四种映射关系示例 **************
@@ -193,13 +193,20 @@ public class Man extends Person {
     @Override
     public String toString() {
         return "Man{" +
+                super.toString() +
                 "isLogin=" + isLogin +
                 ", age=" + age +
                 ", password='" + password + '\'' +
                 ", teachers=" + teachers +
                 ", addrList=" + addrList +
-                ", wife=" + (wife == null ? "" : wife.name) +
-                ", company=" + (company == null ? "" : company.name) +
+                ", wife=" + wife +
+                ", company=" + company +
+                ", check=" + check +
+                ", _collate='" + _collate + '\'' +
+                ", conflict='" + conflict + '\'' +
+                ", def_bool=" + def_bool +
+                ", def_int=" + def_int +
+                ", not_null='" + not_null + '\'' +
                 ", aShort=" + aShort +
                 ", aByte=" + aByte +
                 ", aFloat=" + aFloat +
@@ -208,7 +215,6 @@ public class Man extends Person {
                 ", date=" + date +
                 ", img=" + Arrays.toString(img) +
                 ", map=" + map +
-                super.toString() +
                 "} ";
     }
 

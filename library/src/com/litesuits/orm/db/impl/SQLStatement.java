@@ -336,7 +336,7 @@ public class SQLStatement implements Serializable {
             nums = mStatement.executeUpdateDelete();
         }
         if (Log.isPrint) {
-            Log.i(TAG, "SQL Execute Delete --> " + nums);
+            Log.v(TAG, "SQL Execute Delete --> " + nums);
         }
         clearArgs();
         if (entity != null) {
@@ -370,7 +370,7 @@ public class SQLStatement implements Serializable {
             nums = mStatement.executeUpdateDelete();
         }
         if (Log.isPrint) {
-            Log.i(TAG, "SQL Execute Delete --> " + nums);
+            Log.v(TAG, "SQL Execute Delete --> " + nums);
         }
         clearArgs();
         // 删除关系映射
@@ -505,17 +505,17 @@ public class SQLStatement implements Serializable {
                     if (mapTable.delOldRelationSQL != null) {
                         for (SQLStatement st : mapTable.delOldRelationSQL) {
                             long rowId = st.execDelete(db);
-                            if (Log.isPrint) {
-                                Log.v(TAG, "Exec delete mapping success, nums: " + rowId);
-                            }
+                            //if (Log.isPrint) {
+                            //    Log.v(TAG, "Exec delete mapping success, nums: " + rowId);
+                            //}
                         }
                     }
                     if (insertNew && mapTable.mapNewRelationSQL != null) {
                         for (SQLStatement st : mapTable.mapNewRelationSQL) {
                             long rowId = st.execInsert(db);
-                            if (Log.isPrint) {
-                                Log.v(TAG, "Exec save mapping success, nums: " + rowId);
-                            }
+                            //if (Log.isPrint) {
+                            //    Log.v(TAG, "Exec save mapping success, nums: " + rowId);
+                            //}
                         }
                     }
                     return true;

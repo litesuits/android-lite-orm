@@ -19,9 +19,49 @@ import java.util.Map.Entry;
 
 public class SQLBuilder {
 
-    private static final int INSERT = 1;
-    private static final int REPLACE = 2;
-    //private static final int UPDATE  = 3;
+    private static final int TYPE_INSERT = 1;
+    private static final int TYPE_REPLACE = 2;
+    private static final String DELETE_FROM = "DELETE FROM ";
+    private static final String SELECT_TABLES = "SELECT * FROM sqlite_master WHERE type='table' ORDER BY name";
+    private static final String PRAGMA_TABLE_INFO = "PRAGMA table_info(";
+    private static final String PARENTHESES_LEFT = "(";
+    private static final String PARENTHESES_RIGHT = ")";
+    private static final String IN = " IN ";
+    private static final String SELECT_MAX = "SELECT MAX ";
+    private static final String SELECT = "SELECT ";
+    private static final String FROM = " FROM ";
+    private static final String ORDER_BY = " ORDER BY ";
+    public static final String ASC = " ASC ";
+    public static final String DESC = " DESC ";
+    private static final String LIMIT = " LIMIT ";
+    private static final String DROP_TABLE = "DROP TABLE ";
+    private static final String CREATE = "CREATE ";
+    private static final String TEMP = "TEMP ";
+    private static final String TABLE_IF_NOT_EXISTS = "TABLE IF NOT EXISTS ";
+    private static final String PRIMARY_KEY_AUTOINCREMENT = "PRIMARY KEY AUTOINCREMENT ";
+    private static final String PRIMARY_KEY = "PRIMARY KEY ";
+    private static final String COMMA = ",";
+    private static final String TWO_HOLDER = "(?,?)";
+    private static final String BLANK = " ";
+    private static final String NOT_NULL = "NOT NULL ";
+    private static final String DEFAULT = "DEFAULT ";
+    private static final String UNIQUE = "UNIQUE ";
+    private static final String ON_CONFLICT = "ON CONFLICT ";
+    private static final String CHECK = "CHECK ";
+    private static final String COLLATE = "COLLATE ";
+    public static final String COMMA_HOLDER = ",?";
+    public static final String EQUALS_HOLDER = "=?";
+    public static final String HOLDER = "?";
+    private static final String INSERT = "INSERT ";
+    private static final String REPLACE = "REPLACE ";
+    private static final String INTO = "INTO ";
+    private static final String VALUES = "VALUES";
+    private static final String UPDATE = "UPDATE ";
+    private static final String SET = " SET ";
+    private static final String WHERE = " WHERE ";
+    public static final String AND = " AND ";
+    public static final String OR = " OR ";
+    public static final String NOT = " NOT ";
 
     /**
      * 构建【获取SQLite全部表】sql语句
@@ -29,7 +69,7 @@ public class SQLBuilder {
      * @return
      */
     public static SQLStatement buildTableObtainAll() {
-        return new SQLStatement("SELECT * FROM sqlite_master WHERE type='table' ORDER BY name", null);
+        return new SQLStatement(SELECT_TABLES, null);
     }
 
     /**
@@ -38,7 +78,7 @@ public class SQLBuilder {
      * @return
      */
     public static SQLStatement buildColumnsObtainAll(String table) {
-        return new SQLStatement("PRAGMA table_info([" + table + "])", null);
+        return new SQLStatement(PRAGMA_TABLE_INFO + table + PARENTHESES_RIGHT, null);
     }
 
     /**
@@ -47,7 +87,8 @@ public class SQLBuilder {
      * @return
      */
     public static SQLStatement buildGetLastRowId(EntityTable table) {
-        return new SQLStatement("SELECT MAX(" + table.key.column + ") FROM " + table.name, null);
+        return new SQLStatement(SELECT_MAX + PARENTHESES_LEFT + table.key.column
+                + PARENTHESES_RIGHT + FROM + table.name, null);
     }
 
     /**
@@ -56,7 +97,7 @@ public class SQLBuilder {
      * @return
      */
     public static SQLStatement buildDropTable(EntityTable table) {
-        return new SQLStatement("DROP TABLE " + table.name, null);
+        return new SQLStatement(DROP_TABLE + table.name, null);
     }
 
     /**
@@ -65,7 +106,7 @@ public class SQLBuilder {
      * @return
      */
     public static SQLStatement buildDropTable(String tableName) {
-        return new SQLStatement("DROP TABLE " + tableName, null);
+        return new SQLStatement(DROP_TABLE + tableName, null);
     }
 
     /**
@@ -76,68 +117,68 @@ public class SQLBuilder {
      */
     public static SQLStatement buildCreateTable(EntityTable table) {
         StringBuilder sb = new StringBuilder();
-        sb.append("CREATE ");
+        sb.append(CREATE);
         if (table.getAnnotation(Temporary.class) != null) {
-            sb.append("TEMP ");
+            sb.append(TEMP);
         }
-        sb.append("TABLE IF NOT EXISTS ").append(table.name).append(" ( ");
+        sb.append(TABLE_IF_NOT_EXISTS).append(table.name).append(PARENTHESES_LEFT);
         boolean hasKey = false;
         if (table.key != null) {
             hasKey = true;
             if (table.key.assign == PrimaryKey.AssignType.AUTO_INCREMENT) {
-                sb.append(table.key.column).append(" ").append(DataUtil.INTEGER).append(" PRIMARY KEY AUTOINCREMENT ");
+                sb.append(table.key.column).append(DataUtil.INTEGER).append(PRIMARY_KEY_AUTOINCREMENT);
             } else {
-                sb.append(table.key.column).append(" ").append(DataUtil.getSQLDataType(table.key.field)).append(" PRIMARY KEY ");
+                sb.append(table.key.column).append(DataUtil.getSQLDataType(table.key.field)).append(PRIMARY_KEY);
             }
         }
         if (!Checker.isEmpty(table.pmap)) {
-            boolean isF = true;
+            if (hasKey) {
+                sb.append(COMMA);
+            }
+            boolean needComma = false;
             for (Entry<String, Property> en : table.pmap.entrySet()) {
-                if (isF) {
-                    isF = false;
-                    if (hasKey) {
-                        sb.append(", ");
-                    }
+                if (needComma) {
+                    sb.append(COMMA);
                 } else {
-                    sb.append(", ");
+                    needComma = true;
                 }
                 sb.append(en.getKey());
                 if (en.getValue() == null) {
-                    sb.append(" ").append(DataUtil.TEXT);
+                    sb.append(DataUtil.TEXT);
                 } else {
                     Field f = en.getValue().field;
-                    sb.append(" ");
                     sb.append(DataUtil.getSQLDataType(f));
 
                     if (f.getAnnotation(NotNull.class) != null) {
-                        sb.append(" NOT NULL ");
+                        sb.append(NOT_NULL);
                     }
                     if (f.getAnnotation(Default.class) != null) {
-                        sb.append(" DEFAULT ");
+                        sb.append(DEFAULT);
                         sb.append(f.getAnnotation(Default.class).value());
                     }
                     if (f.getAnnotation(Unique.class) != null) {
-                        sb.append(" UNIQUE ");
+                        sb.append(UNIQUE);
                     }
                     if (f.getAnnotation(Conflict.class) != null) {
-                        sb.append(" ON CONFLICT");
+                        sb.append(ON_CONFLICT);
                         sb.append(f.getAnnotation(Conflict.class).value().getSql());
                     }
 
                     if (f.getAnnotation(Check.class) != null) {
-                        sb.append(" CHECK (");
+                        sb.append(CHECK + PARENTHESES_LEFT);
                         sb.append(f.getAnnotation(Check.class).value());
-                        sb.append(") ");
+                        sb.append(PARENTHESES_RIGHT + BLANK);
                     }
                     if (f.getAnnotation(Collate.class) != null) {
-                        sb.append(" COLLATE ");
+                        sb.append(COLLATE);
                         sb.append(f.getAnnotation(Collate.class).value());
+                        sb.append(BLANK);
                     }
 
                 }
             }
         }
-        sb.append(" )");
+        sb.append(PARENTHESES_RIGHT);
         return new SQLStatement(sb.toString(), null);
     }
 
@@ -145,28 +186,28 @@ public class SQLBuilder {
      * 构建 insert 语句
      */
     public static SQLStatement buildInsertSql(Object entity, ConflictAlgorithm algorithm) {
-        return buildInsertSql(entity, true, INSERT, algorithm);
+        return buildInsertSql(entity, true, TYPE_INSERT, algorithm);
     }
 
     /**
      * 构建批量 insert all 语句，sql不绑定值，执行时时会遍历绑定值。
      */
     public static SQLStatement buildInsertAllSql(Object entity, ConflictAlgorithm algorithm) {
-        return buildInsertSql(entity, false, INSERT, algorithm);
+        return buildInsertSql(entity, false, TYPE_INSERT, algorithm);
     }
 
     /**
      * 构建 replace 语句
      */
     public static SQLStatement buildReplaceSql(Object entity) {
-        return buildInsertSql(entity, true, REPLACE, null);
+        return buildInsertSql(entity, true, TYPE_REPLACE, null);
     }
 
     /**
      * 构建批量 replace all 语句，sql不绑定值，执行时时会遍历绑定值。
      */
     public static SQLStatement buildReplaceAllSql(Object entity) {
-        return buildInsertSql(entity, false, REPLACE, null);
+        return buildInsertSql(entity, false, TYPE_REPLACE, null);
     }
 
     /**
@@ -174,7 +215,7 @@ public class SQLBuilder {
      *
      * @param entity    实体
      * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值
-     * @param type      {@link #INSERT}  or {@link #REPLACE}
+     * @param type      {@link #TYPE_INSERT}  or {@link #TYPE_REPLACE}
      * @param algorithm {@link ConflictAlgorithm}
      * @return
      */
@@ -184,31 +225,25 @@ public class SQLBuilder {
             EntityTable table = TableManager.getTable(entity);
             StringBuilder sql = new StringBuilder(128);
             switch (type) {
-                case INSERT:
-                    sql.append("INSERT");
-                    if (algorithm != null) {
-                        sql.append(algorithm.getAlgorithm()).append("INTO ");
-                    } else {
-                        sql.append(" INTO ");
-                    }
+                case TYPE_REPLACE:
+                    sql.append(REPLACE).append(INTO);
                     break;
-                case REPLACE:
-                    sql.append("REPLACE INTO ");
-                    break;
+                case TYPE_INSERT:
                 default:
-                    sql.append("INSERT");
+                    sql.append(INSERT);
                     if (algorithm != null) {
-                        sql.append(algorithm.getAlgorithm()).append("INTO ");
+                        sql.append(algorithm.getAlgorithm()).append(INTO);
                     } else {
-                        sql.append(" INTO ");
+                        sql.append(INTO);
                     }
+                    break;
             }
             sql.append(table.name);
-            sql.append(" ( ");
+            sql.append(PARENTHESES_LEFT);
             sql.append(table.key.column);
             // 分两部分构建SQL语句，用一个for循环完成SQL构建和值的反射获取，以提高效率。
             StringBuilder value = new StringBuilder();
-            value.append(" ) VALUES ( ?");
+            value.append(PARENTHESES_RIGHT).append(VALUES).append(PARENTHESES_LEFT).append(HOLDER);
             int size = 1, i = 0;
             if (!Checker.isEmpty(table.pmap)) {
                 size += table.pmap.size();
@@ -221,8 +256,8 @@ public class SQLBuilder {
             if (!Checker.isEmpty(table.pmap)) {
                 for (Entry<String, Property> en : table.pmap.entrySet()) {
                     // 后构造列名和占位符
-                    sql.append(",").append(en.getKey());
-                    value.append(",?");
+                    sql.append(COMMA).append(en.getKey());
+                    value.append(COMMA_HOLDER);
                     // 构造列值
                     if (needValue) {
                         args[i] = FieldUtil.get(en.getValue().field, entity);
@@ -230,7 +265,7 @@ public class SQLBuilder {
                     i++;
                 }
             }
-            sql.append(value).append(" )");
+            sql.append(value).append(PARENTHESES_RIGHT);
             stmt.bindArgs = args;
             stmt.sql = sql.toString();
         } catch (Exception e) {
@@ -267,14 +302,12 @@ public class SQLBuilder {
         try {
             EntityTable table = TableManager.getTable(entity);
             StringBuilder sql = new StringBuilder(128);
-            sql.append("UPDATE");
+            sql.append(UPDATE);
             if (algorithm != null) {
                 sql.append(algorithm.getAlgorithm());
-            } else {
-                sql.append(" ");
             }
             sql.append(table.name);
-            sql.append(" SET ");
+            sql.append(SET);
             // 分两部分构建SQL语句，用一个for循环完成SQL构建和值的反射获取，以提高效率。
             int size = 1, i = 0;
             Object[] args = null;
@@ -286,9 +319,9 @@ public class SQLBuilder {
                 boolean hasVal = cvs.hasValues();
                 for (; i < cvs.columns.length; i++) {
                     if (i > 0) {
-                        sql.append(",");
+                        sql.append(COMMA);
                     }
-                    sql.append(cvs.columns[i]).append("=?");
+                    sql.append(cvs.columns[i]).append(EQUALS_HOLDER);
                     if (needValue) {
                         if (hasVal) {
                             args[i] = cvs.values[i];
@@ -305,9 +338,9 @@ public class SQLBuilder {
                 }
                 for (Entry<String, Property> en : table.pmap.entrySet()) {
                     if (i > 0) {
-                        sql.append(",");
+                        sql.append(COMMA);
                     }
-                    sql.append(en.getKey()).append("=?");
+                    sql.append(en.getKey()).append(EQUALS_HOLDER);
                     if (needValue) {
                         args[i] = FieldUtil.get(en.getValue().field, entity);
                     }
@@ -319,7 +352,7 @@ public class SQLBuilder {
             if (needValue) {
                 args[size - 1] = FieldUtil.getAssignedKeyObject(table.key, entity);
             }
-            sql.append(" WHERE ").append(table.key.column).append("=?");
+            sql.append(WHERE).append(table.key.column).append(EQUALS_HOLDER);
             stmt.sql = sql.toString();
             stmt.bindArgs = args;
         } catch (Exception e) {
@@ -339,18 +372,18 @@ public class SQLBuilder {
         try {
             EntityTable table = TableManager.getTable(entity);
             if (table.key != null) {
-                stmt.sql = "DELETE FROM " + table.name + " WHERE " + table.key.column + " = ?";
+                stmt.sql = DELETE_FROM + table.name + WHERE + table.key.column + EQUALS_HOLDER;
                 stmt.bindArgs = new String[]{String.valueOf(FieldUtil.get(table.key.field, entity))};
             } else if (!Checker.isEmpty(table.pmap)) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("DELETE FROM ").append(table.name).append(" WHERE ");
+                sb.append(DELETE_FROM).append(table.name).append(WHERE);
                 Object[] args = new Object[table.pmap.size()];
                 int i = 0;
                 for (Entry<String, Property> en : table.pmap.entrySet()) {
                     if (i == 0) {
-                        sb.append(en.getKey()).append("=?");
+                        sb.append(en.getKey()).append(EQUALS_HOLDER);
                     } else {
-                        sb.append(" and ").append(en.getKey()).append("=?");
+                        sb.append(AND).append(en.getKey()).append(EQUALS_HOLDER);
                     }
                     args[i++] = FieldUtil.get(en.getValue().field, entity);
                 }
@@ -379,14 +412,14 @@ public class SQLBuilder {
             for (Object entity : collection) {
                 if (i == 0) {
                     table = TableManager.getTable(entity);
-                    sb.append("DELETE FROM ").append(table.name).append(" WHERE ").append(table.key.column).append(" IN (");
-                    sb.append("?");
+                    sb.append(DELETE_FROM).append(table.name).append(WHERE)
+                            .append(table.key.column).append(IN).append(PARENTHESES_LEFT).append(HOLDER);
                 } else {
-                    sb.append(",?");
+                    sb.append(COMMA_HOLDER);
                 }
                 args[i++] = FieldUtil.get(table.key.field, entity);
             }
-            sb.append(")");
+            sb.append(PARENTHESES_RIGHT);
             stmt.sql = sb.toString();
             stmt.bindArgs = args;
         } catch (Exception e) {
@@ -404,7 +437,7 @@ public class SQLBuilder {
     public static SQLStatement buildDeleteAllSql(Class<?> claxx) {
         SQLStatement stmt = new SQLStatement();
         EntityTable table = TableManager.getTable(claxx);
-        stmt.sql = "DELETE FROM " + table.name;
+        stmt.sql = DELETE_FROM + table.name;
         return stmt;
     }
 
@@ -420,7 +453,12 @@ public class SQLBuilder {
         String key = table.key.column;
         String orderBy = Checker.isEmpty(orderAscColumn) ? key : orderAscColumn;
         StringBuilder sb = new StringBuilder();
-        sb.append("DELETE FROM ").append(table.name).append(" WHERE ").append(key).append(" IN ( SELECT ").append(key).append(" FROM ").append(table.name).append(" ORDER BY ").append(orderBy).append(" ASC LIMIT ").append(start).append(",").append(end).append(")");
+        sb.append(DELETE_FROM).append(table.name).append(WHERE).append(key)
+                .append(IN).append(PARENTHESES_LEFT)
+                .append(SELECT).append(key)
+                .append(FROM).append(table.name)
+                .append(ORDER_BY).append(orderBy)
+                .append(ASC).append(LIMIT).append(start).append(COMMA).append(end).append(PARENTHESES_RIGHT);
         stmt.sql = sb.toString();
         return stmt;
     }
@@ -487,40 +525,9 @@ public class SQLBuilder {
 
     /**
      * 构建关系映射语句
-     *
-     * @return
-     */
-    public static MapInfo buildDelArrayMappingSql(Collection<?> col) {
-        if (col == null) {
-            return null;
-        }
-        EntityTable table1 = TableManager.getTable(col.iterator().next());
-        if (!Checker.isEmpty(table1.mappingList)) {
-            try {
-                MapInfo mapInfo = new MapInfo();
-                for (MapProperty map : table1.mappingList) {
-                    EntityTable table2 = TableManager.getTable(getTypeByRelation(map));
-                    // add map table info
-                    String mapTableName = TableManager.getMapTableName(table1, table2);
-                    MapTable mi = new MapTable(mapTableName, table1.name, table2.name);
-                    mapInfo.addTable(mi);
-
-                    // add delete mapping sql to map info
-                    SQLStatement st = buildMappingDeleteArraySql(table1, table2, col);
-                    mapInfo.addDelOldRelationSQL(st);
-                }
-                return mapInfo;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 构建关系映射语句
      * 1. 如果是插入或更新数据，先删除旧映射，再建立新映射。
      * 2. 如果是删除，直接删除就映射即可。
+     *
      * @param entity
      * @return
      */
@@ -585,25 +592,11 @@ public class SQLBuilder {
         return calxx;
     }
 
-    private static SQLStatement buildMappingDeleteArraySql(EntityTable table1, EntityTable table2,
-                                                           Collection<?> collection1) throws IllegalArgumentException,
-            IllegalAccessException {
-        if (table2 != null) {
-            String mapTableName = TableManager.getMapTableName(table1, table2);
-            SQLStatement stmt = new SQLStatement();
-            WhereBuilder whereBuilder = new WhereBuilder();
-            whereBuilder.in(table1.name, collection1.toArray());
-            stmt.sql = "DELETE FROM " + mapTableName + whereBuilder.createWhereString(table1.claxx);
-            return stmt;
-        }
-        return null;
-    }
-
     private static SQLStatement buildMappingDeleteAllSql(EntityTable table1, EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
         if (table2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             SQLStatement stmt = new SQLStatement();
-            stmt.sql = "DELETE FROM " + mapTableName;
+            stmt.sql = DELETE_FROM + mapTableName;
             return stmt;
         }
         return null;
@@ -613,7 +606,7 @@ public class SQLBuilder {
         if (table2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             SQLStatement stmt = new SQLStatement();
-            stmt.sql = "DELETE FROM " + mapTableName + " WHERE " + table1.name + " = ?";
+            stmt.sql = DELETE_FROM + mapTableName + WHERE + table1.name + EQUALS_HOLDER;
             stmt.bindArgs = new Object[]{key1};
             return stmt;
         }
@@ -627,35 +620,33 @@ public class SQLBuilder {
             if (!coll.isEmpty()) {
                 boolean isF = true;
                 StringBuilder values = new StringBuilder(128);
-                ArrayList<Object> list = new ArrayList<Object>();
+                ArrayList<String> list = new ArrayList<String>();
+                String key1Str = String.valueOf(key1);
                 for (Object o : coll) {
                     Object key2 = FieldUtil.getAssignedKeyObject(table2.key, o);
                     if (key2 != null) {
                         if (isF) {
-                            values.append("(?,?)");
+                            values.append(TWO_HOLDER);
                             isF = false;
                         } else {
-                            values.append(",(?,?)");
+                            values.append(COMMA).append(TWO_HOLDER);
                         }
-                        list.add(key1);
-                        list.add(key2);
+                        list.add(key1Str);
+                        list.add(String.valueOf(key2));
                     }
                 }
-                Object[] args = list.toArray();
+
+                Object[] args = list.toArray(new String[list.size()]);
                 if (!Checker.isEmpty(args)) {
-                    StringBuilder sql = new StringBuilder(256);
-                    sql.append("REPLACE INTO ").append(mapTableName).append(" (").append(table1.name).append("," +
-                            "").append(table2.name).append(") VALUES ").append(values);
                     SQLStatement stmt = new SQLStatement();
-                    stmt.sql = sql.toString();
+                    stmt.sql = REPLACE + INTO + mapTableName + PARENTHESES_LEFT + table1.name + COMMA + table2.name + PARENTHESES_RIGHT + VALUES + values;
                     stmt.bindArgs = args;
                     return stmt;
                 }
             }
 
         } else if (obj instanceof Object[]) {
-            Object[] objs = (Object[]) obj;
-            List<Object> list = Arrays.asList(objs);
+            List<Object> list = Arrays.asList((Object[]) obj);
             return buildMappingToManySql(key1, table1, table2, list);
         } else {
             throw new RuntimeException("OneToMany and ManyToMany Relation, You must use array or collection object");
@@ -668,7 +659,10 @@ public class SQLBuilder {
         if (key2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             StringBuilder sql = new StringBuilder(128);
-            sql.append("INSERT INTO ").append(mapTableName).append(" (").append(table1.name).append(",").append(table2.name).append(") VALUES ").append("(?,?)");
+            sql.append(INSERT).append(INTO).append(mapTableName)
+                    .append(PARENTHESES_LEFT).append(table1.name)
+                    .append(COMMA).append(table2.name)
+                    .append(PARENTHESES_RIGHT).append(VALUES).append(TWO_HOLDER);
             SQLStatement stmt = new SQLStatement();
             stmt.sql = sql.toString();
             stmt.bindArgs = new Object[]{key1, key2};
@@ -688,39 +682,37 @@ public class SQLBuilder {
         StringBuilder sb = null;
         if (!Checker.isEmpty(key1List)) {
             sb = new StringBuilder();
-            sb.append(table1.name);
-            sb.append(" IN ( ");
+            sb.append(table1.name).append(IN).append(PARENTHESES_LEFT);
             for (int i = 0, size = key1List.size(); i < size; i++) {
                 if (i == 0) {
-                    sb.append("?");
+                    sb.append(HOLDER);
                 } else {
-                    sb.append(",?");
+                    sb.append(COMMA_HOLDER);
                 }
             }
-            sb.append(" ) ");
+            sb.append(PARENTHESES_RIGHT);
             keyList.addAll(key1List);
         }
         if (!Checker.isEmpty(key2List)) {
             if (sb == null) {
                 sb = new StringBuilder();
             } else {
-                sb.append(" AND ");
+                sb.append(AND);
             }
 
-            sb.append(table2.name);
-            sb.append(" IN (");
+            sb.append(table2.name).append(IN).append(PARENTHESES_LEFT);
             for (int i = 0, size = key2List.size(); i < size; i++) {
                 if (i == 0) {
-                    sb.append("?");
+                    sb.append(HOLDER);
                 } else {
-                    sb.append(",?");
+                    sb.append(COMMA_HOLDER);
                 }
             }
-            sb.append(")");
+            sb.append(PARENTHESES_RIGHT);
             keyList.addAll(key2List);
         }
         if (sb != null) {
-            builder.where(sb.toString(), keyList.toArray(new String[0]));
+            builder.where(sb.toString(), keyList.toArray(new String[keyList.size()]));
         }
         return builder.createStatement();
     }

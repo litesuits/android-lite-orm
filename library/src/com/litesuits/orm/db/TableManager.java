@@ -248,6 +248,7 @@ public final class TableManager {
                 ArrayList<String> colS = getAllColumnsFromSQLite(db, sqlTable.name);
                 if (Checker.isEmpty(colS)) {
                     // 如果读数据库失败了，那么解析建表语句
+                    Log.e(TAG, "读数据库失败了，开始解析建表语句");
                     colS = transformSqlToColumns(sqlTable.sql);
                 }
                 sqlTable.columns = colS;
@@ -311,7 +312,7 @@ public final class TableManager {
                     }
                     colList.add(col);
                 }
-                Log.w(TAG, "降级：语义分析表结构（" + colList.toString() + " , Origin SQL is: " + sql);
+                Log.e(TAG, "降级：语义分析表结构（" + colList.toString() + " , Origin SQL is: " + sql);
                 return colList;
             }
         }

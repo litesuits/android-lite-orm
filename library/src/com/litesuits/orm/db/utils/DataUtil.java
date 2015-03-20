@@ -23,26 +23,26 @@ public class DataUtil implements Serializable {
     /**
      * NULL. The value is a NULL value.
      */
-    public static final  String NULL             = "NULL";
+    public static final  String NULL             = " NULL ";
     /**
      * INTEGER. The value is a signed integer, stored in 1, 2, 3, 4, 6, or 8
      * bytes depending on the magnitude of the value.
      */
-    public static final  String INTEGER          = "INTEGER";
+    public static final  String INTEGER          = " INTEGER ";
     /**
      * REAL. The value is a floating point value, stored as an 8-byte IEEE
      * floating point number.
      */
-    public static final  String REAL             = "REAL";
+    public static final  String REAL             = " REAL ";
     /**
      * TEXT. The value is a text string, stored using the database encoding
      * (UTF-8, UTF-16BE or UTF-16LE).
      */
-    public static final  String TEXT             = "TEXT";
+    public static final  String TEXT             = " TEXT ";
     /**
      * BLOB. The value is a blob of data, stored exactly as it was input.
      */
-    public static final  String BLOB             = "BLOB";
+    public static final  String BLOB             = " BLOB ";
 
     /**
      * Value returned by {@link #getType(Object)} if the specified column is null

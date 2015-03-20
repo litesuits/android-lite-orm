@@ -32,9 +32,9 @@ public class Wife extends Person {
     public String toString() {
         return "Wife{" +
                 "des='" + des + '\'' +
-                "type='" + type + '\'' +
+                ", age=" + age +
                 ", man=" + (man == null ? "" : man.name) +
-                super.toString() +
-                "} ";
+                ", type=" + type +
+                "} " + super.toString();
     }
 }

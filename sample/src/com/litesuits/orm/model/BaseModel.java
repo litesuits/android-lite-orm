@@ -12,7 +12,7 @@ import java.io.Serializable;
 public class BaseModel implements Serializable {
 
     @Check("bm NOT NULL")
-    public String bm     = "all models have";
+    public String bm     = "全都有";
 
     @Ignore
     private String ignore = " 这个属性不会出现在数据库里的。因为被标记了ignore";
