@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.impl.SQLStatement;
+import com.litesuits.orm.db.impl.SQLiteHelper;
 import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.db.model.Relation;
@@ -223,19 +224,27 @@ public interface DataBase {
     public <E, T> boolean mapping(Collection<E> col1, Collection<T> col2);
 
     /**
-     * 获取可读数据库操作对象
+     * get readable database
      */
     public SQLiteDatabase getReadableDatabase();
 
     /**
-     * 获取可写数据库操作对象
+     * get writable database
      */
     public SQLiteDatabase getWritableDatabase();
 
     /**
-     * 获取表管理对象
+     * get {@link TableManager}
      */
     public TableManager getTableManager();
+    /**
+     * get {@link SQLiteHelper}
+     */
+    public SQLiteHelper getSQLiteHelper();
+    /**
+     * get {@link DataBaseConfig}
+     */
+    public DataBaseConfig getDataBaseConfig();
 
     /**
      * 关闭数据库，清空缓存。

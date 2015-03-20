@@ -32,23 +32,34 @@ import java.util.List;
 public final class TableManager {
     private static final String TAG = TableManager.class.getSimpleName();
     /**
+     * 数据库表信息
+     */
+    private String dbName = "";
+    /**
      * 这里放的是数据库表信息（表名、字段、建表语句...）
      * 每个数据库对应一个
+     * key : Class Name
+     * value: {@link EntityTable}
      */
-    private ArrayList<SQLiteTable> mSqlTableList;
+    private HashMap<String, SQLiteTable> mSqlTableMap = new HashMap<String, SQLiteTable>();
+
     /**
-     * 这里放的是实体表信息（主键、属性、关系映射...）
+     * 这里放的是类的实体信息表（主键、属性、关系映射...）
      * 全局单例
      * key : Class Name
-     * value: EntityTable
+     * value: {@link EntityTable}
      */
     private static HashMap<String, EntityTable> mEntityTableMap = new HashMap<String, EntityTable>();
+
+    public TableManager(String dbName) {
+        this.dbName = dbName;
+    }
 
     /**
      * 清空数据
      */
     public synchronized void clear() {
-        mSqlTableList = null;
+        mSqlTableMap = null;
         mEntityTableMap.clear();
     }
 
@@ -72,7 +83,7 @@ public final class TableManager {
             if (!checkExistAndColumns(db, table)) {
                 // 关键点3：新建表并加入表队列
                 if (createTable(db, table)) {
-                    putSqlTableIntoList(table);
+                    putNewSqlTableIntoMap(table);
                 }
             }
         }
@@ -88,7 +99,7 @@ public final class TableManager {
      * @param column2
      * @return
      */
-    public void checkOrCreateMappingTable(SQLiteDatabase db, String tableName, String column1, String column2) {
+    public synchronized void checkOrCreateMappingTable(SQLiteDatabase db, String tableName, String column1, String column2) {
         // 关键点1：初始化全部数据库表
         initAllTablesFromSQLite(db);
         EntityTable table = getMappingTable(tableName, column1, column2);
@@ -97,7 +108,7 @@ public final class TableManager {
             if (!checkExistAndColumns(db, table)) {
                 // 关键点3：新建表并加入表队列
                 if (createTable(db, table)) {
-                    putSqlTableIntoList(table);
+                    putNewSqlTableIntoMap(table);
                 }
             }
         }
@@ -110,47 +121,53 @@ public final class TableManager {
      * <p> http://www.sqlite.org/lang_altertable.html
      */
     private boolean checkExistAndColumns(SQLiteDatabase db, EntityTable entityTable) {
-        if (!Checker.isEmpty(mSqlTableList)) {
-            for (SQLiteTable sqlTable : mSqlTableList) {
-                if (entityTable.name.equals(sqlTable.name)) {
-                    if (Log.isPrint) {
-                        Log.d(TAG, "Table [" + entityTable.name + "] Exist");
-                    }
-                    if (!sqlTable.isTableChecked) {
-                        // 表仅进行一次检查，检验是否有新字段加入。
-                        sqlTable.isTableChecked = true;
-                        if (Log.isPrint) {
-                            Log.i(TAG, "Table [" + entityTable.name + "] check column now.");
-                        }
-                        if (entityTable.key != null) {
-                            if (!sqlTable.columns.contains(entityTable.key.column)) {
-                                SQLStatement stmt = SQLBuilder.buildDropTable(sqlTable.name);
-                                stmt.execute(db);
-                                if (Log.isPrint) {
-                                    Log.i(TAG, "Table [" + entityTable.name + "] Primary Key has changed, " +
-                                            "so drop and recreate it later.");
-                                }
-                                return false;
-                            }
-                        }
-                        if (entityTable.pmap != null) {
-                            ArrayList<String> newColumns = new ArrayList<String>();
-                            for (String col : entityTable.pmap.keySet()) {
-                                if (!sqlTable.columns.contains(col)) {
-                                    newColumns.add(col);
-                                }
-                            }
-                            if (!Checker.isEmpty(newColumns)) {
-                                sqlTable.columns.addAll(newColumns);
-                                int sum = insertNewColunms(db, entityTable.name, newColumns);
-                                if (Log.isPrint) {
-                                    Log.i(TAG, "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
-                                }
-                            }
-                        }
-                    }
-                    return true;
+        if (!Checker.isEmpty(mSqlTableMap)) {
+            SQLiteTable sqlTable = mSqlTableMap.get(entityTable.name);
+            if (sqlTable != null) {
+                if (Log.isPrint) {
+                    Log.d(TAG, "Table [" + entityTable.name + "] Exist");
                 }
+                if (!sqlTable.isTableChecked) {
+                    // 表仅进行一次检查，检验是否有新字段加入。
+                    sqlTable.isTableChecked = true;
+                    if (Log.isPrint) {
+                        Log.i(TAG, "Table [" + entityTable.name + "] check column now.");
+                    }
+                    if (entityTable.key != null) {
+                        if (sqlTable.columns.get(entityTable.key.column) == null) {
+                            SQLStatement stmt = SQLBuilder.buildDropTable(sqlTable.name);
+                            stmt.execute(db);
+                            if (Log.isPrint) {
+                                Log.i(TAG, "Table [" + entityTable.name + "] Primary Key has changed, " +
+                                        "so drop and recreate it later.");
+                            }
+                            return false;
+                        }
+                    }
+                    if (entityTable.pmap != null) {
+                        ArrayList<String> newColumns = new ArrayList<String>();
+                        for (String col : entityTable.pmap.keySet()) {
+                            if (sqlTable.columns.get(col) == null) {
+                                newColumns.add(col);
+                            }
+                        }
+                        if (!Checker.isEmpty(newColumns)) {
+                            for (String col : newColumns) {
+                                sqlTable.columns.put(col, 1);
+                            }
+                            int sum = insertNewColunms(db, entityTable.name, newColumns);
+                            if (Log.isPrint) {
+                                if (sum > 0) {
+                                    Log.i(TAG, "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
+                                } else {
+                                    Log.e(TAG, "Table [" + entityTable.name + "] add " + sum + " new column error ： " +
+                                            newColumns);
+                                }
+                            }
+                        }
+                    }
+                }
+                return true;
             }
         }
         if (Log.isPrint) {
@@ -164,35 +181,60 @@ public final class TableManager {
      *
      * @param table
      */
-    private void putSqlTableIntoList(EntityTable table) {
+    private void putNewSqlTableIntoMap(EntityTable table) {
         if (Log.isPrint) {
             Log.i(TAG, "Table [" + table.name + "] Create Success");
         }
         SQLiteTable sqlTable = new SQLiteTable();
         sqlTable.name = table.name;
-        sqlTable.columns = new ArrayList<String>();
+        sqlTable.columns = new HashMap<String, Integer>();
         if (table.key != null) {
-            sqlTable.columns.add(table.key.column);
+            sqlTable.columns.put(table.key.column, 1);
         }
         if (table.pmap != null) {
             for (String col : table.pmap.keySet()) {
-                sqlTable.columns.add(col);
+                sqlTable.columns.put(col, 1);
             }
         }
-        if (mSqlTableList != null) {
-            mSqlTableList.add(sqlTable);
-        }
+        mSqlTableMap.put(sqlTable.name, sqlTable);
     }
 
     /**
-     * global lock synchronized
+     * 初始化全部表及其列名,初始化失败，则无法进行下去。
      *
      * @param db
      */
     private void initAllTablesFromSQLite(SQLiteDatabase db) {
-        synchronized (this) {
-            if (Checker.isEmpty(mSqlTableList)) {
-                mSqlTableList = getAllTablesFromSQLite(db);
+        synchronized (mSqlTableMap) {
+            if (Checker.isEmpty(mSqlTableMap)) {
+                if (Log.isPrint) {
+                    Log.i(TAG, "Initialize SQL table start--------------------->");
+                }
+                SQLStatement st = SQLBuilder.buildTableObtainAll();
+                final EntityTable table = getTable(SQLiteTable.class, false);
+                Querier.doQuery(db, st, new Querier.CursorParser() {
+                    @Override
+                    public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
+                        SQLiteTable sqlTable = new SQLiteTable();
+                        DataUtil.injectDataToObject(c, sqlTable, table);
+                        ArrayList<String> colS = getAllColumnsFromSQLite(db, sqlTable.name);
+                        if (Checker.isEmpty(colS)) {
+                            // 如果读数据库失败了，那么解析建表语句
+                            Log.e(TAG, "读数据库失败了，开始解析建表语句");
+                            colS = transformSqlToColumns(sqlTable.sql);
+                        }
+                        for (String col : colS) {
+                            sqlTable.columns.put(col, 1);
+                        }
+                        if (Log.isPrint) {
+                            Log.d(TAG, "Find One SQL Table: " + sqlTable);
+                        }
+                        mSqlTableMap.put(sqlTable.name, sqlTable);
+                    }
+                });
+                if (Log.isPrint) {
+                    Log.i(TAG, "Initialize SQL table end  ---------------------> " + mSqlTableMap.size());
+                }
             }
         }
     }
@@ -226,42 +268,6 @@ public final class TableManager {
      */
     private boolean createTable(SQLiteDatabase db, EntityTable table) {
         return SQLBuilder.buildCreateTable(table).execute(db);
-    }
-
-    /**
-     * 初始化全部表及其列名,初始化失败，则无法进行下去。
-     *
-     * @throws Exception
-     */
-    public ArrayList<SQLiteTable> getAllTablesFromSQLite(SQLiteDatabase db) {
-        SQLStatement st = SQLBuilder.buildTableObtainAll();
-        final EntityTable table = getTable(SQLiteTable.class, false);
-        final ArrayList<SQLiteTable> list = new ArrayList<SQLiteTable>();
-        if (Log.isPrint) {
-            Log.i(TAG, "Initialize SQL table start--------------------->");
-        }
-        Querier.doQuery(db, st, new Querier.CursorParser() {
-            @Override
-            public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
-                SQLiteTable sqlTable = new SQLiteTable();
-                DataUtil.injectDataToObject(c, sqlTable, table);
-                ArrayList<String> colS = getAllColumnsFromSQLite(db, sqlTable.name);
-                if (Checker.isEmpty(colS)) {
-                    // 如果读数据库失败了，那么解析建表语句
-                    Log.e(TAG, "读数据库失败了，开始解析建表语句");
-                    colS = transformSqlToColumns(sqlTable.sql);
-                }
-                sqlTable.columns = colS;
-                if (Log.isPrint) {
-                    Log.d(TAG, "Find One SQL Table: " + sqlTable);
-                }
-                list.add(sqlTable);
-            }
-        });
-        if (Log.isPrint) {
-            Log.i(TAG, "Initialize SQL table end  ---------------------> " + list.size());
-        }
-        return list;
     }
 
     /**
@@ -319,21 +325,7 @@ public final class TableManager {
         return null;
     }
 
-    /* —————————————————————————— 静态公共方法 ———————————————————————— */
-
-    /**
-     * 根据实体生成表信息,一定需要PrimaryKey
-     */
-    public static EntityTable getTable(Object entity) {
-        return getTable(entity.getClass(), true);
-    }
-
-    /**
-     * 根据类生成表信息,一定需要PrimaryKey
-     */
-    public static EntityTable getTable(Class<?> claxx) {
-        return getTable(claxx, true);
-    }
+    /* —————————————————————————— 静态私有方法 ———————————————————————— */
 
     /**
      * 获取缓存实体表信息
@@ -351,21 +343,45 @@ public final class TableManager {
         return mEntityTableMap.put(tableName, entity);
     }
 
-    public static EntityTable getMappingTable(String tableName, String column1, String column2) {
-        EntityTable table = getEntityTable(tableName);
+    /**
+     * 获取映射表信息(Entity Table)
+     * 注意映射表存储在MAP中，key 为 database name + table name， value 为 entity table。
+     *
+     * @return {@link EntityTable}
+     */
+    private EntityTable getMappingTable(String tableName, String column1, String column2) {
+        EntityTable table = getEntityTable(dbName + tableName);
         if (table == null) {
             table = new EntityTable();
             table.name = tableName;
             table.pmap = new LinkedHashMap<String, Property>();
             table.pmap.put(column1, null);
             table.pmap.put(column2, null);
-            putEntityTable(tableName, table);
+            TableManager.putEntityTable(dbName + tableName, table);
         }
         return table;
     }
+    /* —————————————————————————— 静态公共方法 ———————————————————————— */
 
     /**
-     * 获取缓存实体表信息
+     * 根据实体生成表信息,一定需要PrimaryKey
+     */
+    public static EntityTable getTable(Object entity) {
+        return getTable(entity.getClass(), true);
+    }
+
+    /**
+     * 根据类生成表信息,一定需要PrimaryKey
+     */
+    public static EntityTable getTable(Class<?> claxx) {
+        return getTable(claxx, true);
+    }
+
+    /**
+     * 获取实体表信息(Entity Table)
+     * 注意映射表存储在MAP中，key 为 class name， value 为 entity table。
+     *
+     * @return {@link EntityTable}
      */
     public static synchronized EntityTable getTable(Class<?> claxx, boolean needPK) {
         EntityTable table = getEntityTable(claxx.getName());

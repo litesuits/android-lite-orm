@@ -35,10 +35,16 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     private TableManager mTableManager;
 
     private DataBaseSQLiteImpl(DataBaseConfig config) {
+        if (config.dbName == null) {
+            config.dbName = DataBaseConfig.DEFAULT_DB_NAME;
+        }
+        if (config.dbVersion <= 0) {
+            config.dbVersion = DataBaseConfig.DEFAULT_DB_VERSION;
+        }
         mConfig = config;
         mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(), mConfig.dbName, null, mConfig.dbVersion, config.onUpdateListener);
         mConfig.context = null;
-        mTableManager = new TableManager();
+        mTableManager = new TableManager(mConfig.dbName);
     }
 
     public synchronized static DataBaseSQLiteImpl newInstance(DataBaseConfig config) {
@@ -370,6 +376,7 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     @Override
     public <T> ArrayList<T> query(QueryBuilder qb) {
         SQLiteDatabase db = mHelper.getReadableDatabase();
+        mTableManager.checkOrCreateTable(db, qb.getQueryClass());
         return qb.createStatement().query(db, qb.getQueryClass());
     }
 
@@ -458,6 +465,16 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     @Override
     public TableManager getTableManager() {
         return mTableManager;
+    }
+
+    @Override
+    public SQLiteHelper getSQLiteHelper() {
+        return mHelper;
+    }
+
+    @Override
+    public DataBaseConfig getDataBaseConfig() {
+        return mConfig;
     }
 
     @Override

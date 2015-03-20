@@ -12,12 +12,12 @@ import com.litesuits.orm.db.impl.SQLiteHelper.OnUpdateListener;
  */
 public class DataBaseConfig {
     public static final String DEFAULT_DB_NAME = "liteorm.db";
-    public static final int    DB_VERSION      = 1;
+    public static final int DEFAULT_DB_VERSION = 1;
 
     //public boolean isDebugged;
     public Context context;
     public String dbName    = DEFAULT_DB_NAME;
-    public int    dbVersion = DB_VERSION;
+    public int    dbVersion = DEFAULT_DB_VERSION;
     public OnUpdateListener onUpdateListener;
 
     public DataBaseConfig(Context context) {
@@ -25,7 +25,7 @@ public class DataBaseConfig {
     }
 
     public DataBaseConfig(Context context, String dbName) {
-        this(context, dbName, DB_VERSION, null);
+        this(context, dbName, DEFAULT_DB_VERSION, null);
     }
 
     public DataBaseConfig(Context context, String dbName, int dbVersion, OnUpdateListener onUpdateListener) {
