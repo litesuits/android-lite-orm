@@ -71,10 +71,9 @@ public class FieldUtil {
      * @throws IllegalAccessException
      * @throws IllegalArgumentException
      */
-    public static Object set(Field f, Object obj, Object value) throws IllegalArgumentException, IllegalAccessException {
+    public static void set(Field f, Object obj, Object value) throws IllegalArgumentException, IllegalAccessException {
         f.setAccessible(true);
         f.set(obj, value);
-        return f.get(obj);
     }
 
     /**
@@ -101,8 +100,12 @@ public class FieldUtil {
         Type type = f.getGenericType();
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType) type).getActualTypeArguments()[0];
-            if (type instanceof Class<?>) return (Class<?>) type;
-        } else if (type instanceof Class<?>) return (Class<?>) type;
+            if (type instanceof Class<?>) {
+                return (Class<?>) type;
+            }
+        } else if (type instanceof Class<?>) {
+            return (Class<?>) type;
+        }
         return null;
     }
 

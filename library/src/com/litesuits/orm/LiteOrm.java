@@ -3,6 +3,7 @@ package com.litesuits.orm;
 import android.content.Context;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
+import com.litesuits.orm.db.impl.CascadeSQLiteImpl;
 import com.litesuits.orm.db.impl.DataBaseSQLiteImpl;
 
 /**
@@ -38,8 +39,16 @@ public final class LiteOrm {
         return newInstance(new DataBaseConfig(context, dbName));
     }
 
+    public synchronized static DataBase newCascadeInstance(Context context, String dbName) {
+        return newCascadeInstance(new DataBaseConfig(context, dbName));
+    }
+
     public synchronized static DataBase newInstance(DataBaseConfig config) {
         return DataBaseSQLiteImpl.newInstance(config);
+    }
+
+    public synchronized static DataBase newCascadeInstance(DataBaseConfig config) {
+        return CascadeSQLiteImpl.newInstance(config);
     }
 
     public synchronized static void close(DataBase db) {

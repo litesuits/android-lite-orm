@@ -1,4 +1,4 @@
-package com.litesuits.orm.model.test;
+package com.litesuits.orm.test;
 
 /**
  * @author MaTianyu

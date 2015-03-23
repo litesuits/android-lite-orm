@@ -241,7 +241,7 @@ public class DataUtil implements Serializable {
      * @param obj
      * @return
      */
-    public static byte[] objectToByte(Object obj) throws Exception {
+    public static byte[] objectToByte(Object obj) throws IOException {
         ObjectOutputStream oos = null;
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();

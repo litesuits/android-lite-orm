@@ -1,6 +1,8 @@
 package com.litesuits.orm.db.utils;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
 
@@ -35,7 +37,7 @@ public class ClassUtil {
      * @return
      * @throws Exception
      */
-    public static <T> T newInstance(Class<T> claxx) throws Exception {
+    public static <T> T newInstance(Class<T> claxx) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Constructor<?>[] cons = claxx.getDeclaredConstructors();
         for (Constructor<?> c : cons) {
             Class[] cls = c.getParameterTypes();
@@ -53,6 +55,15 @@ public class ClassUtil {
         }
         return null;
     }
+
+    public static Object newCollection(Class<?> claxx) throws IllegalAccessException, InstantiationException {
+        return claxx.newInstance();
+    }
+
+    public static Object newArray(Class<?> claxx, int size) {
+        return Array.newInstance(claxx, size);
+    }
+
 
     public static Object getDefaultPrimiticeValue(Class clazz) {
         if (clazz.isPrimitive()) {

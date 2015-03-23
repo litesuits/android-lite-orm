@@ -19,49 +19,52 @@ import java.util.Map.Entry;
 
 public class SQLBuilder {
 
-    private static final int TYPE_INSERT = 1;
-    private static final int TYPE_REPLACE = 2;
-    private static final String DELETE_FROM = "DELETE FROM ";
-    private static final String SELECT_TABLES = "SELECT * FROM sqlite_master WHERE type='table' ORDER BY name";
-    private static final String PRAGMA_TABLE_INFO = "PRAGMA table_info(";
-    private static final String PARENTHESES_LEFT = "(";
-    private static final String PARENTHESES_RIGHT = ")";
-    private static final String IN = " IN ";
-    private static final String SELECT_MAX = "SELECT MAX ";
-    private static final String SELECT = "SELECT ";
-    private static final String FROM = " FROM ";
-    private static final String ORDER_BY = " ORDER BY ";
+    public static final int TYPE_INSERT = 1;
+    public static final int TYPE_REPLACE = 2;
+    public static final int TYPE_UPDATE = 3;
+    public static final String DELETE_FROM = "DELETE FROM ";
+    public static final String SELECT_TABLES = "SELECT * FROM sqlite_master WHERE type='table' ORDER BY name";
+    public static final String PRAGMA_TABLE_INFO = "PRAGMA table_info(";
+    public static final String PARENTHESES_LEFT = "(";
+    public static final String PARENTHESES_RIGHT = ")";
+    public static final String IN = " IN ";
+    public static final String SELECT_MAX = "SELECT MAX ";
+    public static final String SELECT_ANY_FROM = "SELECT * FROM ";
+    public static final String SELECT = "SELECT ";
+    public static final String FROM = " FROM ";
+    public static final String ORDER_BY = " ORDER BY ";
     public static final String ASC = " ASC ";
     public static final String DESC = " DESC ";
-    private static final String LIMIT = " LIMIT ";
-    private static final String DROP_TABLE = "DROP TABLE ";
-    private static final String CREATE = "CREATE ";
-    private static final String TEMP = "TEMP ";
-    private static final String TABLE_IF_NOT_EXISTS = "TABLE IF NOT EXISTS ";
-    private static final String PRIMARY_KEY_AUTOINCREMENT = "PRIMARY KEY AUTOINCREMENT ";
-    private static final String PRIMARY_KEY = "PRIMARY KEY ";
-    private static final String COMMA = ",";
-    private static final String TWO_HOLDER = "(?,?)";
-    private static final String BLANK = " ";
-    private static final String NOT_NULL = "NOT NULL ";
-    private static final String DEFAULT = "DEFAULT ";
-    private static final String UNIQUE = "UNIQUE ";
-    private static final String ON_CONFLICT = "ON CONFLICT ";
-    private static final String CHECK = "CHECK ";
-    private static final String COLLATE = "COLLATE ";
+    public static final String LIMIT = " LIMIT ";
+    public static final String DROP_TABLE = "DROP TABLE ";
+    public static final String CREATE = "CREATE ";
+    public static final String TEMP = "TEMP ";
+    public static final String TABLE_IF_NOT_EXISTS = "TABLE IF NOT EXISTS ";
+    public static final String PRIMARY_KEY_AUTOINCREMENT = "PRIMARY KEY AUTOINCREMENT ";
+    public static final String PRIMARY_KEY = "PRIMARY KEY ";
+    public static final String COMMA = ",";
+    public static final String TWO_HOLDER = "(?,?)";
+    public static final String BLANK = " ";
+    public static final String NOT_NULL = "NOT NULL ";
+    public static final String DEFAULT = "DEFAULT ";
+    public static final String UNIQUE = "UNIQUE ";
+    public static final String ON_CONFLICT = "ON CONFLICT ";
+    public static final String CHECK = "CHECK ";
+    public static final String COLLATE = "COLLATE ";
     public static final String COMMA_HOLDER = ",?";
     public static final String EQUALS_HOLDER = "=?";
     public static final String HOLDER = "?";
-    private static final String INSERT = "INSERT ";
-    private static final String REPLACE = "REPLACE ";
-    private static final String INTO = "INTO ";
-    private static final String VALUES = "VALUES";
-    private static final String UPDATE = "UPDATE ";
-    private static final String SET = " SET ";
-    private static final String WHERE = " WHERE ";
+    public static final String INSERT = "INSERT ";
+    public static final String REPLACE = "REPLACE ";
+    public static final String INTO = "INTO ";
+    public static final String VALUES = "VALUES";
+    public static final String UPDATE = "UPDATE ";
+    public static final String SET = " SET ";
+    public static final String WHERE = " WHERE ";
     public static final String AND = " AND ";
     public static final String OR = " OR ";
     public static final String NOT = " NOT ";
+    public static final String ASTERISK = "*";
 
     /**
      * 构建【获取SQLite全部表】sql语句
@@ -602,7 +605,8 @@ public class SQLBuilder {
         return null;
     }
 
-    private static SQLStatement buildMappingDeleteSql(Object key1, EntityTable table1, EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
+    public static SQLStatement buildMappingDeleteSql(Object key1, EntityTable table1,
+                                                     EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
         if (table2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             SQLStatement stmt = new SQLStatement();
@@ -613,7 +617,18 @@ public class SQLBuilder {
         return null;
     }
 
-    private static SQLStatement buildMappingToManySql(Object key1, EntityTable table1, EntityTable table2, Object obj) throws IllegalArgumentException, IllegalAccessException {
+    public static SQLStatement buildMappingDeleteSql(String mapTableName, Object key1, EntityTable table1) throws
+            IllegalArgumentException, IllegalAccessException {
+        if (mapTableName != null) {
+            SQLStatement stmt = new SQLStatement();
+            stmt.sql = DELETE_FROM + mapTableName + WHERE + table1.name + EQUALS_HOLDER;
+            stmt.bindArgs = new Object[]{key1};
+            return stmt;
+        }
+        return null;
+    }
+
+    public static SQLStatement buildMappingToManySql(Object key1, EntityTable table1, EntityTable table2, Object obj) throws IllegalArgumentException, IllegalAccessException {
         if (obj instanceof Collection<?>) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             Collection<?> coll = (Collection<?>) obj;
@@ -654,10 +669,27 @@ public class SQLBuilder {
         return null;
     }
 
-    private static SQLStatement buildMappingToOneSql(Object key1, EntityTable table1, EntityTable table2, Object obj) throws IllegalArgumentException, IllegalAccessException {
+    public static SQLStatement buildMappingToOneSql(Object key1, EntityTable table1, EntityTable table2, Object obj) throws IllegalArgumentException, IllegalAccessException {
         Object key2 = FieldUtil.getAssignedKeyObject(table2.key, obj);
         if (key2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
+            StringBuilder sql = new StringBuilder(128);
+            sql.append(INSERT).append(INTO).append(mapTableName)
+                    .append(PARENTHESES_LEFT).append(table1.name)
+                    .append(COMMA).append(table2.name)
+                    .append(PARENTHESES_RIGHT).append(VALUES).append(TWO_HOLDER);
+            SQLStatement stmt = new SQLStatement();
+            stmt.sql = sql.toString();
+            stmt.bindArgs = new Object[]{key1, key2};
+            return stmt;
+        }
+        return null;
+    }
+
+    public static SQLStatement buildMappingToOneSql(String mapTableName, Object key1, Object key2,
+                                                    EntityTable table1, EntityTable table2)
+            throws IllegalArgumentException, IllegalAccessException {
+        if (key2 != null) {
             StringBuilder sql = new StringBuilder(128);
             sql.append(INSERT).append(INTO).append(mapTableName)
                     .append(PARENTHESES_LEFT).append(table1.name)
@@ -716,4 +748,27 @@ public class SQLBuilder {
         }
         return builder.createStatement();
     }
+
+    /**
+     * 构建查询关系映射语句
+     */
+    public static SQLStatement buildQueryRelationSql(EntityTable table1, EntityTable table2, Object key1) {
+        SQLStatement sqlStatement = new SQLStatement();
+        sqlStatement.sql = SELECT_ANY_FROM + TableManager.getMapTableName(table1, table2)
+                + WHERE + table1.name + EQUALS_HOLDER;
+        sqlStatement.bindArgs = new String[]{String.valueOf(key1)};
+        return sqlStatement;
+    }
+
+    /**
+     * 构建查询关系映射语句
+     * select * from table2 where key2 = key2;
+     */
+    public static SQLStatement buildQueryMapEntitySql(EntityTable table2, Object key2) {
+        SQLStatement sqlStatement = new SQLStatement();
+        sqlStatement.sql = SELECT_ANY_FROM + table2.name + WHERE + table2.key.column + EQUALS_HOLDER;
+        sqlStatement.bindArgs = new String[]{String.valueOf(key2)};
+        return sqlStatement;
+    }
+
 }

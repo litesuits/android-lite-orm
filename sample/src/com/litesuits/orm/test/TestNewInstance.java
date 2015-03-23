@@ -1,4 +1,4 @@
-package com.litesuits.orm.model.test;
+package com.litesuits.orm.test;
 
 import java.lang.reflect.*;
 import java.util.*;

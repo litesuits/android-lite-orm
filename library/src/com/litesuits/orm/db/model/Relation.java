@@ -7,4 +7,9 @@ package com.litesuits.orm.db.model;
 public class Relation {
     public String key1;
     public String key2;
+
+    public boolean isOK() {
+        return key1 != null && key2 != null;
+    }
+
 }

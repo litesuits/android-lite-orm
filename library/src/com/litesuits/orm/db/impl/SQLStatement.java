@@ -20,6 +20,7 @@ import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -62,7 +63,7 @@ public class SQLStatement implements Serializable {
      * @param o
      * @throws Exception
      */
-    protected void bind(int i, Object o) throws Exception {
+    protected void bind(int i, Object o) throws IOException {
         switch (DataUtil.getType(o)) {
             case DataUtil.FIELD_TYPE_NULL:
                 mStatement.bindNull(i);
@@ -98,7 +99,7 @@ public class SQLStatement implements Serializable {
      * @return
      * @throws Exception
      */
-    public long execInsertWithMapping(SQLiteDatabase db, Object entity, TableManager tableManager) throws Exception {
+    public long execInsertWithMapping(SQLiteDatabase db, Object entity, TableManager tableManager) throws IllegalAccessException, IOException {
         printSQL();
         mStatement = db.compileStatement(sql);
         Object keyObj = null;
@@ -109,7 +110,7 @@ public class SQLStatement implements Serializable {
             }
         }
         long rowID = mStatement.executeInsert();
-        clearArgs();
+        realease();
         if (Log.isPrint) {
             Log.i(TAG, "SQL Execute Insert --> " + rowID);
         }
@@ -128,8 +129,40 @@ public class SQLStatement implements Serializable {
      * @return
      * @throws Exception
      */
-    public long execInsert(SQLiteDatabase db) throws Exception {
+    public long execInsert(SQLiteDatabase db) throws IOException, IllegalAccessException {
         return execInsertWithMapping(db, null, null);
+    }
+
+    /**
+     * 目前可用于给对象持久化映射关系时，因为不传入实体所以不可以为之注入ID。
+     *
+     * @param db
+     * @return
+     * @throws Exception
+     */
+    public long execInsert(SQLiteDatabase db, Object entity) throws IOException, IllegalAccessException {
+        printSQL();
+        mStatement = db.compileStatement(sql);
+        Object keyObj = null;
+        if (!Checker.isEmpty(bindArgs)) {
+            keyObj = bindArgs[0];
+            for (int i = 0; i < bindArgs.length; i++) {
+                bind(i + 1, bindArgs[i]);
+            }
+        }
+        long rowID = NONE;
+        try {
+            rowID = mStatement.executeInsert();
+        } finally {
+            realease();
+        }
+        if (Log.isPrint) {
+            Log.i(TAG, "SQL Execute Insert --> " + rowID);
+        }
+        if (entity != null) {
+            FieldUtil.setKeyValueIfneed(entity, TableManager.getTable(entity).key, keyObj, rowID);
+        }
+        return rowID;
     }
 
     /**
@@ -190,10 +223,34 @@ public class SQLStatement implements Serializable {
             }
             e.printStackTrace();
         } finally {
-            clearArgs();
+            realease();
             db.endTransaction();
         }
         return NONE;
+    }
+
+    /**
+     * 执行更新单个数据，返回受影响的行数
+     */
+    public int execUpdate(SQLiteDatabase db) throws IOException {
+        printSQL();
+        mStatement = db.compileStatement(sql);
+        if (!Checker.isEmpty(bindArgs)) {
+            for (int i = 0; i < bindArgs.length; i++) {
+                bind(i + 1, bindArgs[i]);
+            }
+        }
+        int rows = 1;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            mStatement.execute();
+        } else {
+            rows = mStatement.executeUpdateDelete();
+        }
+        realease();
+        if (Log.isPrint) {
+            Log.i(TAG, "SQL Execute update --> " + rows);
+        }
+        return rows;
     }
 
     /**
@@ -218,7 +275,7 @@ public class SQLStatement implements Serializable {
         } else {
             rows = mStatement.executeUpdateDelete();
         }
-        clearArgs();
+        realease();
         if (Log.isPrint) {
             Log.i(TAG, "SQL Execute update --> " + rows);
         }
@@ -296,7 +353,7 @@ public class SQLStatement implements Serializable {
             }
             e.printStackTrace();
         } finally {
-            clearArgs();
+            realease();
             db.endTransaction();
         }
         return NONE;
@@ -309,7 +366,7 @@ public class SQLStatement implements Serializable {
      * @return
      * @throws Exception
      */
-    public int execDelete(SQLiteDatabase db) throws Exception {
+    public int execDelete(SQLiteDatabase db) throws IOException {
         return execDeleteWithMapping(db, null, null);
     }
 
@@ -320,7 +377,7 @@ public class SQLStatement implements Serializable {
      * @param db
      * @throws Exception
      */
-    public int execDeleteWithMapping(final SQLiteDatabase db, Object entity, TableManager tableManager) throws Exception {
+    public int execDeleteWithMapping(final SQLiteDatabase db, Object entity, TableManager tableManager) throws IOException {
         printSQL();
         mStatement = db.compileStatement(sql);
         if (bindArgs != null) {
@@ -338,7 +395,7 @@ public class SQLStatement implements Serializable {
         if (Log.isPrint) {
             Log.v(TAG, "SQL Execute Delete --> " + nums);
         }
-        clearArgs();
+        realease();
         if (entity != null) {
             // 删除关系映射
             mapRelationToDb(entity, false, false, db, tableManager);
@@ -372,7 +429,7 @@ public class SQLStatement implements Serializable {
         if (Log.isPrint) {
             Log.v(TAG, "SQL Execute Delete --> " + nums);
         }
-        clearArgs();
+        realease();
         // 删除关系映射
         MapInfo mapTable = SQLBuilder.buildMappingSql(collection.iterator().next(), true);
         if (mapTable != null && !mapTable.isEmpty()) {
@@ -414,7 +471,7 @@ public class SQLStatement implements Serializable {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            clearArgs();
+            realease();
         }
         return false;
     }
@@ -443,7 +500,7 @@ public class SQLStatement implements Serializable {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            clearArgs();
+            realease();
         }
         return count;
     }
@@ -472,6 +529,34 @@ public class SQLStatement implements Serializable {
             e.printStackTrace();
         }
         return list;
+    }
+
+    /**
+     * 执行查询
+     * 根据类信息读取数据库，取出本类的对象。
+     *
+     * @param claxx
+     * @return
+     */
+    public <T> T queryOneEntity(SQLiteDatabase db, final Class<T> claxx) {
+        printSQL();
+        final EntityTable table = TableManager.getTable(claxx, false);
+        T t = Querier.doQuery(db, this, new CursorParser<T>() {
+            T t;
+
+            @Override
+            public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
+                t = ClassUtil.newInstance(claxx);
+                DataUtil.injectDataToObject(c, t, table);
+                stopParse();
+            }
+
+            @Override
+            public T returnResult() {
+                return t;
+            }
+        });
+        return t;
     }
 
 
@@ -530,11 +615,11 @@ public class SQLStatement implements Serializable {
         }
     }
 
-    private void clearArgs() {
+    private void realease() {
         if (mStatement != null) {
             mStatement.close();
         }
-        sql = null;
+        //sql = null;
         bindArgs = null;
         mStatement = null;
     }

@@ -31,6 +31,7 @@ public class QueryBuilder {
     public static final String FROM = " FROM ";
     public static final String EQUAL_HOLDER = "=?";
     public static final String COMMA_HOLDER = ",?";
+    public static final String COMMA = ",";
 
     private Class clazz;
     private Class clazzMapping;
@@ -42,7 +43,7 @@ public class QueryBuilder {
     private String having;
     private String order;
     private String limit;
-    private WhereBuilder whereBuilder;
+    private WhereBuilder whereBuilder = new WhereBuilder();
 
     public QueryBuilder() {
     }
@@ -86,14 +87,13 @@ public class QueryBuilder {
      * @return
      */
     public QueryBuilder where(String where, Object[] whereArgs) {
-        if (whereBuilder == null) {
-            whereBuilder = new WhereBuilder();
-        }
         whereBuilder.where(where, whereArgs);
         return this;
     }
 
     /**
+     * build as " AND " + where
+     *
      * @param where     "id = ?";
      *                  "id in(?,?,?)";
      *                  "id LIKE %?"
@@ -101,15 +101,14 @@ public class QueryBuilder {
      *                  new Integer[]{1,2}
      * @return
      */
-    public QueryBuilder andWhere(String where, Object[] whereArgs) {
-        if (whereBuilder == null) {
-            whereBuilder = new WhereBuilder();
-        }
+    public QueryBuilder whereAnd(String where, Object[] whereArgs) {
         whereBuilder.and(where, whereArgs);
         return this;
     }
 
     /**
+     * build as " OR " + where
+     *
      * @param where     "id = ?";
      *                  "id in(?,?,?)";
      *                  "id LIKE %?"
@@ -117,11 +116,64 @@ public class QueryBuilder {
      *                  new Integer[]{1,2}
      * @return
      */
-    public QueryBuilder orWhere(String where, Object[] whereArgs) {
-        if (whereBuilder == null) {
-            whereBuilder = new WhereBuilder();
-        }
+    public QueryBuilder whereOr(String where, Object[] whereArgs) {
         whereBuilder.or(where, whereArgs);
+        return this;
+    }
+
+    /**
+     * build as where+" OR "
+     */
+    public QueryBuilder whereAppendOr() {
+        whereBuilder.or();
+        return this;
+    }
+
+    /**
+     * build as where+" NOT "
+     */
+    public QueryBuilder whereAppendNot() {
+        whereBuilder.not();
+        return this;
+    }
+
+    /**
+     * build as where+" column != ? "
+     */
+    public QueryBuilder whereNoEquals(String column, Object value) {
+        whereBuilder.noEquals(column, value);
+        return this;
+    }
+
+    /**
+     * build as where+" column > ? "
+     */
+    public QueryBuilder whereGreaterThan(String column, Object value) {
+        whereBuilder.greaterThan(column, value);
+        return this;
+    }
+
+    /**
+     * build as where+" column < ? "
+     */
+    public QueryBuilder whereLessThan(String column, Object value) {
+        whereBuilder.lessThan(column, value);
+        return this;
+    }
+
+    /**
+     * build as where+" column = ? "
+     */
+    public QueryBuilder whereEquals(String column, Object value) {
+        whereBuilder.equals(column, value);
+        return this;
+    }
+
+    /**
+     * build as where+" column IN(?, ?, ?...)"
+     */
+    public QueryBuilder whereIn(String column, Object[] values) {
+        whereBuilder.in(column, values);
         return this;
     }
 
@@ -215,6 +267,11 @@ public class QueryBuilder {
         return this;
     }
 
+    public QueryBuilder limit(int start, int length) {
+        this.limit = start + COMMA + length;
+        return this;
+    }
+
     public QueryBuilder queryMappingInfo(Class clazzMapping) {
         this.clazzMapping = clazzMapping;
         return this;
@@ -253,9 +310,8 @@ public class QueryBuilder {
         }
         query.append(FROM).append(getTableName());
 
-        if (whereBuilder != null) {
-            query.append(whereBuilder.createWhereString(clazz));
-        }
+        query.append(whereBuilder.createWhereString(clazz));
+
         appendClause(query, GROUP_BY, group);
         appendClause(query, HAVING, having);
         appendClause(query, ORDER_BY, order);
@@ -263,9 +319,7 @@ public class QueryBuilder {
 
         SQLStatement stmt = new SQLStatement();
         stmt.sql = query.toString();
-        if (whereBuilder != null) {
-            stmt.bindArgs = whereBuilder.transToStringArray();
-        }
+        stmt.bindArgs = whereBuilder.transToStringArray();
         return stmt;
     }
 

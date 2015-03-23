@@ -1,4 +1,4 @@
-package com.litesuits.orm.model;
+package com.litesuits.orm.model.single;
 
 import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.annotation.PrimaryKey.AssignType;

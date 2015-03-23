@@ -24,7 +24,7 @@ import java.util.List;
  * @author mty
  * @date 2013-6-2下午2:32:56
  */
-public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase {
+public class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase {
 
     public static final String TAG = DataBaseSQLiteImpl.class.getSimpleName();
 
@@ -34,7 +34,7 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
 
     private TableManager mTableManager;
 
-    private DataBaseSQLiteImpl(DataBaseConfig config) {
+    protected DataBaseSQLiteImpl(DataBaseConfig config) {
         if (config.dbName == null) {
             config.dbName = DataBaseConfig.DEFAULT_DB_NAME;
         }
@@ -96,6 +96,16 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
             releaseReference();
         }
         return false;
+    }
+
+    @Override
+    public DataBase single() {
+        return null;
+    }
+
+    @Override
+    public DataBase cascade() {
+        return null;
     }
 
     @Override
@@ -245,6 +255,11 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     }
 
     @Override
+    public int delete(Class<?> claxx) {
+        return deleteAll(claxx);
+    }
+
+    @Override
     public int delete(final Collection<?> collection) {
         acquireReference();
         try {
@@ -376,7 +391,7 @@ public final class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase
     @Override
     public <T> ArrayList<T> query(QueryBuilder qb) {
         SQLiteDatabase db = mHelper.getReadableDatabase();
-        mTableManager.checkOrCreateTable(db, qb.getQueryClass());
+        //mTableManager.checkOrCreateTable(db, qb.getQueryClass());
         return qb.createStatement().query(db, qb.getQueryClass());
     }
 

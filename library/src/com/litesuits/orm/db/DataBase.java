@@ -21,30 +21,17 @@ import java.util.List;
  */
 public interface DataBase {
     /**
-     * build a sql statement with sql and args.
-     */
-    public SQLStatement createSQLStatement(String sql, Object[] bindArgs);
-
-    /**
-     * Execute this SQL statement, if it is not a SELECT / INSERT / DELETE / UPDATE, for example
-     * CREATE / DROP table, view, trigger, index etc.
-     */
-    public boolean execute(SQLiteDatabase db, SQLStatement statement);
-
-    /**
-     * drop a table
+     * get a single sqlite database operator
      *
-     * @return true if droped successfully.
+     * @return {@link com.litesuits.orm.db.impl.CascadeSQLiteImpl}
      */
-    public boolean dropTable(Object entity);
-
+    public DataBase single();
     /**
-     * drop a table
+     * get a cascade sqlite database operator
      *
-     * @return true if droped successfully.
+     * @return {@link com.litesuits.orm.db.impl.CascadeSQLiteImpl}
      */
-    public boolean dropTable(String tableName);
-
+    public DataBase cascade();
     /**
      * save: insert or update a single entity
      *
@@ -144,6 +131,13 @@ public interface DataBase {
      *
      * @return the number of affected rows
      */
+    public int delete(Class<?> claxx);
+
+    /**
+     * delete all rows
+     *
+     * @return the number of affected rows
+     */
     public int deleteAll(Class<?> claxx);
 
     /**
@@ -170,20 +164,6 @@ public interface DataBase {
     public int delete(Class<?> claxx, WhereBuilder where);
 
     /**
-     * query count of table rows and return
-     *
-     * @return the count of query result
-     */
-    public long queryCount(Class<?> claxx);
-
-    /**
-     * query count of your sql query result rows and return
-     *
-     * @return the count of query result
-     */
-    public long queryCount(QueryBuilder qb);
-
-    /**
      * custom query
      *
      * @return the query result list
@@ -205,11 +185,50 @@ public interface DataBase {
     public <T> T queryById(String id, Class<T> clazz);
 
     /**
+     * query count of table rows and return
+     *
+     * @return the count of query result
+     */
+    public long queryCount(Class<?> claxx);
+
+    /**
+     * query count of your sql query result rows and return
+     *
+     * @return the count of query result
+     */
+    public long queryCount(QueryBuilder qb);
+
+    /**
      * query all data of this type
      *
      * @return the query result list
      */
     public <T> ArrayList<T> queryAll(Class<T> claxx);
+
+    /**
+     * build a sql statement with sql and args.
+     */
+    public SQLStatement createSQLStatement(String sql, Object[] bindArgs);
+
+    /**
+     * Execute this SQL statement, if it is not a SELECT / INSERT / DELETE / UPDATE, for example
+     * CREATE / DROP table, view, trigger, index etc.
+     */
+    public boolean execute(SQLiteDatabase db, SQLStatement statement);
+
+    /**
+     * drop a table
+     *
+     * @return true if droped successfully.
+     */
+    public boolean dropTable(Object entity);
+
+    /**
+     * drop a table
+     *
+     * @return true if droped successfully.
+     */
+    public boolean dropTable(String tableName);
 
     /**
      * find and return relation between two diffirent collection.

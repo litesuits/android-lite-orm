@@ -16,15 +16,15 @@ public class EntityTable implements Serializable {
     /**
      * 实体对应类
      */
-    public Class                           claxx;
+    public Class claxx;
     /**
      * 实体对应表名
      */
-    public String                          name;
+    public String name;
     /**
      * 主键
      */
-    public PrimaryKey                      key;
+    public PrimaryKey key;
     /**
      * 属性列表
      */
@@ -32,7 +32,11 @@ public class EntityTable implements Serializable {
     /**
      * N对N 关系映射表
      */
-    public ArrayList<MapProperty>          mappingList;
+    public ArrayList<MapProperty> mappingList;
+    /**
+     * 是否已对该表进行检查
+     */
+    //public boolean isChecked = false;
 
     public void addMapping(MapProperty pro) {
         if (mappingList == null) {
@@ -42,7 +46,9 @@ public class EntityTable implements Serializable {
     }
 
     public Annotation getAnnotation(Class annoClass) {
-        if (claxx != null) return claxx.getAnnotation(annoClass);
+        if (claxx != null) {
+            return claxx.getAnnotation(annoClass);
+        }
         return null;
     }
 

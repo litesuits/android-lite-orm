@@ -1,4 +1,4 @@
-package com.litesuits.orm.model;
+package com.litesuits.orm.model.single;
 
 import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.annotation.Mapping.Relation;
@@ -30,7 +30,7 @@ public class Man extends Person {
      * ********** 四种映射关系示例 **************
      */
     @Mapping(Relation.ManyToMany)
-    public ArrayList<Teacher> teachers;
+    public ArrayList<Boss> bosses;
 
     //使用任何其他容器
     @Mapping(Relation.OneToMany)
@@ -197,7 +197,7 @@ public class Man extends Person {
                 "isLogin=" + isLogin +
                 ", age=" + age +
                 ", password='" + password + '\'' +
-                ", teachers=" + teachers +
+                ", teachers=" + bosses +
                 ", addrList=" + addrList +
                 ", wife=" + wife +
                 ", company=" + company +

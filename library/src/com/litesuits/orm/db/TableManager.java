@@ -71,47 +71,46 @@ public final class TableManager {
     }
 
     /**
-     * 检测表是否建立，没有则建一张新表。
+     * 检测[数据库表]是否建立，没有则建一张新表。
      */
-    public EntityTable checkOrCreateTable(SQLiteDatabase db, Class claxx) {
-        // 关键点1：初始化全部数据库表
-        initAllTablesFromSQLite(db);
+    public synchronized EntityTable checkOrCreateTable(SQLiteDatabase db, Class claxx) {
+        // 关键点0：[实体表]是否OK
         EntityTable table = getTable(claxx);
-        // table lock synchronized
-        synchronized (table) {
-            // 关键点2:判断表是否存在，是否需要新加列。
+        //if (!table.isChecked) {
+            // 关键点1：初始化全部数据库表
+            initAllTablesFromSQLite(db);
+            // table lock synchronized
+            // 关键点2:判断[数据库表]是否存在，是否需要新加列。
             if (!checkExistAndColumns(db, table)) {
-                // 关键点3：新建表并加入表队列
+                // 关键点3：新建[数据库表]并加入表队列
                 if (createTable(db, table)) {
                     putNewSqlTableIntoMap(table);
                 }
             }
-        }
+        //    table.isChecked = true;
+        //}
         return table;
     }
 
     /**
-     * 检测映射表是否建立，没有则建一张新表。
-     *
-     * @param db
-     * @param tableName
-     * @param column1
-     * @param column2
-     * @return
+     * 检测[映射表]是否建立，没有则建一张新表。
      */
-    public synchronized void checkOrCreateMappingTable(SQLiteDatabase db, String tableName, String column1, String column2) {
-        // 关键点1：初始化全部数据库表
-        initAllTablesFromSQLite(db);
+    public synchronized void checkOrCreateMappingTable(SQLiteDatabase db, String tableName,
+                                                       String column1, String column2) {
+        // 关键点0：[实体表]是否OK
         EntityTable table = getMappingTable(tableName, column1, column2);
-        synchronized (table) {
-            // 关键点2:判断表是否存在，是否需要新加列。
+        //if (!table.isChecked) {
+            // 关键点1：初始化全部数据库表
+            initAllTablesFromSQLite(db);
+            // 关键点2:判断[数据库表]是否存在，是否需要新加列。
             if (!checkExistAndColumns(db, table)) {
-                // 关键点3：新建表并加入表队列
+                // 关键点3：新建[数据库表]并加入表队列
                 if (createTable(db, table)) {
                     putNewSqlTableIntoMap(table);
                 }
             }
-        }
+        //table.isChecked = true;
+        //}
     }
 
     /**
@@ -196,6 +195,8 @@ public final class TableManager {
                 sqlTable.columns.put(col, 1);
             }
         }
+        // 第一次建表，不用检查
+        sqlTable.isTableChecked = true;
         mSqlTableMap.put(sqlTable.name, sqlTable);
     }
 
@@ -223,6 +224,7 @@ public final class TableManager {
                             Log.e(TAG, "读数据库失败了，开始解析建表语句");
                             colS = transformSqlToColumns(sqlTable.sql);
                         }
+                        sqlTable.columns = new HashMap<String, Integer>();
                         for (String col : colS) {
                             sqlTable.columns.put(col, 1);
                         }
@@ -384,6 +386,9 @@ public final class TableManager {
      * @return {@link EntityTable}
      */
     public static synchronized EntityTable getTable(Class<?> claxx, boolean needPK) {
+        if (claxx == null) {
+            return null;
+        }
         EntityTable table = getEntityTable(claxx.getName());
         //if(Log.isPrint)Log.i(TAG, "table : " + table + "  , claxx: " + claxx);
         if (table == null) {
@@ -435,7 +440,8 @@ public final class TableManager {
             }
         }
         if (needPK && table.key == null) {
-            throw new RuntimeException("你必须设置主键(you must set the primary key...)\n 提示：在对象的属性上加PrimaryKey注解来设置主键。");
+            throw new RuntimeException("你必须为[" + table.claxx.getSimpleName() + "]设置主键(you must set the primary key...)" +
+                    "\n 提示：在对象的属性上加PrimaryKey注解来设置主键。");
         }
         return table;
     }

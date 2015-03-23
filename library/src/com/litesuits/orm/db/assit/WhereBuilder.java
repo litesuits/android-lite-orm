@@ -81,6 +81,9 @@ public class WhereBuilder {
         return appendWhere(OR, where, whereArgs);
     }
 
+    /**
+     * build as " AND "
+     */
     public WhereBuilder and() {
         if (where != null) {
             where += AND;
@@ -88,6 +91,9 @@ public class WhereBuilder {
         return this;
     }
 
+    /**
+     * build as " OR "
+     */
     public WhereBuilder or() {
         if (where != null) {
             where += OR;
@@ -95,6 +101,9 @@ public class WhereBuilder {
         return this;
     }
 
+    /**
+     * build as " NOT "
+     */
     public WhereBuilder not() {
         if (where != null) {
             where += NOT;
@@ -147,22 +156,22 @@ public class WhereBuilder {
     /**
      * build as " column in(?,?...) "
      */
-    public WhereBuilder in(String column, Object[] value) {
-        return appendWhere(null, buildWhereIn(column, value.length), value);
+    public WhereBuilder in(String column, Object[] values) {
+        return appendWhere(null, buildWhereIn(column, values.length), values);
     }
 
     /**
      * build as " or column in(?,?...) "
      */
-    public WhereBuilder orIn(String column, Object[] value) {
-        return appendWhere(OR, buildWhereIn(column, value.length), value);
+    public WhereBuilder orIn(String column, Object[] values) {
+        return appendWhere(OR, buildWhereIn(column, values.length), values);
     }
 
     /**
      * build as " and column in(?,?...) "
      */
-    public WhereBuilder andIn(String column, Object[] value) {
-        return appendWhere(AND, buildWhereIn(column, value.length), value);
+    public WhereBuilder andIn(String column, Object[] values) {
+        return appendWhere(AND, buildWhereIn(column, values.length), values);
     }
 
 

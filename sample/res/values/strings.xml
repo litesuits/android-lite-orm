@@ -2,8 +2,12 @@
 <resources>
 
     <string name="app_name">LiteOrm</string>
-    <string name="title">LiteLab:ORM</string>
+    <string name="title">LiteLab-ORM</string>
+    <string name="title_single">ORM-Simple-Single</string>
+    <string name="title_cascade">ORM-Cascade</string>
     <string name="sub_title">Result in The Log</string>
+    <string name="test_single">single persistence TEST</string>
+    <string name="test_cascade">cascade persistence TEST</string>
 
     <string-array name="orm_test_list">
         <item>Save(Insert Or Update)</item>

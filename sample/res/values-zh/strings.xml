@@ -2,8 +2,12 @@
 <resources>
 
     <string name="app_name">LiteOrm</string>
-    <string name="title">Lite实验室:ORM</string>
+    <string name="title">Lite实验室-ORM</string>
+    <string name="title_single">ORM-简单操作</string>
+    <string name="title_cascade">ORM-级联操作</string>
     <string name="sub_title">保存和更新时，实体关系将一并保存</string>
+    <string name="test_single">单一操作测试</string>
+    <string name="test_cascade">级联操作测试</string>
 
     <string-array name="orm_test_list">
         <item>保存(Insert Or Update)</item>

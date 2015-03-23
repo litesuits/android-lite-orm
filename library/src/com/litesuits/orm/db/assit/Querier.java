@@ -21,15 +21,22 @@ public class Querier {
      * @param st
      * @param parser
      */
-    public static void doQuery(SQLiteDatabase db, SQLStatement st, CursorParser parser) {
-        if (Log.isPrint) Log.v(TAG, "----> Query Start: " + st.toString());
+    public static <T> T doQuery(SQLiteDatabase db, SQLStatement st, CursorParser<T> parser) {
+        if (Log.isPrint) {
+            Log.v(TAG, "----> Query Start: " + st.toString());
+        }
         Cursor cursor = db.rawQuery(st.sql, (String[]) st.bindArgs);
         if (cursor != null) {
             parser.process(db, cursor);
-            if (Log.isPrint) Log.v(TAG, "<---- Query End , cursor size : " + cursor.getCount());
+            if (Log.isPrint) {
+                Log.i(TAG, "<---- Query End , cursor size : " + cursor.getCount());
+            }
         } else {
-            if (Log.isPrint) Log.v(TAG, "<---- Query End : nothing find");
+            if (Log.isPrint) {
+                Log.e(TAG, "<---- Query End : cursor is null");
+            }
         }
+        return parser.returnResult();
     }
 
     /**
@@ -37,19 +44,31 @@ public class Querier {
      *
      * @author MaTianyu
      */
-    public static abstract class CursorParser {
+    public static abstract class CursorParser<T> {
+        private boolean parse = true;
+
         public final void process(SQLiteDatabase db, Cursor cursor) {
             try {
                 cursor.moveToFirst();
-                while (!cursor.isAfterLast()) {
+                while (parse && !cursor.isAfterLast()) {
                     parseEachCursor(db, cursor);
                     cursor.moveToNext();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                if (cursor != null) cursor.close();
+                if (cursor != null) {
+                    cursor.close();
+                }
             }
+        }
+
+        public final void stopParse() {
+            parse = false;
+        }
+
+        public T returnResult(){
+            return null;
         }
 
         public abstract void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception;

@@ -1,4 +1,4 @@
-package com.litesuits.orm.model;
+package com.litesuits.orm.model.single;
 
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.Mapping.Relation;
@@ -12,8 +12,8 @@ import java.util.ArrayList;
  * @author MaTianyu
  * 2014-3-7上午10:42:55
  */
-@Table("teacher")
-public class Teacher extends Person{
+@Table("boss")
+public class Boss extends Person{
 
     public String address = "默认地址";
     public String phone = "";
@@ -21,30 +21,10 @@ public class Teacher extends Person{
     @Mapping(Relation.ManyToMany)
     private ArrayList<Man> list;
 
-    //public Teacher() {
-    //}
-
-    public Teacher(String name, ArrayList<Man> list) {
+    public Boss(String name, ArrayList<Man> list) {
         this.name = name;
         this.list = list;
     }
-
-    ///**
-    // * 让我们来隐藏真正的密码
-    // */
-    //@Ignore
-    //private String realPassword;
-    //
-    ///**
-    // * 真正被保存的是buildValue所构建的内容
-    // */
-    //private ColumnValue password = new ColumnValue() {
-    //    @Override
-    //    public CharSequence buildValue() {
-    //        return Base64.encodeToString(realPassword.getBytes(), Base64.DEFAULT);
-    //    }
-    //};
-
 
     public long getId() {
         return id;
@@ -72,7 +52,7 @@ public class Teacher extends Person{
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("Teacher [id=" + id + ", name=" + name + ", phone=" + phone+ ", " +
+        StringBuilder sb = new StringBuilder("Boss [id=" + id + ", name=" + name + ", phone=" + phone+ ", " +
                 "address=" + address);
         if (list != null) {
             sb.append(", list=");

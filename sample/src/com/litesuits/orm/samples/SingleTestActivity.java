@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class LiteOrmSamplesActivity extends BaseActivity {
+public class SingleTestActivity extends BaseActivity {
     //Timer    timer;
     DataBase db;
     static Man uComplex, uAlice, uMax, uMin;
@@ -41,7 +41,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     static Wife wife1, wife2;
 
     /**
-     * 在{@link BaseActivity#onCreate(Bundle)}中设置视图
+     * 在{@link com.litesuits.orm.samples.BaseActivity#onCreate(android.os.Bundle)}中设置视图
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
