@@ -148,12 +148,12 @@ public class SQLBuilder {
                 } else {
                     needComma = true;
                 }
-                Property p = en.getValue();
-                sb.append(p.column);
+                String key = en.getKey();
+                sb.append(key);
                 if (en.getValue() == null) {
                     sb.append(DataUtil.TEXT);
                 } else {
-                    Field f = p.field;
+                    Field f = en.getValue().field;
                     sb.append(DataUtil.getSQLDataType(f));
 
                     if (f.getAnnotation(NotNull.class) != null) {
@@ -193,7 +193,7 @@ public class SQLBuilder {
                             list = new ArrayList<String>();
                             combineUniqueMap.put(uc.value(), list);
                         }
-                        list.add(p.column);
+                        list.add(key);
                     }
 
                 }
