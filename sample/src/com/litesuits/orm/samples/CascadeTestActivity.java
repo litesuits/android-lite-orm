@@ -6,6 +6,10 @@ import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.R;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
+import com.litesuits.orm.model.cascade.Book;
+import com.litesuits.orm.model.cascade.Classes;
+import com.litesuits.orm.model.cascade.College;
+import com.litesuits.orm.model.cascade.School;
 import com.litesuits.orm.model.cascade.tomany.Student;
 import com.litesuits.orm.model.cascade.tomany.Teacher;
 
@@ -28,8 +32,19 @@ public class CascadeTestActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setSubTitile(getString(R.string.sub_title));
+
+        // 模拟数据
         mockData();
+
+        // 使用级联操作
         db = LiteOrm.newCascadeInstance(this, "cascade.db");
+
+        //DataBase db = LiteOrm.newCascadeInstance(this, "cascade.db");
+        //db.save(user);
+        //
+        //// 与非级联交叉使用：
+        //db.cascade().save(user);//级联操作：保存[当前对象]，以及该对象所有的[关联对象]以及它们的[映射关系]，超贱！
+        //db.single().save(user);//非级联操作：仅保存[当前对象]，高效率。
     }
 
     private void makeOrmTest(int id) {
@@ -87,6 +102,17 @@ public class CascadeTestActivity extends BaseActivity {
         ts.add(teacher1);
         ts.add(teacher2);
         db.insert(ts, ConflictAlgorithm.Fail);
+
+        Book book1 = new Book("书：year和author联合唯一");
+        book1.setYear(1988);
+        book1.setAuthor("hehe");
+
+        Book book2 = new Book("其实是同一本书：year和author联合唯一");
+        book2.setYear(1988);
+        book2.setAuthor("hehe");
+
+        db.insert(book1);
+        db.insert(book2, ConflictAlgorithm.Abort);
     }
 
     private void testUpdate() {
@@ -98,8 +124,12 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     private void testQueryAll() {
+        queryAndPrintAll(School.class);
+        queryAndPrintAll(College.class);
+        queryAndPrintAll(Classes.class);
         queryAndPrintAll(Teacher.class);
         queryAndPrintAll(Student.class);
+        queryAndPrintAll(Book.class);
     }
 
     private void testQueryByWhere() {
@@ -131,8 +161,12 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     private void testDeleteAll() {
+        db.deleteAll(School.class);
+        db.deleteAll(College.class);
+        db.deleteAll(Classes.class);
         db.deleteAll(Teacher.class);
         db.deleteAll(Student.class);
+        db.deleteAll(Book.class);
     }
 
 

@@ -1,5 +1,6 @@
 package com.litesuits.orm.db.assit;
 
+import android.util.SparseArray;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.annotation.PrimaryKey;
@@ -114,6 +115,7 @@ public class SQLBuilder {
 
     /**
      * 构建【表】sql语句
+     * create [temp] table if not exists (table-name) (co1 TEXT, co2 TEXT, UNIQUE (co1, co2))
      *
      * @param table
      * @return
@@ -139,17 +141,19 @@ public class SQLBuilder {
                 sb.append(COMMA);
             }
             boolean needComma = false;
+            SparseArray<ArrayList<String>> combineUniqueMap = null;
             for (Entry<String, Property> en : table.pmap.entrySet()) {
                 if (needComma) {
                     sb.append(COMMA);
                 } else {
                     needComma = true;
                 }
-                sb.append(en.getKey());
+                Property p = en.getValue();
+                sb.append(p.column);
                 if (en.getValue() == null) {
                     sb.append(DataUtil.TEXT);
                 } else {
-                    Field f = en.getValue().field;
+                    Field f = p.field;
                     sb.append(DataUtil.getSQLDataType(f));
 
                     if (f.getAnnotation(NotNull.class) != null) {
@@ -165,19 +169,48 @@ public class SQLBuilder {
                     if (f.getAnnotation(Conflict.class) != null) {
                         sb.append(ON_CONFLICT);
                         sb.append(f.getAnnotation(Conflict.class).value().getSql());
+                        sb.append(BLANK);
                     }
 
                     if (f.getAnnotation(Check.class) != null) {
                         sb.append(CHECK + PARENTHESES_LEFT);
                         sb.append(f.getAnnotation(Check.class).value());
-                        sb.append(PARENTHESES_RIGHT + BLANK);
+                        sb.append(PARENTHESES_RIGHT);
+                        sb.append(BLANK);
                     }
                     if (f.getAnnotation(Collate.class) != null) {
                         sb.append(COLLATE);
                         sb.append(f.getAnnotation(Collate.class).value());
                         sb.append(BLANK);
                     }
+                    UniqueCombine uc = f.getAnnotation(UniqueCombine.class);
+                    if (uc != null) {
+                        if (combineUniqueMap == null) {
+                            combineUniqueMap = new SparseArray<ArrayList<String>>();
+                        }
+                        ArrayList<String> list = combineUniqueMap.get(uc.value());
+                        if (list == null) {
+                            list = new ArrayList<String>();
+                            combineUniqueMap.put(uc.value(), list);
+                        }
+                        list.add(p.column);
+                    }
 
+                }
+            }
+            if (combineUniqueMap != null) {
+                for (int i = 0, nsize = combineUniqueMap.size(); i < nsize; i++) {
+                    ArrayList<String> list = combineUniqueMap.valueAt(i);
+                    if (list.size() > 1) {
+                        sb.append(COMMA).append(UNIQUE).append(PARENTHESES_LEFT);
+                        for (int j = 0, size = list.size(); j < size; j++) {
+                            if (j != 0) {
+                                sb.append(COMMA);
+                            }
+                            sb.append(list.get(j));
+                        }
+                        sb.append(PARENTHESES_RIGHT);
+                    }
                 }
             }
         }

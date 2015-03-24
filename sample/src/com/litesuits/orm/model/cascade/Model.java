@@ -1,16 +1,12 @@
 package com.litesuits.orm.model.cascade;
 
-import com.litesuits.orm.db.annotation.PrimaryKey;
-
 /**
  * @author MaTianyu
  * @date 2015-03-22
  */
 public abstract class Model {
 
-    @PrimaryKey(PrimaryKey.AssignType.AUTO_INCREMENT)
     private long id;
-
 
     private String title;
 

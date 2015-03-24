@@ -31,6 +31,7 @@ import java.util.List;
  */
 public final class TableManager {
     private static final String TAG = TableManager.class.getSimpleName();
+    private static final String ID[] = new String[]{"id", "_id"};
     /**
      * 数据库表信息
      */
@@ -77,16 +78,16 @@ public final class TableManager {
         // 关键点0：[实体表]是否OK
         EntityTable table = getTable(claxx);
         //if (!table.isChecked) {
-            // 关键点1：初始化全部数据库表
-            initAllTablesFromSQLite(db);
-            // table lock synchronized
-            // 关键点2:判断[数据库表]是否存在，是否需要新加列。
-            if (!checkExistAndColumns(db, table)) {
-                // 关键点3：新建[数据库表]并加入表队列
-                if (createTable(db, table)) {
-                    putNewSqlTableIntoMap(table);
-                }
+        // 关键点1：初始化全部数据库表
+        initAllTablesFromSQLite(db);
+        // table lock synchronized
+        // 关键点2:判断[数据库表]是否存在，是否需要新加列。
+        if (!checkExistAndColumns(db, table)) {
+            // 关键点3：新建[数据库表]并加入表队列
+            if (createTable(db, table)) {
+                putNewSqlTableIntoMap(table);
             }
+        }
         //    table.isChecked = true;
         //}
         return table;
@@ -100,15 +101,15 @@ public final class TableManager {
         // 关键点0：[实体表]是否OK
         EntityTable table = getMappingTable(tableName, column1, column2);
         //if (!table.isChecked) {
-            // 关键点1：初始化全部数据库表
-            initAllTablesFromSQLite(db);
-            // 关键点2:判断[数据库表]是否存在，是否需要新加列。
-            if (!checkExistAndColumns(db, table)) {
-                // 关键点3：新建[数据库表]并加入表队列
-                if (createTable(db, table)) {
-                    putNewSqlTableIntoMap(table);
-                }
+        // 关键点1：初始化全部数据库表
+        initAllTablesFromSQLite(db);
+        // 关键点2:判断[数据库表]是否存在，是否需要新加列。
+        if (!checkExistAndColumns(db, table)) {
+            // 关键点3：新建[数据库表]并加入表队列
+            if (createTable(db, table)) {
+                putNewSqlTableIntoMap(table);
             }
+        }
         //table.isChecked = true;
         //}
     }
@@ -398,7 +399,6 @@ public final class TableManager {
             table.name = getTableName(claxx);
             table.pmap = new LinkedHashMap<String, Property>();
             List<Field> fields = FieldUtil.getAllDeclaredFields(claxx);
-            //Field[] fields = claxx.getDeclaredFields();
             for (Field f : fields) {
                 if (FieldUtil.isInvalid(f)) {
                     continue;
@@ -421,12 +421,7 @@ public final class TableManager {
                     // 主键不加入属性Map
                     table.key = new com.litesuits.orm.db.model.PrimaryKey(p, key.value());
                     // 主键为系统分配,对类型有要求
-                    if (table.key.isAssignedBySystem()) {
-                        if (!FieldUtil.isLong(table.key.field) && !FieldUtil.isInteger(table.key.field)) {
-                            throw new RuntimeException(PrimaryKey.AssignType.AUTO_INCREMENT + "要求主键属性必须是long或者int( the primary key should be long or int...)\n " +
-                                    "提示：把你的主键设置为long或int型");
-                        }
-                    }
+                    checkPrimaryKey(table.key);
                 } else {
                     //ORM handle
                     //if(Log.isPrint)Log.i(TAG, "Mapping : " + Mapping.class+ " field: "+ f);
@@ -438,12 +433,39 @@ public final class TableManager {
                     }
                 }
             }
-        }
-        if (needPK && table.key == null) {
-            throw new RuntimeException("你必须为[" + table.claxx.getSimpleName() + "]设置主键(you must set the primary key...)" +
-                    "\n 提示：在对象的属性上加PrimaryKey注解来设置主键。");
+            if (table.key == null) {
+                for (String col : table.pmap.keySet()) {
+                    for (String id : ID) {
+                        if (id.equalsIgnoreCase(col)) {
+                            Property p = table.pmap.remove(col);
+                            // 主键不加入属性Map
+                            table.key = new com.litesuits.orm.db.model.PrimaryKey(p, PrimaryKey.AssignType.AUTO_INCREMENT);
+                            // 主键为系统分配,对类型有要求
+                            checkPrimaryKey(table.key);
+                            break;
+                        }
+                    }
+                    if (table.key != null) {
+                        break;
+                    }
+                }
+            }
+            if (needPK && table.key == null) {
+                throw new RuntimeException("你必须为[" + table.claxx.getSimpleName() + "]设置主键(you must set the primary key...)" +
+                        "\n 提示：在对象的属性上加PrimaryKey注解来设置主键。");
+            }
         }
         return table;
+    }
+
+    private static void checkPrimaryKey(com.litesuits.orm.db.model.PrimaryKey key) {
+        if (key.isAssignedBySystem()) {
+            if (!FieldUtil.isLong(key.field) && !FieldUtil.isInteger(key.field)) {
+                throw new RuntimeException(PrimaryKey.AssignType.AUTO_INCREMENT
+                        + "the primary key should be long or int...\n " +
+                        "提示：把你的主键设置为long或int型");
+            }
+        }
     }
 
     /**
