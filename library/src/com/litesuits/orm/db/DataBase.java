@@ -1,5 +1,6 @@
 package com.litesuits.orm.db;
 
+import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
@@ -9,6 +10,7 @@ import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.db.model.Relation;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,14 +22,6 @@ import java.util.List;
  * @date 2013-6-2上午2:37:56
  */
 public interface DataBase {
-    /**
-     * if database in sdcard , you need call this method, and in manifest:
-     * <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
-     * <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-     *
-     * @return true if create successfully.
-     */
-    public boolean createDatabase();
 
     /**
      * get a single sqlite database operator
@@ -277,6 +271,33 @@ public interface DataBase {
      * get {@link DataBaseConfig}
      */
     public DataBaseConfig getDataBaseConfig();
+
+
+    /**
+     * {@link #openOrCreateDatabase(String, android.database.sqlite.SQLiteDatabase.CursorFactory, android.database.DatabaseErrorHandler)}
+     *
+     * @return true if create successfully.
+     */
+    public SQLiteDatabase createDatabase();
+
+    /**
+     * if database in sdcard , you will need this  in manifest:
+     * <p/>
+     * <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
+     * <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+     * Equivalent to {@link SQLiteDatabase#openDatabase(String, android.database.sqlite.SQLiteDatabase.CursorFactory, int, android.database.DatabaseErrorHandler)}.
+     */
+    public SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory,
+                                               DatabaseErrorHandler errorHandler);
+
+    /**
+     * if database in sdcard , you will need this  in manifest:
+     * <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
+     *
+     * @return true if delete successfully.
+     */
+    public boolean deleteDatabase(File file);
+
 
     /**
      * 关闭数据库，清空缓存。

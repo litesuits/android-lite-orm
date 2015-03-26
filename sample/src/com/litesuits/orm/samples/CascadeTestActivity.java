@@ -43,9 +43,6 @@ public class CascadeTestActivity extends BaseActivity {
 
         db = LiteOrm.newCascadeInstance(this, DB_NAME);
 
-        // createDatabase仅当存放在sd卡等其他非默认路径时调用一次。
-        db.createDatabase();
-
         //DataBase db = LiteOrm.newCascadeInstance(this, "cascade.db");
         //db.save(user);
         //

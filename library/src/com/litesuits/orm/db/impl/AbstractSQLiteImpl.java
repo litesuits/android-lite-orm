@@ -1,7 +1,10 @@
 package com.litesuits.orm.db.impl;
 
+import android.annotation.TargetApi;
 import android.database.Cursor;
+import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
@@ -60,25 +63,9 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
         mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(), mConfig.dbName, null, mConfig.dbVersion, config.onUpdateListener);
         mConfig.context = null;
         mTableManager = new TableManager(mConfig.dbName);
-    }
-
-    @Override
-    public boolean createDatabase() {
-        try {
-            File dbf = new File(mConfig.dbName);
-            File dbp = dbf.getParentFile();
-            if (!dbp.exists()) {
-                dbp.mkdirs();
-            }
-            if (!dbf.exists()) {
-                dbf.createNewFile();
-            }
-            SQLiteDatabase.openOrCreateDatabase(mConfig.dbName, null);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (mConfig.dbName.contains(File.separator)) {
+            createDatabase();
         }
-        return false;
     }
 
     @Override
@@ -212,6 +199,49 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
     @Override
     public DataBaseConfig getDataBaseConfig() {
         return mConfig;
+    }
+
+    @Override
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public SQLiteDatabase createDatabase() {
+        return openOrCreateDatabase(mConfig.dbName, null, null);
+    }
+
+    @Override
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory,
+                                               DatabaseErrorHandler errorHandler) {
+        acquireReference();
+        try {
+            File dbf = new File(path);
+            File dbp = dbf.getParentFile();
+            if (!dbp.exists()) {
+                dbp.mkdirs();
+            }
+            if (!dbf.exists()) {
+                dbf.createNewFile();
+            }
+            return SQLiteDatabase.openOrCreateDatabase(path, factory, errorHandler);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            releaseReference();
+        }
+        return null;
+    }
+
+    @Override
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    public boolean deleteDatabase(File file) {
+        acquireReference();
+        try {
+            return SQLiteDatabase.deleteDatabase(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            releaseReference();
+        }
+        return false;
     }
 
     @Override
