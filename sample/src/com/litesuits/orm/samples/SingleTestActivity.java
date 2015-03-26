@@ -240,8 +240,13 @@ public class SingleTestActivity extends BaseActivity {
     }
 
     private void testQueryByWhere() {
-        //AND关系 获取 南京的香港路
+        // 模糊查询：所有带“山”字的地址
         QueryBuilder qb = new QueryBuilder(Address.class)
+                .where(Address.COL_ADDRESS + " LIKE ?", new String[]{"%山%"});
+        printAddress(db.<Address>query(qb));
+
+        //AND关系 获取 南京的香港路
+        qb = new QueryBuilder(Address.class)
                 .where(WhereBuilder.create()
                         .equals(Address.COL_ADDRESS, "香港路")
                         .andEquals(Address.COL_CITY, "南京"));
@@ -423,6 +428,7 @@ public class SingleTestActivity extends BaseActivity {
         addrList.add(new Address("4 公主坟", "北京"));
         addrList.add(new Address("夫子庙", "南京"));
         addrList.add(new Address("中山陵", "南京"));
+        addrList.add(new Address("西山陵", "南京"));
         addrList.add(new Address("香港路", "南京"));
         addrList.add(new Address("香港路", "杭州"));
         addrList.add(new Address("香港路", "青岛"));

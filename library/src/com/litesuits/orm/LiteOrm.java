@@ -4,7 +4,7 @@ import android.content.Context;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.impl.CascadeSQLiteImpl;
-import com.litesuits.orm.db.impl.DataBaseSQLiteImpl;
+import com.litesuits.orm.db.impl.SingleSQLiteImpl;
 
 /**
  * 数据管理
@@ -44,7 +44,7 @@ public final class LiteOrm {
     }
 
     public synchronized static DataBase newInstance(DataBaseConfig config) {
-        return DataBaseSQLiteImpl.newInstance(config);
+        return SingleSQLiteImpl.newInstance(config);
     }
 
     public synchronized static DataBase newCascadeInstance(DataBaseConfig config) {

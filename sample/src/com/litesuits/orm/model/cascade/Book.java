@@ -33,4 +33,13 @@ public class Book extends Model {
     public void setAuthor(String author) {
         this.author = author;
     }
+
+    @Override
+    public String toString() {
+        return "Book{" +
+                super.toString() +
+                "year=" + year +
+                ", author='" + author + '\'' +
+                "} ";
+    }
 }

@@ -15,6 +15,8 @@ import com.litesuits.orm.db.model.Relation;
 import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,6 +60,25 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
         mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(), mConfig.dbName, null, mConfig.dbVersion, config.onUpdateListener);
         mConfig.context = null;
         mTableManager = new TableManager(mConfig.dbName);
+    }
+
+    @Override
+    public boolean createDatabase() {
+        try {
+            File dbf = new File(mConfig.dbName);
+            File dbp = dbf.getParentFile();
+            if (!dbp.exists()) {
+                dbp.mkdirs();
+            }
+            if (!dbf.exists()) {
+                dbf.createNewFile();
+            }
+            SQLiteDatabase.openOrCreateDatabase(mConfig.dbName, null);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override

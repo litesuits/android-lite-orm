@@ -12,6 +12,8 @@ import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -94,6 +96,25 @@ public class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase {
             e.printStackTrace();
         } finally {
             releaseReference();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean createDatabase() {
+        try {
+            File dbf = new File(mConfig.dbName);
+            File dbp = dbf.getParentFile();
+            if (!dbp.exists()) {
+                dbp.mkdirs();
+            }
+            if (!dbf.exists()) {
+                dbf.createNewFile();
+            }
+            SQLiteDatabase.openOrCreateDatabase(mConfig.dbName, null);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return false;
     }

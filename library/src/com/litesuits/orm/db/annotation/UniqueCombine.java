@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface UniqueCombine {
     /**
-     * index
+     * 使用相同int值将归为一组[联合唯一]属性
      */
     public int value();
 }

@@ -21,17 +21,28 @@ import java.util.List;
  */
 public interface DataBase {
     /**
+     * if database in sdcard , you need call this method, and in manifest:
+     * <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
+     * <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+     *
+     * @return true if create successfully.
+     */
+    public boolean createDatabase();
+
+    /**
      * get a single sqlite database operator
      *
      * @return {@link com.litesuits.orm.db.impl.CascadeSQLiteImpl}
      */
     public DataBase single();
+
     /**
      * get a cascade sqlite database operator
      *
      * @return {@link com.litesuits.orm.db.impl.CascadeSQLiteImpl}
      */
     public DataBase cascade();
+
     /**
      * save: insert or update a single entity
      *
@@ -256,10 +267,12 @@ public interface DataBase {
      * get {@link TableManager}
      */
     public TableManager getTableManager();
+
     /**
      * get {@link SQLiteHelper}
      */
     public SQLiteHelper getSQLiteHelper();
+
     /**
      * get {@link DataBaseConfig}
      */

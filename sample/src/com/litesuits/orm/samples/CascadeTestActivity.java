@@ -1,6 +1,7 @@
 package com.litesuits.orm.samples;
 
 import android.os.Bundle;
+import android.os.Environment;
 import com.litesuits.android.log.Log;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.R;
@@ -26,6 +27,9 @@ public class CascadeTestActivity extends BaseActivity {
     static Student studentC;
 
 
+    public static final String DB_NAME = Environment.getExternalStorageDirectory().getAbsolutePath()
+            + "/lite/orm/cascade.db";
+
     DataBase db;
 
     @Override
@@ -35,9 +39,12 @@ public class CascadeTestActivity extends BaseActivity {
 
         // 模拟数据
         mockData();
-
         // 使用级联操作
-        db = LiteOrm.newCascadeInstance(this, "cascade.db");
+
+        db = LiteOrm.newCascadeInstance(this, DB_NAME);
+
+        // createDatabase仅当存放在sd卡等其他非默认路径时调用一次。
+        db.createDatabase();
 
         //DataBase db = LiteOrm.newCascadeInstance(this, "cascade.db");
         //db.save(user);
