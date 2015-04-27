@@ -175,7 +175,7 @@ public class CascadeTestActivity extends BaseActivity {
 
 
     private void queryAndPrintAll(Class claxx) {
-        List list = db.queryAll(claxx);
+        List list = db.query(claxx);
         Log.i(TAG, list);
     }
 

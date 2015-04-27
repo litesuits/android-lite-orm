@@ -423,7 +423,7 @@ public class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase {
     }
 
     @Override
-    public <T> ArrayList<T> queryAll(Class<T> claxx) {
+    public <T> ArrayList<T> query(Class<T> claxx) {
         acquireReference();
         try {
             SQLStatement stmt = new QueryBuilder(claxx).createStatement();

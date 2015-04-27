@@ -247,7 +247,7 @@ public class SQLBuilder {
     }
 
     /**
-     * 构建 insert SQL语句
+     * 构建 insert SQL 语句
      *
      * @param entity    实体
      * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值

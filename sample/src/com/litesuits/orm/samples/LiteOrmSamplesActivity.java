@@ -217,11 +217,11 @@ public class LiteOrmSamplesActivity extends BaseActivity {
 
 
     private void testQueryAll() {
-        ArrayList<Man> query = db.queryAll(Man.class);
-        ArrayList<Address> as = db.queryAll(Address.class);
-        ArrayList<Wife> ws = db.queryAll(Wife.class);
-        ArrayList<Company> cs = db.queryAll(Company.class);
-        ArrayList<Boss> ts = db.queryAll(Boss.class);
+        ArrayList<Man> query = db.query(Man.class);
+        ArrayList<Address> as = db.query(Address.class);
+        ArrayList<Wife> ws = db.query(Wife.class);
+        ArrayList<Company> cs = db.query(Company.class);
+        ArrayList<Boss> ts = db.query(Boss.class);
         for (Address uu : as) {
             Log.i(this, "query Address: " + uu);
         }
@@ -275,7 +275,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
     }
 
     private void printAllAddress() {
-        printAddress(db.queryAll(Address.class));
+        printAddress(db.query(Address.class));
     }
 
     private void printAddress(List<Address> addrList) {
@@ -308,11 +308,11 @@ public class LiteOrmSamplesActivity extends BaseActivity {
 
     private void testMapping() {
         // 先找出来相关的实体
-        ArrayList<Man> mans = db.queryAll(Man.class);
-        ArrayList<Address> as = db.queryAll(Address.class);
-        ArrayList<Wife> ws = db.queryAll(Wife.class);
-        ArrayList<Company> cs = db.queryAll(Company.class);
-        ArrayList<Boss> ts = db.queryAll(Boss.class);
+        ArrayList<Man> mans = db.query(Man.class);
+        ArrayList<Address> as = db.query(Address.class);
+        ArrayList<Wife> ws = db.query(Wife.class);
+        ArrayList<Company> cs = db.query(Company.class);
+        ArrayList<Boss> ts = db.query(Boss.class);
         // 为它们映射关系
         db.mapping(mans, as);
         db.mapping(mans, ws);

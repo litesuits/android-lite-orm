@@ -13,8 +13,6 @@ import com.litesuits.orm.db.impl.SQLiteHelper.OnUpdateListener;
 public class DataBaseConfig {
     public static final String DEFAULT_DB_NAME = "liteorm.db";
     public static final int DEFAULT_DB_VERSION = 1;
-
-    //public boolean isDebugged;
     public Context context;
     public String dbName    = DEFAULT_DB_NAME;
     public int    dbVersion = DEFAULT_DB_VERSION;
@@ -30,7 +28,6 @@ public class DataBaseConfig {
 
     public DataBaseConfig(Context context, String dbName, int dbVersion, OnUpdateListener onUpdateListener) {
         this.context = context.getApplicationContext();
-        //this.isDebugged = isDebugged;
         if (!Checker.isEmpty(dbName)) this.dbName = dbName;
         if (dbVersion > 1) this.dbVersion = dbVersion;
         this.onUpdateListener = onUpdateListener;

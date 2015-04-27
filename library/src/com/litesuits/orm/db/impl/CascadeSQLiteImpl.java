@@ -24,7 +24,7 @@ import java.util.*;
  * @author MaTianyu
  * @date 2015-03-13
  */
-public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataBase {
+public final class CascadeSQLiteImpl extends AbstractSQLiteImpl {
 
     public static final String TAG = CascadeSQLiteImpl.class.getSimpleName();
 
@@ -35,7 +35,6 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
     private CascadeSQLiteImpl(DataBaseConfig config) {
         super(config);
     }
-
 
     public synchronized static DataBase newInstance(DataBaseConfig config) {
         return new CascadeSQLiteImpl(config);
@@ -272,13 +271,18 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
             end = end == Integer.MAX_VALUE ? -1 : end - start;
             EntityTable table = TableManager.getTable(claxx);
             List<?> list = query(QueryBuilder.create(claxx)
-                    .limit(start + SQLBuilder.COMMA + end)
-                    .appendOrderAscBy(orderAscColumn)
-                    .columns(new String[]{table.key.column}));
+                                             .limit(start + SQLBuilder.COMMA + end)
+                                             .appendOrderAscBy(orderAscColumn)
+                                             .columns(new String[]{table.key.column}));
             return delete(list);
         } finally {
             releaseReference();
         }
+    }
+
+    @Override
+    public <T> ArrayList<T> query(Class<T> claxx) {
+        return checkTableAndQuery(claxx, new QueryBuilder(claxx));
     }
 
     @Override
@@ -295,18 +299,13 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
     public <T> T queryById(String id, Class<T> claxx) {
         EntityTable table = TableManager.getTable(claxx);
         ArrayList<T> list = checkTableAndQuery(claxx,
-                new QueryBuilder(claxx).whereEquals(table.key.column, String.valueOf(id)));
+                                               new QueryBuilder(claxx)
+                                                       .whereEquals(table.key.column, String.valueOf(id)));
         if (!Checker.isEmpty(list)) {
             return list.get(0);
         }
         return null;
     }
-
-    @Override
-    public <T> ArrayList<T> queryAll(Class<T> claxx) {
-        return checkTableAndQuery(claxx, new QueryBuilder(claxx));
-    }
-
 
     /* --------------------------------  私有方法: 查询相关 -------------------------------- */
 
@@ -318,8 +317,6 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * 3. 如果是多对一，根据map查找key2的关联对象，赋给obj1
      * 4. 如果是一对多，根据map查找key2的关联对象，反射实例化obj1的容器，关联对象放入。
      * 5. 并对关联对象递归此过程
-     *
-     * @return
      */
     private <T> ArrayList<T> checkTableAndQuery(final Class<T> claxx, QueryBuilder builder) {
         acquireReference();
@@ -355,7 +352,8 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * 循环遍历查找当前实体的关联实体
      */
     private void queryForMappingRecursive(Object obj1, SQLiteDatabase db, HashMap<String, Integer> queryMap,
-                                          HashMap<String, Object> entityMap) throws IllegalAccessException, InstantiationException {
+                                          HashMap<String, Object> entityMap)
+            throws IllegalAccessException, InstantiationException {
         final EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.getAssignedKeyObject(table1.key, obj1);
         String key = table1.name + key1;
@@ -378,7 +376,8 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      */
     private void queryMapToOne(final EntityTable table1, Object key1, Object obj1,
                                Field field, SQLiteDatabase db, HashMap<String, Integer> queryMap,
-                               HashMap<String, Object> entityMap) throws IllegalAccessException, InstantiationException {
+                               HashMap<String, Object> entityMap)
+            throws IllegalAccessException, InstantiationException {
         final EntityTable table2 = TableManager.getTable(field.getType());
         SQLStatement relationSql = SQLBuilder.buildQueryRelationSql(table1, table2, key1);
         final Relation relation = new Relation();
@@ -419,7 +418,7 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
             compClass = FieldUtil.getComponentType(field);
         } else {
             throw new RuntimeException("OneToMany and ManyToMany Relation, " +
-                    "you must use collection or array object");
+                                       "you must use collection or array object");
         }
         final EntityTable table2 = TableManager.getTable(compClass);
         final ArrayList<String> key2List = new ArrayList<String>();
@@ -448,7 +447,9 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
                 start = next;
 
                 SQLStatement entitySql = QueryBuilder.create(compClass).whereIn(table2.key.column,
-                        subList.toArray(new String[subList.size()])).createStatement();
+                                                                                subList.toArray(
+                                                                                        new String[subList.size()]))
+                                                     .createStatement();
 
                 Querier.doQuery(db, entitySql, new Querier.CursorParser() {
                     @Override
@@ -471,7 +472,7 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
                     FieldUtil.set(field, obj1, arrObj);
                 } else {
                     throw new RuntimeException("OneToMany and ManyToMany Relation, " +
-                            "you must use collection or array object");
+                                               "you must use collection or array object");
                 }
                 for (Object obj2 : allList2) {
                     queryForMappingRecursive(obj2, db, queryMap, entityMap);
@@ -686,8 +687,6 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * @param obj1 需要保存的对象
      * @param db   可写数据库对象
      * @return rowID of entity
-     * @throws IOException
-     * @throws IllegalAccessException
      */
     private long handleEntityRecursive(int type, SQLStatement stmt, Object obj1, SQLiteDatabase db,
                                        HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
@@ -727,8 +726,6 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * @param obj1 需要保存的对象
      * @param db   可写数据库对象
      * @return rowID of entity
-     * @throws IOException
-     * @throws IllegalAccessException
      */
     private int updateRecursive(SQLStatement stmt, Object obj1, SQLiteDatabase db,
                                 HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
@@ -755,8 +752,6 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * @param obj1 需要保存的对象
      * @param db   可写数据库对象
      * @return rowID of entity
-     * @throws IOException
-     * @throws IllegalAccessException
      */
     private int deleteRecursive(SQLStatement stmt, Object obj1, SQLiteDatabase db,
                                 HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
@@ -782,8 +777,6 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * @param obj1 需要保存的对象
      * @param db   可写数据库对象
      * @return rowID of entity
-     * @throws IOException
-     * @throws IllegalAccessException
      */
     private long insertRecursive(SQLStatement stmt, Object obj1, SQLiteDatabase db,
                                  HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
@@ -813,10 +806,9 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * @param obj1 需要保存的对象
      * @param db   可写数据库对象
      * @return rowID of entity
-     * @throws IOException
-     * @throws IllegalAccessException
      */
-    private long checkTableAndSaveRecursive(Object obj1, SQLiteDatabase db, HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+    private long checkTableAndSaveRecursive(Object obj1, SQLiteDatabase db, HashMap<String, Integer> handleMap)
+            throws IOException, IllegalAccessException {
         mTableManager.checkOrCreateTable(db, obj1);
         return insertRecursive(SQLBuilder.buildReplaceSql(obj1), obj1, db, handleMap);
     }
@@ -827,11 +819,10 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * @param obj1 需要保存的对象
      * @param db   可写数据库对象
      * @return rowID of entity
-     * @throws IOException
-     * @throws IllegalAccessException
      */
     private int checkTableAndDeleteRecursive(Object obj1, SQLiteDatabase db,
-                                             HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+                                             HashMap<String, Integer> handleMap)
+            throws IOException, IllegalAccessException {
         mTableManager.checkOrCreateTable(db, obj1);
         return deleteRecursive(SQLBuilder.buildDeleteSql(obj1), obj1, db, handleMap);
     }
@@ -840,7 +831,8 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * 处理一个实体中所有的关联实体。
      */
     private void handleMapping(Object key1, Object obj1, SQLiteDatabase db,
-                               boolean insertNew, HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+                               boolean insertNew, HashMap<String, Integer> handleMap)
+            throws IOException, IllegalAccessException {
         EntityTable table1 = TableManager.getTable(obj1);
         // 2. 存储[关联实体]以及其[关系映射]
         if (table1.mappingList != null) {
@@ -862,7 +854,7 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
                             handleMapToMany(table1, key1, Arrays.asList((Object[]) array), db, insertNew, handleMap);
                         } else {
                             throw new RuntimeException("OneToMany and ManyToMany Relation, " +
-                                    "you must use collection or array object");
+                                                       "you must use collection or array object");
                         }
                     }
                 }
@@ -874,7 +866,8 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * 处理N对1关系的关联实体
      */
     private void handleMapToOne(EntityTable table1, Object key1, Object obj2, SQLiteDatabase db,
-                                boolean insertNew, HashMap<String, Integer> handleMap) throws IllegalAccessException, IOException {
+                                boolean insertNew, HashMap<String, Integer> handleMap)
+            throws IllegalAccessException, IOException {
         if (obj2 != null) {
             if (insertNew) {
                 // 递归存储[关联实体]
@@ -908,7 +901,8 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
      * 处理N对N关系的关联实体
      */
     private void handleMapToMany(EntityTable table1, Object key1, Collection coll, SQLiteDatabase db,
-                                 boolean insertNew, HashMap<String, Integer> handleMap) throws IllegalAccessException, IOException {
+                                 boolean insertNew, HashMap<String, Integer> handleMap)
+            throws IllegalAccessException, IOException {
         if (coll != null) {
             boolean isF = true;
             StringBuilder values = new StringBuilder();
@@ -961,8 +955,8 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl implements DataB
                     if (!Checker.isEmpty(args)) {
                         SQLStatement stmt = new SQLStatement();
                         stmt.sql = SQLBuilder.REPLACE + SQLBuilder.INTO + tableName
-                                + SQLBuilder.PARENTHESES_LEFT + table1.name + SQLBuilder.COMMA
-                                + table2.name + SQLBuilder.PARENTHESES_RIGHT + SQLBuilder.VALUES + values;
+                                   + SQLBuilder.PARENTHESES_LEFT + table1.name + SQLBuilder.COMMA
+                                   + table2.name + SQLBuilder.PARENTHESES_RIGHT + SQLBuilder.VALUES + values;
                         stmt.bindArgs = args;
                         stmt.execInsert(db);
                     }

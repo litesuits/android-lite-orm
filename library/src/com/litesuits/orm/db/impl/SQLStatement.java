@@ -60,46 +60,57 @@ public class SQLStatement implements Serializable {
      * 给sql语句的占位符(?)按序绑定值
      *
      * @param i The 1-based index to the parameter to bind null to
-     * @param o
-     * @throws Exception
      */
     protected void bind(int i, Object o) throws IOException {
-        switch (DataUtil.getType(o)) {
-            case DataUtil.FIELD_TYPE_NULL:
-                mStatement.bindNull(i);
-                break;
-            case DataUtil.FIELD_TYPE_STRING:
-                mStatement.bindString(i, String.valueOf(o));
-                break;
-            case DataUtil.FIELD_TYPE_LONG:
-                mStatement.bindLong(i, ((Number) o).longValue());
-                break;
-            case DataUtil.FIELD_TYPE_REAL:
-                mStatement.bindDouble(i, ((Number) o).doubleValue());
-                break;
-            case DataUtil.FIELD_TYPE_DATE:
-                mStatement.bindLong(i, ((Date) o).getTime());
-                break;
-            case DataUtil.FIELD_TYPE_BLOB:
-                mStatement.bindBlob(i, (byte[]) o);
-                break;
-            case DataUtil.FIELD_TYPE_SERIALIZABLE:
-                mStatement.bindBlob(i, DataUtil.objectToByte(o));
-                break;
-            default:
-                break;
+        if (o == null) {
+            mStatement.bindNull(i);
+        } else if (o instanceof CharSequence || o instanceof Boolean || o instanceof Character) {
+            mStatement.bindString(i, String.valueOf(o));
+        } else if (o instanceof Float || o instanceof Double) {
+            mStatement.bindDouble(i, ((Number) o).doubleValue());
+        } else if (o instanceof Number) {
+            mStatement.bindLong(i, ((Number) o).longValue());
+        } else if (o instanceof Date) {
+            mStatement.bindLong(i, ((Date) o).getTime());
+        } else if (o instanceof byte[]) {
+            mStatement.bindBlob(i, (byte[]) o);
+        } else if (o instanceof Serializable) {
+            mStatement.bindBlob(i, DataUtil.objectToByte(o));
+        } else {
+            mStatement.bindNull(i);
         }
+        //switch (DataUtil.getType(o)) {
+        //    case DataUtil.FIELD_TYPE_NULL:
+        //        mStatement.bindNull(i);
+        //        break;
+        //    case DataUtil.FIELD_TYPE_STRING:
+        //        mStatement.bindString(i, String.valueOf(o));
+        //        break;
+        //    case DataUtil.FIELD_TYPE_LONG:
+        //        mStatement.bindLong(i, ((Number) o).longValue());
+        //        break;
+        //    case DataUtil.FIELD_TYPE_REAL:
+        //        mStatement.bindDouble(i, ((Number) o).doubleValue());
+        //        break;
+        //    case DataUtil.FIELD_TYPE_DATE:
+        //        mStatement.bindLong(i, ((Date) o).getTime());
+        //        break;
+        //    case DataUtil.FIELD_TYPE_BLOB:
+        //        mStatement.bindBlob(i, (byte[]) o);
+        //        break;
+        //    case DataUtil.FIELD_TYPE_SERIALIZABLE:
+        //        mStatement.bindBlob(i, DataUtil.objectToByte(o));
+        //        break;
+        //    default:
+        //        break;
+        //}
     }
 
     /**
      * 执行插入单个数据，返回rawid
-     *
-     * @param db
-     * @param entity
-     * @return
-     * @throws Exception
      */
-    public long execInsertWithMapping(SQLiteDatabase db, Object entity, TableManager tableManager) throws IllegalAccessException, IOException {
+    public long execInsertWithMapping(SQLiteDatabase db, Object entity, TableManager tableManager)
+            throws IllegalAccessException, IOException {
         printSQL();
         mStatement = db.compileStatement(sql);
         Object keyObj = null;
@@ -124,10 +135,6 @@ public class SQLStatement implements Serializable {
 
     /**
      * 目前可用于给对象持久化映射关系时，因为不传入实体所以不可以为之注入ID。
-     *
-     * @param db
-     * @return
-     * @throws Exception
      */
     public long execInsert(SQLiteDatabase db) throws IOException, IllegalAccessException {
         return execInsertWithMapping(db, null, null);
@@ -135,10 +142,6 @@ public class SQLStatement implements Serializable {
 
     /**
      * 目前可用于给对象持久化映射关系时，因为不传入实体所以不可以为之注入ID。
-     *
-     * @param db
-     * @return
-     * @throws Exception
      */
     public long execInsert(SQLiteDatabase db, Object entity) throws IOException, IllegalAccessException {
         printSQL();
@@ -167,9 +170,6 @@ public class SQLStatement implements Serializable {
 
     /**
      * 执行批量插入
-     *
-     * @param db
-     * @return
      */
     public int execInsertCollection(SQLiteDatabase db, Collection<?> list, TableManager tableManager) {
         printSQL();
@@ -255,11 +255,6 @@ public class SQLStatement implements Serializable {
 
     /**
      * 执行更新单个数据，返回受影响的行数
-     *
-     * @param db
-     * @param entity
-     * @return
-     * @throws Exception
      */
     public int execUpdateWithMapping(SQLiteDatabase db, Object entity, TableManager tableManager) throws Exception {
         printSQL();
@@ -287,11 +282,9 @@ public class SQLStatement implements Serializable {
 
     /**
      * 执行批量更新
-     *
-     * @param db
-     * @return
      */
-    public int execUpdateCollection(SQLiteDatabase db, Collection<?> list, ColumnsValue cvs, TableManager tableManager) {
+    public int execUpdateCollection(SQLiteDatabase db, Collection<?> list, ColumnsValue cvs,
+                                    TableManager tableManager) {
         printSQL();
         db.beginTransaction();
         if (Log.isPrint) {
@@ -361,10 +354,6 @@ public class SQLStatement implements Serializable {
 
     /**
      * 删除语句执行，返回受影响的行数
-     *
-     * @param db
-     * @return
-     * @throws Exception
      */
     public int execDelete(SQLiteDatabase db) throws IOException {
         return execDeleteWithMapping(db, null, null);
@@ -373,11 +362,9 @@ public class SQLStatement implements Serializable {
     /**
      * 执行删操作.(excute delete ...)，返回受影响的行数
      * 并将关系映射删除
-     *
-     * @param db
-     * @throws Exception
      */
-    public int execDeleteWithMapping(final SQLiteDatabase db, Object entity, TableManager tableManager) throws IOException {
+    public int execDeleteWithMapping(final SQLiteDatabase db, Object entity, TableManager tableManager)
+            throws IOException {
         printSQL();
         mStatement = db.compileStatement(sql);
         if (bindArgs != null) {
@@ -406,11 +393,9 @@ public class SQLStatement implements Serializable {
     /**
      * 执行删操作.(excute delete ...)，返回受影响的行数
      * 并将关系映射删除
-     *
-     * @param db
-     * @throws Exception
      */
-    public int execDeleteCollection(final SQLiteDatabase db, final Collection<?> collection, final TableManager tableManager) throws Exception {
+    public int execDeleteCollection(final SQLiteDatabase db, final Collection<?> collection,
+                                    final TableManager tableManager) throws Exception {
         printSQL();
         // 删除全部数据
         mStatement = db.compileStatement(sql);
@@ -454,8 +439,6 @@ public class SQLStatement implements Serializable {
 
     /**
      * 执行create,drop table 等
-     *
-     * @param db
      */
     public boolean execute(SQLiteDatabase db) {
         printSQL();
@@ -479,9 +462,6 @@ public class SQLStatement implements Serializable {
     /**
      * Execute a statement that returns a 1 by 1 table with a numeric value.
      * For example, SELECT COUNT(*) FROM table;
-     *
-     * @param db
-     * @return
      */
     public long queryForLong(SQLiteDatabase db) {
         printSQL();
@@ -508,9 +488,6 @@ public class SQLStatement implements Serializable {
     /**
      * 执行查询
      * 根据类信息读取数据库，取出全部本类的对象。
-     *
-     * @param claxx
-     * @return
      */
     public <T> ArrayList<T> query(SQLiteDatabase db, final Class<T> claxx) {
         printSQL();
@@ -534,9 +511,6 @@ public class SQLStatement implements Serializable {
     /**
      * 执行查询
      * 根据类信息读取数据库，取出本类的对象。
-     *
-     * @param claxx
-     * @return
      */
     public <T> T queryOneEntity(SQLiteDatabase db, final Class<T> claxx) {
         printSQL();
@@ -563,18 +537,17 @@ public class SQLStatement implements Serializable {
     @Override
     public String toString() {
         return "SQLStatement [sql=" + sql + ", bindArgs=" + Arrays.toString(bindArgs) + ", mStatement=" + mStatement
-                + "]";
+               + "]";
     }
     /*------------------------------ 私有方法 ------------------------------*/
 
     /**
      * 重新映射关系到数据库
      *
-     * @param entity
      * @param insertNew 仅在执行删除该实体时，此值为false
-     * @param db
      */
-    private void mapRelationToDb(Object entity, final boolean insertNew, final boolean tableCheck, SQLiteDatabase db, final TableManager tableManager) {
+    private void mapRelationToDb(Object entity, final boolean insertNew, final boolean tableCheck, SQLiteDatabase db,
+                                 final TableManager tableManager) {
         // 插入关系映射
         final MapInfo mapTable = SQLBuilder.buildMappingSql(entity, insertNew);
         if (mapTable != null && !mapTable.isEmpty()) {
@@ -584,7 +557,7 @@ public class SQLStatement implements Serializable {
                     if (insertNew && tableCheck) {
                         for (MapTable table : mapTable.tableList) {
                             tableManager.checkOrCreateMappingTable(db, table.name, table.column1,
-                                    table.column2);
+                                                                   table.column2);
                         }
                     }
                     if (mapTable.delOldRelationSQL != null) {

@@ -1,5 +1,6 @@
 package com.litesuits.orm.db;
 
+
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.android.log.Log;
@@ -11,7 +12,6 @@ import com.litesuits.orm.db.assit.Checker;
 import com.litesuits.orm.db.assit.Querier;
 import com.litesuits.orm.db.assit.SQLBuilder;
 import com.litesuits.orm.db.assit.Transaction;
-import com.litesuits.orm.db.assit.Transaction.Worker;
 import com.litesuits.orm.db.impl.SQLStatement;
 import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.utils.DataUtil;
@@ -139,7 +139,7 @@ public final class TableManager {
                             stmt.execute(db);
                             if (Log.isPrint) {
                                 Log.i(TAG, "Table [" + entityTable.name + "] Primary Key has changed, " +
-                                        "so drop and recreate it later.");
+                                           "so drop and recreate it later.");
                             }
                             return false;
                         }
@@ -158,10 +158,11 @@ public final class TableManager {
                             int sum = insertNewColunms(db, entityTable.name, newColumns);
                             if (Log.isPrint) {
                                 if (sum > 0) {
-                                    Log.i(TAG, "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
+                                    Log.i(TAG,
+                                          "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
                                 } else {
                                     Log.e(TAG, "Table [" + entityTable.name + "] add " + sum + " new column error ： " +
-                                            newColumns);
+                                               newColumns);
                                 }
                             }
                         }
@@ -178,8 +179,6 @@ public final class TableManager {
 
     /**
      * 将Sql Table放入存储集合
-     *
-     * @param table
      */
     private void putNewSqlTableIntoMap(EntityTable table) {
         if (Log.isPrint) {
@@ -203,8 +202,6 @@ public final class TableManager {
 
     /**
      * 初始化全部表及其列名,初始化失败，则无法进行下去。
-     *
-     * @param db
      */
     private void initAllTablesFromSQLite(SQLiteDatabase db) {
         synchronized (mSqlTableMap) {
@@ -244,15 +241,11 @@ public final class TableManager {
 
     /**
      * 插入新列
-     *
-     * @param tableName
-     * @param columns
-     * @return
      */
     private int insertNewColunms(SQLiteDatabase db, final String tableName, final List<String> columns) {
         Integer size = null;
         if (!Checker.isEmpty(columns)) {
-            size = Transaction.execute(db, new Worker<Integer>() {
+            size = Transaction.execute(db, new Transaction.Worker<Integer>() {
                 @Override
                 public Integer doTransaction(SQLiteDatabase db) {
                     for (String c : columns) {
@@ -276,10 +269,6 @@ public final class TableManager {
     /**
      * 数据库分析
      * 通过读数据库得到一张表的全部列名
-     *
-     * @param db
-     * @param tableName
-     * @return
      */
     public ArrayList<String> getAllColumnsFromSQLite(SQLiteDatabase db, final String tableName) {
         final EntityTable table = getTable(SQLiteColumn.class, false);
@@ -301,9 +290,6 @@ public final class TableManager {
     /**
      * 语义分析
      * 依据表的sql“CREATE TABLE”建表语句得到一张表的全部列名。
-     *
-     * @param sql
-     * @return
      */
     public ArrayList<String> transformSqlToColumns(String sql) {
         if (sql != null) {
@@ -394,7 +380,6 @@ public final class TableManager {
         //if(Log.isPrint)Log.i(TAG, "table : " + table + "  , claxx: " + claxx);
         if (table == null) {
             table = new EntityTable();
-            putEntityTable(claxx.getName(), table);
             table.claxx = claxx;
             table.name = getTableName(claxx);
             table.pmap = new LinkedHashMap<String, Property>();
@@ -419,7 +404,7 @@ public final class TableManager {
                 PrimaryKey key = f.getAnnotation(PrimaryKey.class);
                 if (key != null) {
                     // 主键不加入属性Map
-                    table.key = new com.litesuits.orm.db.model.PrimaryKey(p, key.value());
+                    table.key = new Primarykey(p, key.value());
                     // 主键为系统分配,对类型有要求
                     checkPrimaryKey(table.key);
                 } else {
@@ -437,12 +422,19 @@ public final class TableManager {
                 for (String col : table.pmap.keySet()) {
                     for (String id : ID) {
                         if (id.equalsIgnoreCase(col)) {
-                            Property p = table.pmap.remove(col);
-                            // 主键不加入属性Map
-                            table.key = new com.litesuits.orm.db.model.PrimaryKey(p, PrimaryKey.AssignType.AUTO_INCREMENT);
-                            // 主键为系统分配,对类型有要求
-                            checkPrimaryKey(table.key);
-                            break;
+                            Property p = table.pmap.get(col);
+                            if (p.field.getType() == String.class) {
+                                // 主键移除属性Map
+                                table.pmap.remove(col);
+                                table.key = new Primarykey(p, PrimaryKey.AssignType.BY_MYSELF);
+                                break;
+                            } else if (FieldUtil.isNumber(p.field.getType())) {
+                                // 主键移除属性Map
+                                table.pmap.remove(col);
+                                table.key = new Primarykey(p, PrimaryKey.AssignType.AUTO_INCREMENT);
+                                break;
+                            }
+
                         }
                     }
                     if (table.key != null) {
@@ -451,20 +443,34 @@ public final class TableManager {
                 }
             }
             if (needPK && table.key == null) {
-                throw new RuntimeException("你必须为[" + table.claxx.getSimpleName() + "]设置主键(you must set the primary key...)" +
+                throw new RuntimeException(
+                        "你必须为[" + table.claxx.getSimpleName() + "]设置主键(you must set the primary key...)" +
                         "\n 提示：在对象的属性上加PrimaryKey注解来设置主键。");
             }
+            putEntityTable(claxx.getName(), table);
         }
         return table;
     }
 
-    private static void checkPrimaryKey(com.litesuits.orm.db.model.PrimaryKey key) {
+    private static void checkPrimaryKey(Primarykey key) {
         if (key.isAssignedBySystem()) {
-            if (!FieldUtil.isLong(key.field) && !FieldUtil.isInteger(key.field)) {
-                throw new RuntimeException(PrimaryKey.AssignType.AUTO_INCREMENT
-                        + "the primary key should be long or int...\n " +
-                        "提示：把你的主键设置为long或int型");
+            if (!FieldUtil.isNumber(key.field.getType())) {
+                throw new RuntimeException(
+                        PrimaryKey.AssignType.AUTO_INCREMENT
+                        + " Auto increment primary key must be a number ...\n " +
+                        "错误提示：自增主键必须设置为数字类型");
             }
+        } else if (key.isAssignedByMyself()) {
+            if (String.class != key.field.getType() && !FieldUtil.isNumber(key.field.getType())) {
+                throw new RuntimeException(
+                        PrimaryKey.AssignType.BY_MYSELF
+                        + " Custom primary key must be string or number ...\n " +
+                        "错误提示：自定义主键值必须为String或者Number类型");
+            }
+        } else {
+            throw new RuntimeException(
+                    " Primary key without Assign Type ...\n " +
+                    "错误提示：主键无类型");
         }
     }
 

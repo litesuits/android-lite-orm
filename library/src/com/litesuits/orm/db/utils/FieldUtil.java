@@ -1,7 +1,7 @@
 package com.litesuits.orm.db.utils;
 
 import com.litesuits.orm.db.annotation.Ignore;
-import com.litesuits.orm.db.model.PrimaryKey;
+import com.litesuits.orm.db.model.Primarykey;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -21,9 +21,6 @@ public class FieldUtil {
 
     /**
      * 判断域是否被忽略
-     *
-     * @param f
-     * @return
      */
     public static boolean isIgnored(Field f) {
         return f.getAnnotation(Ignore.class) != null;
@@ -31,13 +28,10 @@ public class FieldUtil {
 
     /**
      * 检测非法：static final 或者 加了{@link Ignore} 注解
-     *
-     * @param f
-     * @return
      */
     public static boolean isInvalid(Field f) {
         return (Modifier.isStatic(f.getModifiers()) && Modifier.isFinal(f.getModifiers()))
-                || isIgnored(f) || f.isSynthetic();
+               || isIgnored(f) || f.isSynthetic();
     }
 
     public static boolean isLong(Field field) {
@@ -50,9 +44,6 @@ public class FieldUtil {
 
     /**
      * 判断是否序列化
-     *
-     * @param f
-     * @return
      */
     public static boolean isSerializable(Field f) {
         Class<?>[] cls = f.getType().getInterfaces();
@@ -64,12 +55,6 @@ public class FieldUtil {
 
     /**
      * 设置域的值
-     *
-     * @param f
-     * @param obj
-     * @return
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
      */
     public static void set(Field f, Object obj, Object value) throws IllegalArgumentException, IllegalAccessException {
         f.setAccessible(true);
@@ -78,12 +63,6 @@ public class FieldUtil {
 
     /**
      * 获取域的值
-     *
-     * @param f
-     * @param obj
-     * @return
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
      */
     public static Object get(Field f, Object obj) throws IllegalArgumentException, IllegalAccessException {
         f.setAccessible(true);
@@ -92,9 +71,6 @@ public class FieldUtil {
 
     /**
      * 获取域的泛型类型，如果不带泛型返回null
-     *
-     * @param f
-     * @return
      */
     public static Class<?> getGenericType(Field f) {
         Type type = f.getGenericType();
@@ -111,28 +87,25 @@ public class FieldUtil {
 
     /**
      * 获取数组的类型
-     *
-     * @param f
-     * @return
      */
     public static Class<?> getComponentType(Field f) {
         return f.getType().getComponentType();
     }
 
 
-    public static Object getAssignedKeyObject(PrimaryKey key, Object entity) throws IllegalArgumentException,
+    public static Object getAssignedKeyObject(Primarykey key, Object entity) throws IllegalArgumentException,
             IllegalAccessException {
         Object obj = get(key.field, entity);
         if (key.isAssignedByMyself()
-                || (key.isAssignedBySystem() && obj != null && ((Number) obj).longValue() > 0)) { return obj; }
+            || (key.isAssignedBySystem() && obj != null && ((Number) obj).longValue() > 0)) { return obj; }
         return null;
     }
 
-    public static boolean setKeyValueIfneed(Object entity, PrimaryKey key, Object keyObj, long rowID)
+    public static boolean setKeyValueIfneed(Object entity, Primarykey key, Object keyObj, long rowID)
             throws IllegalArgumentException, IllegalAccessException {
         if (key != null && key.isAssignedBySystem()
-                && (keyObj == null || ((Number) keyObj).longValue() < 1)) {
-            FieldUtil.set(key.field, entity, rowID);
+            && (keyObj == null || ((Number) keyObj).longValue() < 1)) {
+            FieldUtil.setNumber(entity, key.field, rowID);
             return true;
         }
         return false;
@@ -153,4 +126,40 @@ public class FieldUtil {
         }
         return fieldList;
     }
+
+    public static void setNumber(Object o, Field field, long n) throws IllegalAccessException {
+        field.setAccessible(true);
+        Class claxx = field.getType();
+        if (claxx == long.class) {
+            field.setLong(o, n);
+        } else if (claxx == int.class) {
+            field.setInt(o, (int) n);
+        } else if (claxx == short.class) {
+            field.setShort(o, (short) n);
+        } else if (claxx == byte.class) {
+            field.setByte(o, (byte) n);
+        } else if (claxx == Long.class) {
+            field.set(o, new Long(n));
+        } else if (claxx == Integer.class) {
+            field.set(o, new Integer((int) n));
+        } else if (claxx == Short.class) {
+            field.set(o, new Short((short) n));
+        } else if (claxx == Byte.class) {
+            field.set(o, new Byte((byte) n));
+        } else {
+            throw new RuntimeException("field is not a number class");
+        }
+    }
+
+    public static boolean isNumber(Class<?> claxx) {
+        return claxx == long.class
+               || claxx == Long.class
+               || claxx == int.class
+               || claxx == Integer.class
+               || claxx == short.class
+               || claxx == Short.class
+               || claxx == byte.class
+               || claxx == Byte.class;
+    }
+
 }

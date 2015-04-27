@@ -169,6 +169,12 @@ public interface DataBase {
     public int delete(Class<?> claxx, WhereBuilder where);
 
     /**
+     * query all data of this type
+     *
+     * @return the query result list
+     */
+    public <T> ArrayList<T> query(Class<T> claxx);
+    /**
      * custom query
      *
      * @return the query result list
@@ -202,13 +208,6 @@ public interface DataBase {
      * @return the count of query result
      */
     public long queryCount(QueryBuilder qb);
-
-    /**
-     * query all data of this type
-     *
-     * @return the query result list
-     */
-    public <T> ArrayList<T> queryAll(Class<T> claxx);
 
     /**
      * build a sql statement with sql and args.

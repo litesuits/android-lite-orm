@@ -24,7 +24,7 @@ public class EntityTable implements Serializable {
     /**
      * 主键
      */
-    public PrimaryKey key;
+    public Primarykey key;
     /**
      * 属性列表
      */

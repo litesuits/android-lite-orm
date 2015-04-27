@@ -23,7 +23,7 @@ import java.util.List;
  * @author mty
  * @date 2013-6-2下午2:32:56
  */
-public class SingleSQLiteImpl extends AbstractSQLiteImpl implements DataBase {
+public final class SingleSQLiteImpl extends AbstractSQLiteImpl {
 
     public static final String TAG = SingleSQLiteImpl.class.getSimpleName();
 
@@ -47,7 +47,7 @@ public class SingleSQLiteImpl extends AbstractSQLiteImpl implements DataBase {
 
     @Override
     public DataBase cascade() {
-        if(otherDatabase == null){
+        if (otherDatabase == null) {
             otherDatabase = new CascadeSQLiteImpl(this);
         }
         return otherDatabase;
@@ -287,6 +287,19 @@ public class SingleSQLiteImpl extends AbstractSQLiteImpl implements DataBase {
     }
 
     @Override
+    public <T> ArrayList<T> query(Class<T> claxx) {
+        acquireReference();
+        try {
+            SQLStatement stmt = new QueryBuilder(claxx).createStatement();
+            SQLiteDatabase db = mHelper.getReadableDatabase();
+            mTableManager.checkOrCreateTable(db, claxx);
+            return stmt.query(db, claxx);
+        } finally {
+            releaseReference();
+        }
+    }
+
+    @Override
     public <T> ArrayList<T> query(QueryBuilder qb) {
         SQLiteDatabase db = mHelper.getReadableDatabase();
         mTableManager.checkOrCreateTable(db, qb.getQueryClass());
@@ -304,7 +317,8 @@ public class SingleSQLiteImpl extends AbstractSQLiteImpl implements DataBase {
         try {
             SQLiteDatabase db = mHelper.getReadableDatabase();
             EntityTable table = TableManager.getTable(claxx);
-            SQLStatement stmt = new QueryBuilder(claxx).where(table.key.column + "=?", new String[]{id}).createStatement();
+            SQLStatement stmt = new QueryBuilder(claxx).where(table.key.column + "=?", new String[]{id})
+                                                       .createStatement();
             mTableManager.checkOrCreateTable(db, claxx);
             ArrayList<T> list = stmt.query(db, claxx);
             if (!Checker.isEmpty(list)) {
@@ -314,19 +328,6 @@ public class SingleSQLiteImpl extends AbstractSQLiteImpl implements DataBase {
             releaseReference();
         }
         return null;
-    }
-
-    @Override
-    public <T> ArrayList<T> queryAll(Class<T> claxx) {
-        acquireReference();
-        try {
-            SQLStatement stmt = new QueryBuilder(claxx).createStatement();
-            SQLiteDatabase db = mHelper.getReadableDatabase();
-            mTableManager.checkOrCreateTable(db, claxx);
-            return stmt.query(db, claxx);
-        } finally {
-            releaseReference();
-        }
     }
 
 }
