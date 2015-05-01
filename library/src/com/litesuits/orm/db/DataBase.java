@@ -1,6 +1,5 @@
 package com.litesuits.orm.db;
 
-import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
@@ -10,7 +9,6 @@ import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.db.model.Relation;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -174,6 +172,7 @@ public interface DataBase {
      * @return the query result list
      */
     public <T> ArrayList<T> query(Class<T> claxx);
+
     /**
      * custom query
      *
@@ -273,7 +272,7 @@ public interface DataBase {
 
 
     /**
-     * {@link #openOrCreateDatabase(String, android.database.sqlite.SQLiteDatabase.CursorFactory, android.database.DatabaseErrorHandler)}
+     * {@link #openOrCreateDatabase(String, android.database.sqlite.SQLiteDatabase.CursorFactory)}
      *
      * @return true if create successfully.
      */
@@ -284,10 +283,9 @@ public interface DataBase {
      * <p/>
      * <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
      * <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-     * Equivalent to {@link SQLiteDatabase#openDatabase(String, android.database.sqlite.SQLiteDatabase.CursorFactory, int, android.database.DatabaseErrorHandler)}.
+     * Equivalent to {@link SQLiteDatabase#openDatabase(String, android.database.sqlite.SQLiteDatabase.CursorFactory, int)}.
      */
-    public SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory,
-                                               DatabaseErrorHandler errorHandler);
+    public SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory);
 
     /**
      * if database in sdcard , you will need this  in manifest:
@@ -295,7 +293,7 @@ public interface DataBase {
      *
      * @return true if delete successfully.
      */
-    public boolean deleteDatabase(File file);
+    //    public boolean deleteDatabase(File file);
 
 
     /**

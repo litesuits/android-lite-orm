@@ -3,7 +3,6 @@ package com.litesuits.orm.db.impl;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
-import android.os.Build;
 import com.litesuits.android.log.Log;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.assit.Checker;
@@ -240,12 +239,14 @@ public class SQLStatement implements Serializable {
                 bind(i + 1, bindArgs[i]);
             }
         }
-        int rows = 1;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            mStatement.execute();
-        } else {
-            rows = mStatement.executeUpdateDelete();
-        }
+        int rows = 0;
+        mStatement.execute();
+        rows = 0;
+        //        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+        //            mStatement.execute();
+        //        } else {
+        //            rows = mStatement.executeUpdateDelete();
+        //        }
         realease();
         if (Log.isPrint) {
             Log.i(TAG, "SQL Execute update --> " + rows);
@@ -264,12 +265,14 @@ public class SQLStatement implements Serializable {
                 bind(i + 1, bindArgs[i]);
             }
         }
-        int rows = 1;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            mStatement.execute();
-        } else {
-            rows = mStatement.executeUpdateDelete();
-        }
+        int rows = 0;
+        mStatement.execute();
+        rows = 1;
+        //        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+        //            mStatement.execute();
+        //        } else {
+        //            rows = mStatement.executeUpdateDelete();
+        //        }
         realease();
         if (Log.isPrint) {
             Log.i(TAG, "SQL Execute update --> " + rows);
@@ -373,12 +376,14 @@ public class SQLStatement implements Serializable {
             }
         }
         int nums = 0;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            mStatement.execute();
-            nums = 1;
-        } else {
-            nums = mStatement.executeUpdateDelete();
-        }
+        mStatement.execute();
+        nums = 1;
+        //        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+        //            mStatement.execute();
+        //            nums = 1;
+        //        } else {
+        //            nums = mStatement.executeUpdateDelete();
+        //        }
         if (Log.isPrint) {
             Log.v(TAG, "SQL Execute Delete --> " + nums);
         }
@@ -405,12 +410,14 @@ public class SQLStatement implements Serializable {
             }
         }
         int nums = 0;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            mStatement.execute();
-            nums = collection.size();
-        } else {
-            nums = mStatement.executeUpdateDelete();
-        }
+        mStatement.execute();
+        nums = collection.size();
+        //        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+        //            mStatement.execute();
+        //            nums = collection.size();
+        //        } else {
+        //            nums = mStatement.executeUpdateDelete();
+        //        }
         if (Log.isPrint) {
             Log.v(TAG, "SQL Execute Delete --> " + nums);
         }

@@ -1,10 +1,7 @@
 package com.litesuits.orm.db.impl;
 
-import android.annotation.TargetApi;
 import android.database.Cursor;
-import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Build;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
@@ -51,7 +48,6 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
         this.otherDatabase = dataBase;
     }
 
-
     protected AbstractSQLiteImpl(DataBaseConfig config) {
         if (config.dbName == null) {
             config.dbName = DataBaseConfig.DEFAULT_DB_NAME;
@@ -60,11 +56,12 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
             config.dbVersion = DataBaseConfig.DEFAULT_DB_VERSION;
         }
         mConfig = config;
-        mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(), mConfig.dbName, null, mConfig.dbVersion, config.onUpdateListener);
+        mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(), mConfig.dbName, null, mConfig.dbVersion,
+                                   config.onUpdateListener);
         mConfig.context = null;
         mTableManager = new TableManager(mConfig.dbName);
         if (mConfig.dbName.contains(File.separator)) {
-            createDatabase();
+                createDatabase();
         }
     }
 
@@ -202,15 +199,12 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
     }
 
     @Override
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public SQLiteDatabase createDatabase() {
-        return openOrCreateDatabase(mConfig.dbName, null, null);
+        return openOrCreateDatabase(mConfig.dbName, null);
     }
 
     @Override
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory,
-                                               DatabaseErrorHandler errorHandler) {
+    public SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory) {
         acquireReference();
         try {
             File dbf = new File(path);
@@ -221,7 +215,7 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
             if (!dbf.exists()) {
                 dbf.createNewFile();
             }
-            return SQLiteDatabase.openOrCreateDatabase(path, factory, errorHandler);
+            return SQLiteDatabase.openOrCreateDatabase(path, factory);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -230,19 +224,19 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
         return null;
     }
 
-    @Override
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    public boolean deleteDatabase(File file) {
-        acquireReference();
-        try {
-            return SQLiteDatabase.deleteDatabase(file);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            releaseReference();
-        }
-        return false;
-    }
+//    @Override
+//    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+//    public boolean deleteDatabase(File file) {
+//        acquireReference();
+//        try {
+//            return SQLiteDatabase.deleteDatabase(file);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            releaseReference();
+//        }
+//        return false;
+//    }
 
     @Override
     public synchronized void close() {
@@ -262,7 +256,8 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
 
     /* --------------------------------  私有方法 -------------------------------- */
 
-    private <E, T> boolean keepMapping(Collection<E> col1, Collection<T> col2) throws IllegalAccessException, InstantiationException {
+    private <E, T> boolean keepMapping(Collection<E> col1,
+                                       Collection<T> col2) throws IllegalAccessException, InstantiationException {
         Class claxx1 = col1.iterator().next().getClass();
         Class claxx2 = col2.iterator().next().getClass();
         EntityTable table1 = TableManager.getTable(claxx1);
@@ -320,7 +315,8 @@ public abstract class AbstractSQLiteImpl extends SQLiteClosable implements DataB
                                         }
                                         col.add(obj2);
                                     } else {
-                                        throw new RuntimeException("OneToMany and ManyToMany Relation, You must use collection object");
+                                        throw new RuntimeException(
+                                                "OneToMany and ManyToMany Relation, You must use collection object");
                                     }
                                 } else {
                                     FieldUtil.set(mp.field, obj1, obj2);

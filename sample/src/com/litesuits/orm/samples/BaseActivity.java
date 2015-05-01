@@ -41,7 +41,7 @@ public abstract class BaseActivity extends Activity implements OnClickListener {
         if (bttxt != null) {
             for (int i = 0; i < bttxt.length; i++) {
                 Button bt = new Button(this);
-                LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+                LayoutParams lp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
                 int margin = getResources().getDimensionPixelSize(R.dimen.common_marin);
                 lp.setMargins(margin, margin, margin, margin);
                 bt.setId(i);

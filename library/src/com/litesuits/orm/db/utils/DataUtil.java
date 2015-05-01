@@ -18,31 +18,31 @@ import java.util.Date;
  * @date 2013-6-10下午5:28:10
  */
 public class DataUtil implements Serializable {
-    public static final  String TAG              = DataUtil.class.getSimpleName();
-    private static final long   serialVersionUID = 6668874253056236676L;
+    public static final String TAG = DataUtil.class.getSimpleName();
+    private static final long serialVersionUID = 6668874253056236676L;
     /**
      * NULL. The value is a NULL value.
      */
-    public static final  String NULL             = " NULL ";
+    public static final String NULL = " NULL ";
     /**
      * INTEGER. The value is a signed integer, stored in 1, 2, 3, 4, 6, or 8
      * bytes depending on the magnitude of the value.
      */
-    public static final  String INTEGER          = " INTEGER ";
+    public static final String INTEGER = " INTEGER ";
     /**
      * REAL. The value is a floating point value, stored as an 8-byte IEEE
      * floating point number.
      */
-    public static final  String REAL             = " REAL ";
+    public static final String REAL = " REAL ";
     /**
      * TEXT. The value is a text string, stored using the database encoding
      * (UTF-8, UTF-16BE or UTF-16LE).
      */
-    public static final  String TEXT             = " TEXT ";
+    public static final String TEXT = " TEXT ";
     /**
      * BLOB. The value is a blob of data, stored exactly as it was input.
      */
-    public static final  String BLOB             = " BLOB ";
+    public static final String BLOB = " BLOB ";
 
     /**
      * Value returned by {@link #getType(Object)} if the specified column is null
@@ -99,9 +99,6 @@ public class DataUtil implements Serializable {
      * <li>{@link #FIELD_TYPE_SERIALIZABLE}</li>
      * </ul>
      * </p>
-     *
-     * @param obj
-     * @return
      */
     public static int getType(Object obj) {
         if (obj == null) {
@@ -161,7 +158,6 @@ public class DataUtil implements Serializable {
      *
      * @param c      数据库Cursor
      * @param entity 实体对象
-     * @throws Exception
      */
     public static void injectDataToObject(Cursor c, Object entity, EntityTable table) throws Exception {
         Field f;
@@ -176,7 +172,8 @@ public class DataUtil implements Serializable {
                 p = table.key;
             }
             if (p == null) {
-                if (Log.isPrint) Log.w(TAG, "数据库字段[" + col + "]已在实体中被移除");
+                if (Log.isPrint)
+                    Log.w(TAG, "数据库字段[" + col + "]已在实体中被移除");
                 continue;
             }
             f = p.field;
@@ -209,7 +206,8 @@ public class DataUtil implements Serializable {
                 }
             } else if (type == Date.class) {
                 f.set(entity, new Date(c.getLong(i)));
-            } else if (c.getType(i) == Cursor.FIELD_TYPE_BLOB) {
+                //            } else if (c.getType(i) == Cursor.FIELD_TYPE_BLOB) {
+            } else {
                 byte[] bytes = c.getBlob(i);
                 if (bytes != null) {
                     //序列化的对象
@@ -221,9 +219,6 @@ public class DataUtil implements Serializable {
 
     /**
      * byte[] 转为 对象
-     *
-     * @param bytes
-     * @return
      */
     public static Object byteToObject(byte[] bytes) throws Exception {
         ObjectInputStream ois = null;
@@ -231,15 +226,13 @@ public class DataUtil implements Serializable {
             ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
             return ois.readObject();
         } finally {
-            if(ois !=null) ois.close();
+            if (ois != null)
+                ois.close();
         }
     }
 
     /**
      * 对象 转为 byte[]
-     *
-     * @param obj
-     * @return
      */
     public static byte[] objectToByte(Object obj) throws IOException {
         ObjectOutputStream oos = null;
@@ -249,7 +242,8 @@ public class DataUtil implements Serializable {
             oos.writeObject(obj);
             return bos.toByteArray();
         } finally {
-            if(oos != null)oos.close();
+            if (oos != null)
+                oos.close();
         }
     }
 

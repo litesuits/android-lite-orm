@@ -28,13 +28,13 @@
                 android:onClick="clickSingle"
                 android:text="@string/test_single"
                 android:layout_margin="20dp"
-                android:layout_width="match_parent"
+                android:layout_width="fill_parent"
                 android:layout_height="48dp"/>
         <Button
                 android:onClick="clickCascade"
                 android:text="@string/test_cascade"
                 android:layout_margin="20dp"
-                android:layout_width="match_parent"
+                android:layout_width="fill_parent"
                 android:layout_height="48dp"/>
     </LinearLayout>
 
