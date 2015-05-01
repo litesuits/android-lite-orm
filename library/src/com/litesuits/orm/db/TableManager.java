@@ -400,7 +400,7 @@ public final class TableManager {
                 }
 
                 // 主键判断
-                //if(Log.isPrint)Log.i(TAG, "PrimaryKey : " + PrimaryKey.class + "  field: "+ f + " asst:" + AssignType.AUTO_INCREMENT);
+                //if(Log.isPrint)Log.i(TAG, "Primarykey : " + Primarykey.class + "  field: "+ f + " asst:" + AssignType.AUTO_INCREMENT);
                 PrimaryKey key = f.getAnnotation(PrimaryKey.class);
                 if (key != null) {
                     // 主键不加入属性Map
