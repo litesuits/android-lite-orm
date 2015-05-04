@@ -1,7 +1,7 @@
 package com.litesuits.orm.db.utils;
 
 import android.database.Cursor;
-import com.litesuits.android.log.Log;
+import com.litesuits.orm.log.Log;
 import com.litesuits.orm.db.assit.Checker;
 import com.litesuits.orm.db.model.EntityTable;
 import com.litesuits.orm.db.model.Property;

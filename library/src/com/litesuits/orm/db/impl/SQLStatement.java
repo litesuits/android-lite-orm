@@ -3,7 +3,7 @@ package com.litesuits.orm.db.impl;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
-import com.litesuits.android.log.Log;
+import com.litesuits.orm.log.Log;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.assit.Checker;
 import com.litesuits.orm.db.assit.Querier;

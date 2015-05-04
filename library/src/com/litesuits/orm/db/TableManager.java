@@ -3,7 +3,7 @@ package com.litesuits.orm.db;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import com.litesuits.android.log.Log;
+import com.litesuits.orm.log.Log;
 import com.litesuits.orm.db.annotation.Column;
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.PrimaryKey;

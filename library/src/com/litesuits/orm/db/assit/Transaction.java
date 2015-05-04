@@ -1,7 +1,7 @@
 package com.litesuits.orm.db.assit;
 
 import android.database.sqlite.SQLiteDatabase;
-import com.litesuits.android.log.Log;
+import com.litesuits.orm.log.Log;
 
 /**
  * 辅助事务
