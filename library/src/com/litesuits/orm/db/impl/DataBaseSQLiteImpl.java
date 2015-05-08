@@ -2,7 +2,7 @@ package com.litesuits.orm.db.impl;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import com.litesuits.orm.log.Log;
+import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
@@ -25,6 +25,7 @@ import java.util.List;
  *
  * @author mty
  * @date 2013-6-2下午2:32:56
+ * @deprecated
  */
 public class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase {
 
@@ -281,8 +282,8 @@ public class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase {
                             for (Object entity : collection) {
                                 SQLBuilder.buildDeleteSql(entity).execDeleteWithMapping(db, entity, mTableManager);
                             }
-                            if (Log.isPrint) {
-                                Log.i(TAG, "Exec delete(no primarykey) ：" + collection.size());
+                            if (OrmLog.isPrint) {
+                                OrmLog.i(TAG, "Exec delete(no primarykey) ：" + collection.size());
                             }
                             return collection.size();
                         }
@@ -333,8 +334,8 @@ public class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase {
                         if (mapTable.delOldRelationSQL != null) {
                             for (SQLStatement st : mapTable.delOldRelationSQL) {
                                 long rowId = st.execDelete(db);
-                                if (Log.isPrint) {
-                                    Log.i(TAG, "Exec delete mapping success, nums: " + rowId);
+                                if (OrmLog.isPrint) {
+                                    OrmLog.i(TAG, "Exec delete mapping success, nums: " + rowId);
                                 }
                             }
                         }

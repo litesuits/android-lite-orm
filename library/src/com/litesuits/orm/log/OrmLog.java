@@ -6,19 +6,15 @@ package com.litesuits.orm.log;
  * @author MaTianyu
  * 2014-1-1下午4:05:39
  */
-public final class Log {
+public final class OrmLog {
 
-	public static boolean isPrint = true;
-	private static String defaultTag = "Log";
+	public static boolean isPrint = false;
+	private static String defaultTag = "OrmLog";
 
-	private Log() {}
-
-	public static void setPrintable(boolean print) {
-		Log.isPrint = print;
-	}
+	private OrmLog() {}
 
 	public static void setTag(String tag) {
-		Log.defaultTag = tag;
+		OrmLog.defaultTag = tag;
 	}
 
 	public static int i(Object o) {

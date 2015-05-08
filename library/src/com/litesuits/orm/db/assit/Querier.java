@@ -2,7 +2,7 @@ package com.litesuits.orm.db.assit;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import com.litesuits.orm.log.Log;
+import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.db.impl.SQLStatement;
 
 /**
@@ -22,18 +22,18 @@ public class Querier {
      * @param parser
      */
     public static <T> T doQuery(SQLiteDatabase db, SQLStatement st, CursorParser<T> parser) {
-        if (Log.isPrint) {
-            Log.v(TAG, "----> Query Start: " + st.toString());
+        if (OrmLog.isPrint) {
+            OrmLog.v(TAG, "----> Query Start: " + st.toString());
         }
         Cursor cursor = db.rawQuery(st.sql, (String[]) st.bindArgs);
         if (cursor != null) {
             parser.process(db, cursor);
-            if (Log.isPrint) {
-                Log.i(TAG, "<---- Query End , cursor size : " + cursor.getCount());
+            if (OrmLog.isPrint) {
+                OrmLog.i(TAG, "<---- Query End , cursor size : " + cursor.getCount());
             }
         } else {
-            if (Log.isPrint) {
-                Log.e(TAG, "<---- Query End : cursor is null");
+            if (OrmLog.isPrint) {
+                OrmLog.e(TAG, "<---- Query End : cursor is null");
             }
         }
         return parser.returnResult();

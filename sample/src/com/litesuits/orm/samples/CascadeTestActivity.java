@@ -2,11 +2,11 @@ package com.litesuits.orm.samples;
 
 import android.os.Bundle;
 import android.os.Environment;
-import com.litesuits.android.log.Log;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.R;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
+import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.model.cascade.Book;
 import com.litesuits.orm.model.cascade.Classes;
 import com.litesuits.orm.model.cascade.College;
@@ -176,7 +176,7 @@ public class CascadeTestActivity extends BaseActivity {
 
     private void queryAndPrintAll(Class claxx) {
         List list = db.query(claxx);
-        Log.i(TAG, list);
+        OrmLog.i(TAG, list);
     }
 
     static Teacher teacher0;

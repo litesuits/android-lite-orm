@@ -1,6 +1,7 @@
 package com.litesuits.orm.db;
 
 import android.database.sqlite.SQLiteDatabase;
+import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.impl.SQLStatement;
@@ -14,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * data base operation
+ * data base operation interface
  *
  * @author mty
  * @date 2013-6-2上午2:37:56
@@ -22,18 +23,18 @@ import java.util.List;
 public interface DataBase {
 
     /**
-     * get a single sqlite database operator
+     * get a single data operator based on SQLite
      *
      * @return {@link com.litesuits.orm.db.impl.CascadeSQLiteImpl}
      */
-    public DataBase single();
+    public LiteOrm single();
 
     /**
-     * get a cascade sqlite database operator
+     * get a cascade data operator based on SQLite
      *
      * @return {@link com.litesuits.orm.db.impl.CascadeSQLiteImpl}
      */
-    public DataBase cascade();
+    public LiteOrm cascade();
 
     /**
      * save: insert or update a single entity
@@ -238,7 +239,8 @@ public interface DataBase {
      *
      * @return the relation list of class1 and class2;
      */
-    public ArrayList<Relation> queryRelation(Class class1, Class class2, List<String> key1List, List<String> key2List);
+    public ArrayList<Relation> queryRelation(Class class1, Class class2, List<String> key1List,
+                                                      List<String> key2List);
 
     /**
      * auto entity relation mapping

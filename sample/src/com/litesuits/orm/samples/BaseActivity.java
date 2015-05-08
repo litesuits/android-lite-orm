@@ -9,27 +9,28 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import com.litesuits.android.log.Log;
 import com.litesuits.orm.R;
+import com.litesuits.orm.log.OrmLog;
 
 /**
  * 动态添加按钮和点击事件
  *
  * @author MaTianyu
  *         2014-2-25下午2:36:30
+ * @deprecated
  */
 public abstract class BaseActivity extends Activity implements OnClickListener {
     protected String TAG = "BaseActivity";
-    private TextView     mTvSubTitle;
-    public  LinearLayout container;
-    public  ScrollView   scroll;
+    private TextView mTvSubTitle;
+    public LinearLayout container;
+    public ScrollView scroll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_list_btn);
         TAG = this.getClass().getSimpleName();
-        Log.setTag(TAG);
+        OrmLog.setTag(TAG);
 
         container = (LinearLayout) findViewById(R.id.container);
         scroll = (ScrollView) container.getParent();
@@ -55,15 +56,11 @@ public abstract class BaseActivity extends Activity implements OnClickListener {
 
     /**
      * 获取主标题
-     *
-     * @return
      */
     public abstract String getMainTitle();
 
     /**
      * 设置二级标题
-     *
-     * @param st
      */
     public void setSubTitile(String st) {
         mTvSubTitle.setText(st);
@@ -71,8 +68,6 @@ public abstract class BaseActivity extends Activity implements OnClickListener {
 
     /**
      * 取button列表
-     *
-     * @return
      */
     public abstract String[] getButtonTexts();
 
@@ -80,9 +75,6 @@ public abstract class BaseActivity extends Activity implements OnClickListener {
      * 在{@link #onClick(View)} 里调用。
      * id值得含义为：若{@link #getButtonTexts()}的string[]数组长度为len，则id从0,1,2到len-1.
      * 点击第N个按钮，id变为N。
-     *
-     * @param id
-     * @return
      */
     public abstract Runnable getButtonClickRunnable(final int id);
 

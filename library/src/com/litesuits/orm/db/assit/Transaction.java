@@ -1,7 +1,7 @@
 package com.litesuits.orm.db.assit;
 
 import android.database.sqlite.SQLiteDatabase;
-import com.litesuits.orm.log.Log;
+import com.litesuits.orm.log.OrmLog;
 
 /**
  * 辅助事务
@@ -20,14 +20,14 @@ public class Transaction {
 	 */
 	public static <T> T execute(SQLiteDatabase db, Worker<T> worker) {
 		db.beginTransaction();
-		Log.i(TAG, "----> BeginTransaction");
+		OrmLog.i(TAG, "----> BeginTransaction");
 		T data = null;
 		try {
 			data = worker.doTransaction(db);
 			db.setTransactionSuccessful();
-			if (Log.isPrint) Log.i(TAG, "----> Transaction Successful");
+			if (OrmLog.isPrint) OrmLog.i(TAG, "----> Transaction Successful");
 		} catch (Exception e) {
-			if (Log.isPrint) Log.e(TAG, "----> Transaction Failling");
+			if (OrmLog.isPrint) OrmLog.e(TAG, "----> Transaction Failling");
 			e.printStackTrace();
 		} finally {
 			db.endTransaction();

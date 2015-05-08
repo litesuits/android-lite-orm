@@ -3,7 +3,7 @@ package com.litesuits.orm.db.impl;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
-import com.litesuits.orm.log.Log;
+import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.assit.Checker;
 import com.litesuits.orm.db.assit.Querier;
@@ -121,8 +121,8 @@ public class SQLStatement implements Serializable {
         }
         long rowID = mStatement.executeInsert();
         realease();
-        if (Log.isPrint) {
-            Log.i(TAG, "SQL Execute Insert --> " + rowID);
+        if (OrmLog.isPrint) {
+            OrmLog.i(TAG, "SQL Execute Insert --> " + rowID);
         }
         if (entity != null) {
             FieldUtil.setKeyValueIfneed(entity, TableManager.getTable(entity).key, keyObj, rowID);
@@ -158,8 +158,8 @@ public class SQLStatement implements Serializable {
         } finally {
             realease();
         }
-        if (Log.isPrint) {
-            Log.i(TAG, "SQL Execute Insert --> " + rowID);
+        if (OrmLog.isPrint) {
+            OrmLog.i(TAG, "SQL Execute Insert --> " + rowID);
         }
         if (entity != null) {
             FieldUtil.setKeyValueIfneed(entity, TableManager.getTable(entity).key, keyObj, rowID);
@@ -173,8 +173,8 @@ public class SQLStatement implements Serializable {
     public int execInsertCollection(SQLiteDatabase db, Collection<?> list, TableManager tableManager) {
         printSQL();
         db.beginTransaction();
-        if (Log.isPrint) {
-            Log.d(TAG, "----> BeginTransaction[insert col]");
+        if (OrmLog.isPrint) {
+            OrmLog.d(TAG, "----> BeginTransaction[insert col]");
         }
         try {
             mStatement = db.compileStatement(sql);
@@ -208,17 +208,17 @@ public class SQLStatement implements Serializable {
                 mapRelationToDb(obj, true, tableCheck, db, tableManager);
                 tableCheck = false;
             }
-            if (Log.isPrint) {
-                Log.i(TAG, "Exec insert " + list.size() + " rows , SQL: " + sql);
+            if (OrmLog.isPrint) {
+                OrmLog.i(TAG, "Exec insert " + list.size() + " rows , SQL: " + sql);
             }
             db.setTransactionSuccessful();
-            if (Log.isPrint) {
-                Log.d(TAG, "----> BeginTransaction[insert col] Successful");
+            if (OrmLog.isPrint) {
+                OrmLog.d(TAG, "----> BeginTransaction[insert col] Successful");
             }
             return list.size();
         } catch (Exception e) {
-            if (Log.isPrint) {
-                Log.e(TAG, "----> BeginTransaction[insert col] Failling");
+            if (OrmLog.isPrint) {
+                OrmLog.e(TAG, "----> BeginTransaction[insert col] Failling");
             }
             e.printStackTrace();
         } finally {
@@ -248,8 +248,8 @@ public class SQLStatement implements Serializable {
         //            rows = mStatement.executeUpdateDelete();
         //        }
         realease();
-        if (Log.isPrint) {
-            Log.i(TAG, "SQL Execute update --> " + rows);
+        if (OrmLog.isPrint) {
+            OrmLog.i(TAG, "SQL Execute update --> " + rows);
         }
         return rows;
     }
@@ -274,8 +274,8 @@ public class SQLStatement implements Serializable {
         //            rows = mStatement.executeUpdateDelete();
         //        }
         realease();
-        if (Log.isPrint) {
-            Log.i(TAG, "SQL Execute update --> " + rows);
+        if (OrmLog.isPrint) {
+            OrmLog.i(TAG, "SQL Execute update --> " + rows);
         }
         if (entity != null) {
             mapRelationToDb(entity, true, true, db, tableManager);
@@ -290,8 +290,8 @@ public class SQLStatement implements Serializable {
                                     TableManager tableManager) {
         printSQL();
         db.beginTransaction();
-        if (Log.isPrint) {
-            Log.d(TAG, "----> BeginTransaction[update col]");
+        if (OrmLog.isPrint) {
+            OrmLog.d(TAG, "----> BeginTransaction[update col]");
         }
         try {
             mStatement = db.compileStatement(sql);
@@ -335,17 +335,17 @@ public class SQLStatement implements Serializable {
                 mapRelationToDb(obj, true, tableCheck, db, tableManager);
                 tableCheck = false;
             }
-            if (Log.isPrint) {
-                Log.i(TAG, "Exec update " + list.size() + " rows , SQL: " + sql);
+            if (OrmLog.isPrint) {
+                OrmLog.i(TAG, "Exec update " + list.size() + " rows , SQL: " + sql);
             }
             db.setTransactionSuccessful();
-            if (Log.isPrint) {
-                Log.d(TAG, "----> BeginTransaction[update col] Successful");
+            if (OrmLog.isPrint) {
+                OrmLog.d(TAG, "----> BeginTransaction[update col] Successful");
             }
             return list.size();
         } catch (Exception e) {
-            if (Log.isPrint) {
-                Log.e(TAG, "----> BeginTransaction[update col] Failling");
+            if (OrmLog.isPrint) {
+                OrmLog.e(TAG, "----> BeginTransaction[update col] Failling");
             }
             e.printStackTrace();
         } finally {
@@ -384,8 +384,8 @@ public class SQLStatement implements Serializable {
         //        } else {
         //            nums = mStatement.executeUpdateDelete();
         //        }
-        if (Log.isPrint) {
-            Log.v(TAG, "SQL Execute Delete --> " + nums);
+        if (OrmLog.isPrint) {
+            OrmLog.v(TAG, "SQL Execute Delete --> " + nums);
         }
         realease();
         if (entity != null) {
@@ -418,8 +418,8 @@ public class SQLStatement implements Serializable {
         //        } else {
         //            nums = mStatement.executeUpdateDelete();
         //        }
-        if (Log.isPrint) {
-            Log.v(TAG, "SQL Execute Delete --> " + nums);
+        if (OrmLog.isPrint) {
+            OrmLog.v(TAG, "SQL Execute Delete --> " + nums);
         }
         realease();
         // 删除关系映射
@@ -435,11 +435,11 @@ public class SQLStatement implements Serializable {
                     return true;
                 }
             });
-            if (Log.isPrint) {
-                Log.i(TAG, "Exec delete collection mapping: " + ((suc != null && suc) ? "成功" : "失败"));
+            if (OrmLog.isPrint) {
+                OrmLog.i(TAG, "Exec delete collection mapping: " + ((suc != null && suc) ? "成功" : "失败"));
             }
         } else {
-            Log.i(TAG, "此对象组不包含关系映射");
+            OrmLog.i(TAG, "此对象组不包含关系映射");
         }
         return nums;
     }
@@ -481,8 +481,8 @@ public class SQLStatement implements Serializable {
                 }
             }
             count = mStatement.simpleQueryForLong();
-            if (Log.isPrint) {
-                Log.i(TAG, "SQL Execute queryForLong --> " + count);
+            if (OrmLog.isPrint) {
+                OrmLog.i(TAG, "SQL Execute queryForLong --> " + count);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -570,16 +570,16 @@ public class SQLStatement implements Serializable {
                     if (mapTable.delOldRelationSQL != null) {
                         for (SQLStatement st : mapTable.delOldRelationSQL) {
                             long rowId = st.execDelete(db);
-                            //if (Log.isPrint) {
-                            //    Log.v(TAG, "Exec delete mapping success, nums: " + rowId);
+                            //if (OrmLog.isPrint) {
+                            //    OrmLog.v(TAG, "Exec delete mapping success, nums: " + rowId);
                             //}
                         }
                     }
                     if (insertNew && mapTable.mapNewRelationSQL != null) {
                         for (SQLStatement st : mapTable.mapNewRelationSQL) {
                             long rowId = st.execInsert(db);
-                            //if (Log.isPrint) {
-                            //    Log.v(TAG, "Exec save mapping success, nums: " + rowId);
+                            //if (OrmLog.isPrint) {
+                            //    OrmLog.v(TAG, "Exec save mapping success, nums: " + rowId);
                             //}
                         }
                     }
@@ -590,8 +590,8 @@ public class SQLStatement implements Serializable {
     }
 
     private void printSQL() {
-        if (Log.isPrint) {
-            Log.d(TAG, "SQL Execute: [" + sql + "] ARGS--> " + Arrays.toString(bindArgs));
+        if (OrmLog.isPrint) {
+            OrmLog.d(TAG, "SQL Execute: [" + sql + "] ARGS--> " + Arrays.toString(bindArgs));
         }
     }
 

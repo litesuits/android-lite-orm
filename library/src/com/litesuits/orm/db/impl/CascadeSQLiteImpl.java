@@ -2,7 +2,7 @@ package com.litesuits.orm.db.impl;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import com.litesuits.orm.db.DataBase;
+import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.assit.*;
@@ -24,11 +24,11 @@ import java.util.*;
  * @author MaTianyu
  * @date 2015-03-13
  */
-public final class CascadeSQLiteImpl extends AbstractSQLiteImpl {
+public final class CascadeSQLiteImpl extends LiteOrm {
 
     public static final String TAG = CascadeSQLiteImpl.class.getSimpleName();
 
-    protected CascadeSQLiteImpl(AbstractSQLiteImpl dataBase) {
+    protected CascadeSQLiteImpl(LiteOrm dataBase) {
         super(dataBase);
     }
 
@@ -36,12 +36,12 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl {
         super(config);
     }
 
-    public synchronized static DataBase newInstance(DataBaseConfig config) {
+    public synchronized static LiteOrm newInstance(DataBaseConfig config) {
         return new CascadeSQLiteImpl(config);
     }
 
     @Override
-    public DataBase single() {
+    public LiteOrm single() {
         if (otherDatabase == null) {
             otherDatabase = new SingleSQLiteImpl(this);
         }
@@ -49,7 +49,7 @@ public final class CascadeSQLiteImpl extends AbstractSQLiteImpl {
     }
 
     @Override
-    public DataBase cascade() {
+    public LiteOrm cascade() {
         return this;
     }
 

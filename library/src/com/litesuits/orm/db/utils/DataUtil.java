@@ -1,7 +1,7 @@
 package com.litesuits.orm.db.utils;
 
 import android.database.Cursor;
-import com.litesuits.orm.log.Log;
+import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.db.assit.Checker;
 import com.litesuits.orm.db.model.EntityTable;
 import com.litesuits.orm.db.model.Property;
@@ -172,8 +172,8 @@ public class DataUtil implements Serializable {
                 p = table.key;
             }
             if (p == null) {
-                if (Log.isPrint)
-                    Log.w(TAG, "数据库字段[" + col + "]已在实体中被移除");
+                if (OrmLog.isPrint)
+                    OrmLog.w(TAG, "数据库字段[" + col + "]已在实体中被移除");
                 continue;
             }
             f = p.field;

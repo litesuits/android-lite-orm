@@ -2,7 +2,6 @@ package com.litesuits.orm.samples;
 
 import android.os.Bundle;
 import android.view.Menu;
-import com.litesuits.android.log.Log;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.R;
 import com.litesuits.orm.db.DataBase;
@@ -10,6 +9,7 @@ import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
+import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.model.single.*;
 
 import java.util.ArrayList;
@@ -18,6 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * @deprecated
+ */
 public class LiteOrmSamplesActivity extends BaseActivity {
     //Timer    timer;
     DataBase db;
@@ -48,7 +51,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setSubTitile(getString(R.string.sub_title));
         mockData();
-        db = LiteOrm.newInstance(this, "liteorm.db");
+        db = LiteOrm.newCascadeInstance(this, "liteorm.db");
     }
 
     public void onDestroy() {
@@ -175,11 +178,11 @@ public class LiteOrmSamplesActivity extends BaseActivity {
 
         // save : 既可以当insert 也可以做update，非常灵活
         long c = db.save(uMax);
-        Log.i(this, "update User Max: " + c);
+        OrmLog.i(this, "update User Max: " + c);
 
         // update：仅能在已经存在时更新
         c = db.update(uMin, ConflictAlgorithm.Replace);
-        Log.i(this, "update User Min: " + c);
+        OrmLog.i(this, "update User Min: " + c);
 
         //更新任意的整个集合
         bossList.get(0).setName("Cang Jin Kong");
@@ -203,7 +206,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
 
         ColumnsValue cv = new ColumnsValue(new String[]{"phone"});
         long c = db.update(bossList, cv, ConflictAlgorithm.None);
-        Log.i(this, "update teacher ：" + c);
+        OrmLog.i(this, "update teacher ：" + c);
 
 
         //2. 更新单个实体（强制赋指定值）示例：
@@ -212,7 +215,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         wife1.age = 18;
         cv = new ColumnsValue(new String[]{"des", "bm", "age"}, new Object[]{"外部强制赋值地址", null, 20});
         c = db.update(wife1, cv, ConflictAlgorithm.None);
-        Log.i(this, "update wife1 " + wife1.name + ": " + c);
+        OrmLog.i(this, "update wife1 " + wife1.name + ": " + c);
     }
 
 
@@ -223,19 +226,19 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         ArrayList<Company> cs = db.query(Company.class);
         ArrayList<Boss> ts = db.query(Boss.class);
         for (Address uu : as) {
-            Log.i(this, "query Address: " + uu);
+            OrmLog.i(this, "query Address: " + uu);
         }
         for (Wife uu : ws) {
-            Log.i(this, "query Wife: " + uu);
+            OrmLog.i(this, "query Wife: " + uu);
         }
         for (Company uu : cs) {
-            Log.i(this, "query Company: " + uu);
+            OrmLog.i(this, "query Company: " + uu);
         }
         for (Boss uu : ts) {
-            Log.i(this, "query Teacher: " + uu);
+            OrmLog.i(this, "query Teacher: " + uu);
         }
         for (Man uu : query) {
-            Log.i(this, "query user: " + uu);
+            OrmLog.i(this, "query user: " + uu);
         }
     }
 
@@ -271,7 +274,7 @@ public class LiteOrmSamplesActivity extends BaseActivity {
 
     private void testQueryByID() {
         Man man = db.queryById(uComplex.getId(), Man.class);
-        Log.i(this, "query id: " + uComplex.getId() + ",MAN: " + man);
+        OrmLog.i(this, "query id: " + uComplex.getId() + ",MAN: " + man);
     }
 
     private void printAllAddress() {
@@ -280,14 +283,14 @@ public class LiteOrmSamplesActivity extends BaseActivity {
 
     private void printAddress(List<Address> addrList) {
         for (Address uu : addrList) {
-            Log.i(this, "Address: " + uu);
+            OrmLog.i(this, "Address: " + uu);
         }
     }
 
     private void testQueryAnyUwant() {
 
         long nums = db.queryCount(Address.class);
-        Log.i(this, "Address All Count : " + nums);
+        OrmLog.i(this, "Address All Count : " + nums);
 
         QueryBuilder qb = new QueryBuilder(Address.class)
                 .columns(new String[]{Address.COL_ADDRESS})
@@ -297,10 +300,10 @@ public class LiteOrmSamplesActivity extends BaseActivity {
                 .where(Address.COL_ADDRESS + "=?", new String[]{"香港路"});
 
         nums = db.queryCount(qb);
-        Log.i(this, "Address All Count : " + nums);
+        OrmLog.i(this, "Address All Count : " + nums);
         List<Address> addrList = db.query(qb);
         for (Address uu : addrList) {
-            Log.i(this, "Query Address: " + uu);
+            OrmLog.i(this, "Query Address: " + uu);
         }
 
     }
@@ -319,20 +322,20 @@ public class LiteOrmSamplesActivity extends BaseActivity {
         db.mapping(mans, cs);
         db.mapping(mans, ts);
         for (Address uu : as) {
-            Log.i(this, "query Address: " + uu);
+            OrmLog.i(this, "query Address: " + uu);
         }
         for (Wife uu : ws) {
-            Log.i(this, "query Wife: " + uu);
+            OrmLog.i(this, "query Wife: " + uu);
         }
         for (Company uu : cs) {
-            Log.i(this, "query Company: " + uu);
+            OrmLog.i(this, "query Company: " + uu);
         }
         for (Boss uu : ts) {
-            Log.i(this, "query Teacher: " + uu);
+            OrmLog.i(this, "query Teacher: " + uu);
         }
         //可以看到与Man关联的Teacher、Company、Address都智能映射给Man对应的各个的实例了。
         for (Man uu : mans) {
-            Log.i(this, "query user: " + uu);
+            OrmLog.i(this, "query user: " + uu);
         }
     }
 

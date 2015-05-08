@@ -3,7 +3,7 @@ package com.litesuits.orm.db;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import com.litesuits.orm.log.Log;
+import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.db.annotation.Column;
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.PrimaryKey;
@@ -124,22 +124,22 @@ public final class TableManager {
         if (!Checker.isEmpty(mSqlTableMap)) {
             SQLiteTable sqlTable = mSqlTableMap.get(entityTable.name);
             if (sqlTable != null) {
-                if (Log.isPrint) {
-                    Log.d(TAG, "Table [" + entityTable.name + "] Exist");
+                if (OrmLog.isPrint) {
+                    OrmLog.d(TAG, "Table [" + entityTable.name + "] Exist");
                 }
                 if (!sqlTable.isTableChecked) {
                     // 表仅进行一次检查，检验是否有新字段加入。
                     sqlTable.isTableChecked = true;
-                    if (Log.isPrint) {
-                        Log.i(TAG, "Table [" + entityTable.name + "] check column now.");
+                    if (OrmLog.isPrint) {
+                        OrmLog.i(TAG, "Table [" + entityTable.name + "] check column now.");
                     }
                     if (entityTable.key != null) {
                         if (sqlTable.columns.get(entityTable.key.column) == null) {
                             SQLStatement stmt = SQLBuilder.buildDropTable(sqlTable.name);
                             stmt.execute(db);
-                            if (Log.isPrint) {
-                                Log.i(TAG, "Table [" + entityTable.name + "] Primary Key has changed, " +
-                                           "so drop and recreate it later.");
+                            if (OrmLog.isPrint) {
+                                OrmLog.i(TAG, "Table [" + entityTable.name + "] Primary Key has changed, " +
+                                              "so drop and recreate it later.");
                             }
                             return false;
                         }
@@ -156,13 +156,14 @@ public final class TableManager {
                                 sqlTable.columns.put(col, 1);
                             }
                             int sum = insertNewColunms(db, entityTable.name, newColumns);
-                            if (Log.isPrint) {
+                            if (OrmLog.isPrint) {
                                 if (sum > 0) {
-                                    Log.i(TAG,
-                                          "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
+                                    OrmLog.i(TAG,
+                                             "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
                                 } else {
-                                    Log.e(TAG, "Table [" + entityTable.name + "] add " + sum + " new column error ： " +
-                                               newColumns);
+                                    OrmLog.e(TAG,
+                                             "Table [" + entityTable.name + "] add " + sum + " new column error ： " +
+                                             newColumns);
                                 }
                             }
                         }
@@ -171,8 +172,8 @@ public final class TableManager {
                 return true;
             }
         }
-        if (Log.isPrint) {
-            Log.d(TAG, "Table [" + entityTable.name + "] Not Exist");
+        if (OrmLog.isPrint) {
+            OrmLog.d(TAG, "Table [" + entityTable.name + "] Not Exist");
         }
         return false;
     }
@@ -181,8 +182,8 @@ public final class TableManager {
      * 将Sql Table放入存储集合
      */
     private void putNewSqlTableIntoMap(EntityTable table) {
-        if (Log.isPrint) {
-            Log.i(TAG, "Table [" + table.name + "] Create Success");
+        if (OrmLog.isPrint) {
+            OrmLog.i(TAG, "Table [" + table.name + "] Create Success");
         }
         SQLiteTable sqlTable = new SQLiteTable();
         sqlTable.name = table.name;
@@ -206,8 +207,8 @@ public final class TableManager {
     private void initAllTablesFromSQLite(SQLiteDatabase db) {
         synchronized (mSqlTableMap) {
             if (Checker.isEmpty(mSqlTableMap)) {
-                if (Log.isPrint) {
-                    Log.i(TAG, "Initialize SQL table start--------------------->");
+                if (OrmLog.isPrint) {
+                    OrmLog.i(TAG, "Initialize SQL table start--------------------->");
                 }
                 SQLStatement st = SQLBuilder.buildTableObtainAll();
                 final EntityTable table = getTable(SQLiteTable.class, false);
@@ -219,21 +220,21 @@ public final class TableManager {
                         ArrayList<String> colS = getAllColumnsFromSQLite(db, sqlTable.name);
                         if (Checker.isEmpty(colS)) {
                             // 如果读数据库失败了，那么解析建表语句
-                            Log.e(TAG, "读数据库失败了，开始解析建表语句");
+                            OrmLog.e(TAG, "读数据库失败了，开始解析建表语句");
                             colS = transformSqlToColumns(sqlTable.sql);
                         }
                         sqlTable.columns = new HashMap<String, Integer>();
                         for (String col : colS) {
                             sqlTable.columns.put(col, 1);
                         }
-                        if (Log.isPrint) {
-                            Log.d(TAG, "Find One SQL Table: " + sqlTable);
+                        if (OrmLog.isPrint) {
+                            OrmLog.d(TAG, "Find One SQL Table: " + sqlTable);
                         }
                         mSqlTableMap.put(sqlTable.name, sqlTable);
                     }
                 });
-                if (Log.isPrint) {
-                    Log.i(TAG, "Initialize SQL table end  ---------------------> " + mSqlTableMap.size());
+                if (OrmLog.isPrint) {
+                    OrmLog.i(TAG, "Initialize SQL table end  ---------------------> " + mSqlTableMap.size());
                 }
             }
         }
@@ -307,7 +308,7 @@ public final class TableManager {
                     }
                     colList.add(col);
                 }
-                Log.e(TAG, "降级：语义分析表结构（" + colList.toString() + " , Origin SQL is: " + sql);
+                OrmLog.e(TAG, "降级：语义分析表结构（" + colList.toString() + " , Origin SQL is: " + sql);
                 return colList;
             }
         }
@@ -377,7 +378,7 @@ public final class TableManager {
             return null;
         }
         EntityTable table = getEntityTable(claxx.getName());
-        //if(Log.isPrint)Log.i(TAG, "table : " + table + "  , claxx: " + claxx);
+        //if(OrmLog.isPrint)OrmLog.i(TAG, "table : " + table + "  , claxx: " + claxx);
         if (table == null) {
             table = new EntityTable();
             table.claxx = claxx;
@@ -391,7 +392,7 @@ public final class TableManager {
                 Property p = new Property();
                 p.field = f;
                 // 获取列名,每个属性都有，没有注解默认取属性名
-                //if(Log.isPrint)Log.i(TAG, "Column : " + Column.class+ "  field: "+ f);
+                //if(OrmLog.isPrint)OrmLog.i(TAG, "Column : " + Column.class+ "  field: "+ f);
                 Column col = f.getAnnotation(Column.class);
                 if (col != null) {
                     p.column = col.value();
@@ -400,7 +401,7 @@ public final class TableManager {
                 }
 
                 // 主键判断
-                //if(Log.isPrint)Log.i(TAG, "Primarykey : " + Primarykey.class + "  field: "+ f + " asst:" + AssignType.AUTO_INCREMENT);
+                //if(OrmLog.isPrint)OrmLog.i(TAG, "Primarykey : " + Primarykey.class + "  field: "+ f + " asst:" + AssignType.AUTO_INCREMENT);
                 PrimaryKey key = f.getAnnotation(PrimaryKey.class);
                 if (key != null) {
                     // 主键不加入属性Map
@@ -409,7 +410,7 @@ public final class TableManager {
                     checkPrimaryKey(table.key);
                 } else {
                     //ORM handle
-                    //if(Log.isPrint)Log.i(TAG, "Mapping : " + Mapping.class+ " field: "+ f);
+                    //if(OrmLog.isPrint)OrmLog.i(TAG, "Mapping : " + Mapping.class+ " field: "+ f);
                     Mapping mapping = f.getAnnotation(Mapping.class);
                     if (mapping != null) {
                         table.addMapping(new MapProperty(p, mapping.value()));
