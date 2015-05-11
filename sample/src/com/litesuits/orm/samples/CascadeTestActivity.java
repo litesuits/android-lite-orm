@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.R;
-import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.model.cascade.Book;
@@ -30,7 +29,7 @@ public class CascadeTestActivity extends BaseActivity {
     public static final String DB_NAME = Environment.getExternalStorageDirectory().getAbsolutePath()
             + "/lite/orm/cascade.db";
 
-    DataBase db;
+    LiteOrm liteOrm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +40,8 @@ public class CascadeTestActivity extends BaseActivity {
         mockData();
         // 使用级联操作
 
-        db = LiteOrm.newCascadeInstance(this, DB_NAME);
+        liteOrm = LiteOrm.newCascadeInstance(this, DB_NAME);
+        liteOrm.setDebugged(true);
 
         //DataBase db = LiteOrm.newCascadeInstance(this, "cascade.db");
         //db.save(user);
@@ -98,14 +98,14 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     private void testSave() {
-        db.save(teacher0);
+        liteOrm.save(teacher0);
     }
 
     private void testInsert() {
         ArrayList<Teacher> ts = new ArrayList<Teacher>();
         ts.add(teacher1);
         ts.add(teacher2);
-        db.insert(ts, ConflictAlgorithm.Fail);
+        liteOrm.insert(ts, ConflictAlgorithm.Fail);
 
         Book book1 = new Book("书：year和author联合唯一");
         book1.setYear(1988);
@@ -115,8 +115,8 @@ public class CascadeTestActivity extends BaseActivity {
         book2.setYear(1988);
         book2.setAuthor("hehe");
 
-        db.insert(book1);
-        db.insert(book2, ConflictAlgorithm.Abort);
+        liteOrm.insert(book1);
+        liteOrm.insert(book2, ConflictAlgorithm.Abort);
     }
 
     private void testUpdate() {
@@ -165,17 +165,17 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     private void testDeleteAll() {
-        db.deleteAll(School.class);
-        db.deleteAll(College.class);
-        db.deleteAll(Classes.class);
-        db.deleteAll(Teacher.class);
-        db.deleteAll(Student.class);
-        db.deleteAll(Book.class);
+        liteOrm.deleteAll(School.class);
+        liteOrm.deleteAll(College.class);
+        liteOrm.deleteAll(Classes.class);
+        liteOrm.deleteAll(Teacher.class);
+        liteOrm.deleteAll(Student.class);
+        liteOrm.deleteAll(Book.class);
     }
 
 
     private void queryAndPrintAll(Class claxx) {
-        List list = db.query(claxx);
+        List list = liteOrm.query(claxx);
         OrmLog.i(TAG, list);
     }
 

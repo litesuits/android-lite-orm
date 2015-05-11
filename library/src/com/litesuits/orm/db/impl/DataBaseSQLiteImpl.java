@@ -2,6 +2,7 @@ package com.litesuits.orm.db.impl;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
@@ -103,12 +104,12 @@ public class DataBaseSQLiteImpl extends SQLiteClosable implements DataBase {
     }
 
     @Override
-    public DataBase single() {
+    public LiteOrm single() {
         return null;
     }
 
     @Override
-    public DataBase cascade() {
+    public LiteOrm cascade() {
         return null;
     }
 

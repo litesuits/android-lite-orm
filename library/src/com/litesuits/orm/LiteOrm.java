@@ -19,7 +19,6 @@ import com.litesuits.orm.db.utils.FieldUtil;
 import com.litesuits.orm.log.OrmLog;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -264,18 +263,18 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
             File dbf = new File(path);
             File dbp = dbf.getParentFile();
             if (!dbp.exists()) {
-                dbp.mkdirs();
+                boolean mks = dbp.mkdirs();
+                OrmLog.i(TAG, "create database, parent file mkdirs: " + mks +"  path:" + dbp.getAbsolutePath());
             }
-            if (!dbf.exists()) {
-                dbf.createNewFile();
-            }
+            //if (!dbf.exists()) {
+            //    dbf.createNewFile();
+            //    OrmLog.i(TAG, "create database, parent file mkdirs: " + mks +"  path:" + dbp.getAbsolutePath());
+            //}
             return SQLiteDatabase.openOrCreateDatabase(path, factory);
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
             releaseReference();
         }
-        return null;
+        //return null;
     }
 
     //    @Override

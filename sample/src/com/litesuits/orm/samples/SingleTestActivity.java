@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.R;
-import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.model.ColumnsValue;
@@ -20,7 +19,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class SingleTestActivity extends BaseActivity {
     //Timer    timer;
-    DataBase db;
+    LiteOrm liteOrm;
     static Man uComplex, uAlice, uMax, uMin;
     /**
      * object relation mapping test
@@ -48,7 +47,8 @@ public class SingleTestActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setSubTitile(getString(R.string.sub_title));
         mockData();
-        db = LiteOrm.newSingleInstance(this, "liteorm.db");
+        liteOrm = LiteOrm.newSingleInstance(this, "liteorm.db");
+        liteOrm.setDebugged(true);
     }
 
     public void onDestroy() {
@@ -147,21 +147,21 @@ public class SingleTestActivity extends BaseActivity {
 
     private void testSave() {
 
-        db.save(uMax);
-        db.save(uMin);
+        liteOrm.save(uMax);
+        liteOrm.save(uMin);
 
-        db.save(company);
-        db.save(wife1);
-        db.save(wife2);
+        liteOrm.save(company);
+        liteOrm.save(wife1);
+        liteOrm.save(wife2);
         //插入任意集合
-        db.save(addrList);
+        liteOrm.save(addrList);
         //保存任意集合
-        db.save(bossList);
+        liteOrm.save(bossList);
     }
 
     private void testInsert() {
-        db.insert(uAlice, ConflictAlgorithm.Replace);
-        db.insert(uComplex, ConflictAlgorithm.Rollback);
+        liteOrm.insert(uAlice, ConflictAlgorithm.Replace);
+        liteOrm.insert(uComplex, ConflictAlgorithm.Rollback);
     }
 
     private void testUpdate() {
@@ -172,17 +172,17 @@ public class SingleTestActivity extends BaseActivity {
         uMin.setId(id);
 
         // save : 既可以当insert 也可以做update，非常灵活
-        long c = db.save(uMax);
+        long c = liteOrm.save(uMax);
         OrmLog.i(this, "update User Max: " + c);
 
         // update：仅能在已经存在时更新
-        c = db.update(uMin, ConflictAlgorithm.Replace);
+        c = liteOrm.update(uMin, ConflictAlgorithm.Replace);
         OrmLog.i(this, "update User Min: " + c);
 
         //更新任意的整个集合
         bossList.get(0).setName("Cang Jin Kong");
         bossList.get(1).setName("Song Dao Feng");
-        db.update(bossList, ConflictAlgorithm.Fail);
+        liteOrm.update(bossList, ConflictAlgorithm.Fail);
     }
 
     /**
@@ -200,7 +200,7 @@ public class SingleTestActivity extends BaseActivity {
         t2.phone = "168 0000 0000";
 
         ColumnsValue cv = new ColumnsValue(new String[]{"phone"});
-        long c = db.update(bossList, cv, ConflictAlgorithm.None);
+        long c = liteOrm.update(bossList, cv, ConflictAlgorithm.None);
         OrmLog.i(this, "update teacher ：" + c);
 
 
@@ -209,17 +209,17 @@ public class SingleTestActivity extends BaseActivity {
         wife1.bm = "实体自带值";
         wife1.age = 18;
         cv = new ColumnsValue(new String[]{"des", "bm", "age"}, new Object[]{"外部强制赋值地址", null, 20});
-        c = db.update(wife1, cv, ConflictAlgorithm.None);
+        c = liteOrm.update(wife1, cv, ConflictAlgorithm.None);
         OrmLog.i(this, "update wife1 " + wife1.name + ": " + c);
     }
 
 
     private void testQueryAll() {
-        ArrayList<Man> query = db.query(Man.class);
-        ArrayList<Address> as = db.query(Address.class);
-        ArrayList<Wife> ws = db.query(Wife.class);
-        ArrayList<Company> cs = db.query(Company.class);
-        ArrayList<Boss> ts = db.query(Boss.class);
+        ArrayList<Man> query = liteOrm.query(Man.class);
+        ArrayList<Address> as = liteOrm.query(Address.class);
+        ArrayList<Wife> ws = liteOrm.query(Wife.class);
+        ArrayList<Company> cs = liteOrm.query(Company.class);
+        ArrayList<Boss> ts = liteOrm.query(Boss.class);
         for (Address uu : as) {
             OrmLog.i(this, "query Address: " + uu);
         }
@@ -241,27 +241,27 @@ public class SingleTestActivity extends BaseActivity {
         // 模糊查询：所有带“山”字的地址
         QueryBuilder qb = new QueryBuilder(Address.class)
                 .where(Address.COL_ADDRESS + " LIKE ?", new String[]{"%山%"});
-        printAddress(db.<Address>query(qb));
+        printAddress(liteOrm.<Address>query(qb));
 
         //AND关系 获取 南京的香港路
         qb = new QueryBuilder(Address.class)
                 .where(WhereBuilder.create()
                                    .equals(Address.COL_ADDRESS, "香港路")
                                    .andEquals(Address.COL_CITY, "南京"));
-        printAddress(db.<Address>query(qb));
+        printAddress(liteOrm.<Address>query(qb));
 
         //OR关系 获取所有 地址为香港路 ，和 青岛 的所有地址
         qb = new QueryBuilder(Address.class)
                 .where(WhereBuilder.create()
                                    .equals(Address.COL_ADDRESS, "香港路")
                                    .orEquals(Address.COL_CITY, "青岛"));
-        printAddress(db.<Address>query(qb));
+        printAddress(liteOrm.<Address>query(qb));
 
         //IN语句 获取所有 城市为杭州 和 北京 的地址
         qb = new QueryBuilder(Address.class)
                 .where(WhereBuilder.create()
                                    .in(Address.COL_CITY, new String[]{"杭州", "北京"}));
-        printAddress(db.<Address>query(qb));
+        printAddress(liteOrm.<Address>query(qb));
 
         //IN语句 获取所有 非香港路 并且 ID>10
         qb = new QueryBuilder(Address.class)
@@ -269,16 +269,16 @@ public class SingleTestActivity extends BaseActivity {
                                    .noEquals(Address.COL_ADDRESS, "香港路")
                                    .and()
                                    .greaterThan(Address.COL_ID, 5));
-        printAddress(db.<Address>query(qb));
+        printAddress(liteOrm.<Address>query(qb));
     }
 
     private void testQueryByID() {
-        Man man = db.queryById(uComplex.getId(), Man.class);
+        Man man = liteOrm.queryById(uComplex.getId(), Man.class);
         OrmLog.i(this, "query id: " + uComplex.getId() + ",MAN: " + man);
     }
 
     private void printAllAddress() {
-        printAddress(db.query(Address.class));
+        printAddress(liteOrm.query(Address.class));
     }
 
     private void printAddress(List<Address> addrList) {
@@ -289,7 +289,7 @@ public class SingleTestActivity extends BaseActivity {
 
     private void testQueryAnyUwant() {
 
-        long nums = db.queryCount(Address.class);
+        long nums = liteOrm.queryCount(Address.class);
         OrmLog.i(this, "Address All Count : " + nums);
 
         QueryBuilder qb = new QueryBuilder(Address.class)
@@ -299,9 +299,9 @@ public class SingleTestActivity extends BaseActivity {
                 .distinct(true)
                 .where(Address.COL_ADDRESS + "=?", new String[]{"香港路"});
 
-        nums = db.queryCount(qb);
+        nums = liteOrm.queryCount(qb);
         OrmLog.i(this, "Address All Count : " + nums);
-        List<Address> addrList = db.query(qb);
+        List<Address> addrList = liteOrm.query(qb);
         for (Address uu : addrList) {
             OrmLog.i(this, "Query Address: " + uu);
         }
@@ -311,16 +311,16 @@ public class SingleTestActivity extends BaseActivity {
 
     private void testMapping() {
         // 先找出来相关的实体
-        ArrayList<Man> mans = db.query(Man.class);
-        ArrayList<Address> as = db.query(Address.class);
-        ArrayList<Wife> ws = db.query(Wife.class);
-        ArrayList<Company> cs = db.query(Company.class);
-        ArrayList<Boss> ts = db.query(Boss.class);
+        ArrayList<Man> mans = liteOrm.query(Man.class);
+        ArrayList<Address> as = liteOrm.query(Address.class);
+        ArrayList<Wife> ws = liteOrm.query(Wife.class);
+        ArrayList<Company> cs = liteOrm.query(Company.class);
+        ArrayList<Boss> ts = liteOrm.query(Boss.class);
         // 为它们映射关系
-        db.mapping(mans, as);
-        db.mapping(mans, ws);
-        db.mapping(mans, cs);
-        db.mapping(mans, ts);
+        liteOrm.mapping(mans, as);
+        liteOrm.mapping(mans, ws);
+        liteOrm.mapping(mans, cs);
+        liteOrm.mapping(mans, ts);
         for (Address uu : as) {
             OrmLog.i(this, "query Address: " + uu);
         }
@@ -340,42 +340,42 @@ public class SingleTestActivity extends BaseActivity {
     }
 
     private void testDelete() {
-        db.delete(uMin);
-        db.delete(uMax);
-        db.delete(uAlice);
-        db.delete(uComplex);
+        liteOrm.delete(uMin);
+        liteOrm.delete(uMax);
+        liteOrm.delete(uAlice);
+        liteOrm.delete(uComplex);
 
         // delete 任意 collection
-        db.delete(bossList);
+        liteOrm.delete(bossList);
 
     }
 
     private void testDeleteByIndex() {
         // 最后一个参数可为null，默认按ID升序排列
         // 按id升序，删除[2, size-1]，结果：仅保留第一个和最后一个
-        db.delete(Address.class, 2, addrList.size() - 1, Address.COL_ID);
+        liteOrm.delete(Address.class, 2, addrList.size() - 1, Address.COL_ID);
     }
 
     private void testDeleteByWhereBuilder() {
         //AND关系 删掉 南京 的 香港路
-        db.delete(Address.class, WhereBuilder.create()
+        liteOrm.delete(Address.class, WhereBuilder.create()
                                              .equals(Address.COL_ADDRESS, "香港路")
                                              .andEquals(Address.COL_CITY, "南京"));
         printAllAddress();
 
         //OR关系 删掉所有地址为 香港路 ，同时删掉 青岛的所有地址
-        db.delete(Address.class, WhereBuilder.create()
+        liteOrm.delete(Address.class, WhereBuilder.create()
                                              .equals(Address.COL_ADDRESS, "香港路")
                                              .orEquals(Address.COL_CITY, "青岛"));
         printAllAddress();
 
         //IN语句 删掉所有城市为 杭州 或 北京的地址
-        db.delete(Address.class, WhereBuilder.create()
+        liteOrm.delete(Address.class, WhereBuilder.create()
                                              .in(Address.COL_CITY, new String[]{"杭州", "北京"}));
         printAllAddress();
 
         //IN语句 删掉所有 非香港路 并且 ID>10
-        db.delete(Address.class, WhereBuilder.create()
+        liteOrm.delete(Address.class, WhereBuilder.create()
                                              .equals(Address.COL_ADDRESS, "夫子庙")
                                              .and()
                                              .greaterThan(Address.COL_ID, 5));
@@ -383,11 +383,11 @@ public class SingleTestActivity extends BaseActivity {
     }
 
     private void testDeleteAll() {
-        db.deleteAll(Address.class);
-        db.deleteAll(Company.class);
-        db.deleteAll(Wife.class);
-        db.deleteAll(Man.class);
-        db.deleteAll(Boss.class);
+        liteOrm.deleteAll(Address.class);
+        liteOrm.deleteAll(Company.class);
+        liteOrm.deleteAll(Wife.class);
+        liteOrm.deleteAll(Man.class);
+        liteOrm.deleteAll(Boss.class);
     }
 
     private void mockData() {
