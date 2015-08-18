@@ -6,7 +6,7 @@ A fast, small, powerful ORM framework for Android. LiteOrm makes you do CRUD ope
 #### Goal：simple, powerful, and most userful android ORM framework library. 
 
 
-Principles Principles:
+Principles :
 ---
 
 - Lightweight, focus, performance priority, unrelated threads, focused data and relational storage and manipulation.
@@ -14,22 +14,22 @@ Principles Principles:
 - Use extreme simplicity, such as: db.save (u); db.query (U.class); db.deleteAll (U.class);
 
 
-Features Features:
+Features :
 ---
 
-- Support for multi-database: a database file corresponds to a LiteOrm management class instances.
-- SD card storage: DB files can be placed in the position you think is reasonable.
-- Automatically build tables: Developers do not care about the database and table details.
-- Relational storage and recovery: real entity-relational mapping persistence and recovery, just mark the relationship type to the associated attributes of the entity.
-- Independent and cascading: You can smooth handoff, independent operation of high performance, save only the object data; cascade operation more powerful, associated objects and relationships kept together.
-- Intelligent Column Detection: App Model upgrade or change, added a new property field, which will be detected and added to the database, so no need to worry about the new fields will not be stored.
-- Rich API support: save (replace), insert, update, delete, query, mapping, etc.
-- Automatic Identification Type: respectively into with sqlite support TEXT, REAL, INTEGER, BLOB data type stores several.
-- Automatically build an object, the new object is detected by the reflection and constructor parameters hack techniques, most cases nor requires no-argument constructor.
-- Updates the designated column can be flexible, force, mass assignment, the assignment will be forced to disregard the real value of the object to be operated.
-- Store a sequence of fields: Date, ArrayList, Vector, and other containers of smart save and read.
-- Binding syntax supports: NOT NULL, UNIQUE, DEFAULT, COLLATE, CHECK, PRIMARY KEY, support conflict algorithms.
-- Flexible query and delete: columns, where, roder, limit, having group, etc.
+- **Support for multi-database**: a database file corresponds to a LiteOrm management class instances.
+- **SD card storage**: DB files can be placed in the position you think is reasonable.
+- **Automatically build tables**: Developers do not care about the database and table details.
+- **Relational storage and recovery**: real entity-relational mapping persistence and recovery, just mark the relationship type to the associated attributes of the entity.
+- **Independent and cascading**: You can smooth handoff, independent operation of high performance, save only the object data; cascade operation more powerful, associated objects and relationships kept together.
+- **Intelligent Column Detection**: App Model upgrade or change, added a new property field, which will be detected and added to the database, so no need to worry about the new fields will not be stored.
+- **Rich API support: save (replace), insert, update, delete, query, mapping, etc.
+- **Automatic Identification Type**: respectively into with sqlite support TEXT, REAL, INTEGER, BLOB data type stores several.
+- **Automatically build an object**, the new object is detected by the reflection and constructor parameters hack techniques, most cases nor requires no-argument constructor.
+- **Updates the designated column can be flexible, force, mass assignment**, the assignment will be forced to disregard the real value of the object to be operated.
+- **Store a sequence of fields**: Date, ArrayList, Vector, and other containers of smart save and read.
+- **Binding syntax supports**: NOT NULL, UNIQUE, DEFAULT, COLLATE, CHECK, PRIMARY KEY, support conflict algorithms.
+- **Flexible query and delete**: columns, where, roder, limit, having group, etc.
 
 Futures:
 ---
@@ -78,7 +78,7 @@ LiteOrm是一个速度快、小巧、强大的android ORM框架类库，让你�
 使用案例2：http://www.apkbus.com/ask/article/13859
 
 
-Principles 原则：
+原则 ：
 ---
 
 - 轻量、专注、性能优先、线程无关，专注数据及其关系存储和操作。
@@ -86,7 +86,7 @@ Principles 原则：
 - 使用极致简约，例如：db.save(u); db.query(U.class); db.deleteAll(U.class);
 
 
-Features 特色:
+特色 :
 ---
 
 - 支持多库：每个数据库文件对应一个LiteOrm管理类实例。
@@ -103,7 +103,7 @@ Features 特色:
 - 约束性语法支持：NOT NULL, UNIQUE, DEFAULT, COLLATE, CHECK, PRIMARY KEY，支持冲突算法。
 - 灵活的查询和删除：columns, where, roder, limit, having group, etc。
 
-Futures：
+未来：
 ---
 
 - 信息加密功能，防止破库后数据裸奔。
