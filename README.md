@@ -74,6 +74,9 @@ LiteOrm是一个速度快、小巧、强大的android ORM框架类库，让你�
 
 #### 目标：简单、强大、最有用的android ORM 框架库
 
+使用案例1：http://blog.csdn.net/napoleonbai/article/details/41958725
+使用案例2：http://www.apkbus.com/ask/article/13859
+
 
 Principles 原则：
 ---
