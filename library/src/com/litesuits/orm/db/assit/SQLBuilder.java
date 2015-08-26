@@ -162,6 +162,7 @@ public class SQLBuilder {
                     if (f.getAnnotation(Default.class) != null) {
                         sb.append(DEFAULT);
                         sb.append(f.getAnnotation(Default.class).value());
+                        sb.append(BLANK);
                     }
                     if (f.getAnnotation(Unique.class) != null) {
                         sb.append(UNIQUE);
