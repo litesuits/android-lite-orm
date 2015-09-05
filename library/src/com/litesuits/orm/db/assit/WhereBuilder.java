@@ -24,23 +24,30 @@ public class WhereBuilder {
     private static final String PARENTHESES_RIGHT = ")";
     private static final String IN = " IN ";
 
-    private String where;
-    private Object[] whereArgs;
+    protected String where;
+    protected Object[] whereArgs;
+    protected Class tableClass;
 
-    public WhereBuilder() {
+    public WhereBuilder(Class tableClass) {
+        this.tableClass = tableClass;
     }
 
-    public static WhereBuilder create() {
-        return new WhereBuilder();
+    public static WhereBuilder create(Class tableClass) {
+        return new WhereBuilder(tableClass);
     }
 
-    public static WhereBuilder create(String where, Object[] whereArgs) {
-        return new WhereBuilder(where, whereArgs);
+    public static WhereBuilder create(Class tableClass, String where, Object[] whereArgs) {
+        return new WhereBuilder(tableClass, where, whereArgs);
     }
 
-    public WhereBuilder(String where, Object[] whereArgs) {
+    public WhereBuilder(Class tableClass, String where, Object[] whereArgs) {
         this.where = where;
         this.whereArgs = whereArgs;
+        this.tableClass = tableClass;
+    }
+
+    public Class getTableClass() {
+        return tableClass;
     }
 
     /**
@@ -218,7 +225,7 @@ public class WhereBuilder {
     }
 
 
-    public String createWhereString(Class claxx) {
+    public String createWhereString() {
         if (where != null) {
             return WHERE + where;
         } else {
@@ -226,9 +233,9 @@ public class WhereBuilder {
         }
     }
 
-    public SQLStatement createStatementDelete(Class claxx) {
+    public SQLStatement createStatementDelete() {
         SQLStatement stmt = new SQLStatement();
-        stmt.sql = DELETE + TableManager.getTableName(claxx) + createWhereString(claxx);
+        stmt.sql = DELETE + TableManager.getTableName(tableClass) + createWhereString();
         stmt.bindArgs = transToStringArray();
         return stmt;
     }

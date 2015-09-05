@@ -12,7 +12,7 @@ package com.litesuits.orm.db.model;
 public class ColumnsValue {
 
     /**
-     * your sql only affect column in {@link #columns}.
+     * your sql only affect column in this {@link #columns}.
      */
     public String[] columns;
 

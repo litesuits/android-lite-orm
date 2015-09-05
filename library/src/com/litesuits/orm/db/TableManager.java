@@ -159,11 +159,11 @@ public final class TableManager {
                             if (OrmLog.isPrint) {
                                 if (sum > 0) {
                                     OrmLog.i(TAG,
-                                             "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
+                                            "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
                                 } else {
                                     OrmLog.e(TAG,
-                                             "Table [" + entityTable.name + "] add " + sum + " new column error ： " +
-                                             newColumns);
+                                            "Table [" + entityTable.name + "] add " + sum + " new column error ： " +
+                                            newColumns);
                                 }
                             }
                         }
@@ -228,7 +228,8 @@ public final class TableManager {
                             sqlTable.columns.put(col, 1);
                         }
                         if (OrmLog.isPrint) {
-                            OrmLog.d(TAG, "Find One SQL Table: " + sqlTable);
+                            OrmLog.i(TAG, "Find One SQL Table: " + sqlTable);
+                            OrmLog.i(TAG, "Table Column: "+colS);
                         }
                         mSqlTableMap.put(sqlTable.name, sqlTable);
                     }

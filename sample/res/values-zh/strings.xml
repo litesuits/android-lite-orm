@@ -18,7 +18,6 @@
         <item>查找 使用WhereBuilder</item>
         <item>查询 根据ID</item>
         <item>查询 任意</item>
-        <item>关系映射 恢复</item>
         <item>删除 实体</item>
         <item>删除 指定数量</item>
         <item>删除 使用WhereBuilder</item>

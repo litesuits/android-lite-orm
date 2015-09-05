@@ -23,7 +23,7 @@ public class Querier {
      */
     public static <T> T doQuery(SQLiteDatabase db, SQLStatement st, CursorParser<T> parser) {
         if (OrmLog.isPrint) {
-            OrmLog.v(TAG, "----> Query Start: " + st.toString());
+            OrmLog.i(TAG, "----> Query Start: " + st.toString());
         }
         Cursor cursor = db.rawQuery(st.sql, (String[]) st.bindArgs);
         if (cursor != null) {

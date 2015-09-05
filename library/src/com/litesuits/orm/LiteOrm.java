@@ -6,19 +6,15 @@ import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
-import com.litesuits.orm.db.assit.Checker;
-import com.litesuits.orm.db.assit.Querier;
-import com.litesuits.orm.db.assit.QueryBuilder;
-import com.litesuits.orm.db.assit.SQLBuilder;
+import com.litesuits.orm.db.assit.*;
 import com.litesuits.orm.db.impl.*;
-import com.litesuits.orm.db.model.EntityTable;
-import com.litesuits.orm.db.model.MapProperty;
-import com.litesuits.orm.db.model.Relation;
+import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 import com.litesuits.orm.log.OrmLog;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,8 +54,8 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
             config.dbVersion = DataBaseConfig.DEFAULT_DB_VERSION;
         }
         mConfig = config;
-        mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(), mConfig.dbName, null, mConfig.dbVersion,
-                                   config.onUpdateListener);
+        mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(),
+                mConfig.dbName, null, mConfig.dbVersion, config.onUpdateListener);
         mConfig.context = null;
         mTableManager = new TableManager(mConfig.dbName);
         if (mConfig.dbName.contains(File.separator)) {
@@ -108,6 +104,20 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     public synchronized static LiteOrm newCascadeInstance(DataBaseConfig config) {
         return CascadeSQLiteImpl.newInstance(config);
     }
+
+    /**
+     * get a single data operator based on SQLite
+     *
+     * @return {@link com.litesuits.orm.db.impl.CascadeSQLiteImpl}
+     */
+    public abstract LiteOrm single();
+
+    /**
+     * get a cascade data operator based on SQLite
+     *
+     * @return {@link com.litesuits.orm.db.impl.CascadeSQLiteImpl}
+     */
+    public abstract LiteOrm cascade();
 
     /**
      * when debugged is true, the {@link OrmLog} is opened.
@@ -227,6 +237,21 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     }
 
     @Override
+    public int update(WhereBuilder where, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm) {
+        acquireReference();
+        try {
+            SQLiteDatabase db = mHelper.getWritableDatabase();
+            SQLStatement stmt = SQLBuilder.buildUpdateAllSql(where, cvs, conflictAlgorithm);
+            return stmt.execUpdate(db);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            releaseReference();
+        }
+        return SQLStatement.NONE;
+    }
+
+    @Override
     public synchronized SQLiteDatabase getReadableDatabase() {
         return mHelper.getReadableDatabase();
     }
@@ -264,12 +289,8 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
             File dbp = dbf.getParentFile();
             if (!dbp.exists()) {
                 boolean mks = dbp.mkdirs();
-                OrmLog.i(TAG, "create database, parent file mkdirs: " + mks +"  path:" + dbp.getAbsolutePath());
+                OrmLog.i(TAG, "create database, parent file mkdirs: " + mks + "  path:" + dbp.getAbsolutePath());
             }
-            //if (!dbf.exists()) {
-            //    dbf.createNewFile();
-            //    OrmLog.i(TAG, "create database, parent file mkdirs: " + mks +"  path:" + dbp.getAbsolutePath());
-            //}
             return SQLiteDatabase.openOrCreateDatabase(path, factory);
         } finally {
             releaseReference();
@@ -277,19 +298,40 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
         //return null;
     }
 
-    //    @Override
-    //    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    //    public boolean deleteDatabase(File file) {
-    //        acquireReference();
-    //        try {
-    //            return SQLiteDatabase.deleteDatabase(file);
-    //        } catch (Exception e) {
-    //            e.printStackTrace();
-    //        } finally {
-    //            releaseReference();
-    //        }
-    //        return false;
-    //    }
+    @Override
+    public boolean deleteDatabase(File file) {
+        acquireReference();
+        try {
+            if (file == null) {
+                throw new IllegalArgumentException("file must not be null");
+            }
+            boolean deleted = false;
+            deleted |= file.delete();
+            deleted |= new File(file.getPath() + "-journal").delete();
+            deleted |= new File(file.getPath() + "-shm").delete();
+            deleted |= new File(file.getPath() + "-wal").delete();
+
+            File dir = file.getParentFile();
+            if (dir != null) {
+                final String prefix = file.getName() + "-mj";
+                final FileFilter filter = new FileFilter() {
+                    @Override
+                    public boolean accept(File candidate) {
+                        return candidate.getName().startsWith(prefix);
+                    }
+                };
+                for (File masterJournal : dir.listFiles(filter)) {
+                    deleted |= masterJournal.delete();
+                }
+            }
+            return deleted;
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            releaseReference();
+        }
+        return false;
+    }
 
     @Override
     public synchronized void close() {
@@ -306,6 +348,15 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
         mTableManager.clear();
     }
 
+    /**
+     * Attempts to release memory that SQLite holds but does not require to
+     * operate properly. Typically this memory will come from the page cache.
+     *
+     * @return the number of bytes actually released
+     */
+    public static int releaseMemory() {
+        return SQLiteDatabase.releaseMemory();
+    }
 
     /* --------------------------------  私有方法 -------------------------------- */
     @SuppressWarnings("unchecked")

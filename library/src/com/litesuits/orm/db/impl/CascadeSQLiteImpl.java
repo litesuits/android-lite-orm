@@ -75,7 +75,6 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     public int save(Collection<?> collection) {
         acquireReference();
         try {
-            // 直接循环调用{@link save(Object) }最简单，但在此我没有偷懒，而是采用了效率更高的做法。
             return saveCollection(collection);
         } finally {
             releaseReference();
@@ -245,6 +244,21 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     }
 
     @Override
+    public int delete(WhereBuilder where) {
+        acquireReference();
+        try {
+            EntityTable table = TableManager.getTable(where.getTableClass());
+            List<?> list = query(QueryBuilder.create(where.getTableClass()).columns(new String[]{table.key.column}).where(where));
+            deleteCollection(list);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            releaseReference();
+        }
+        return SQLStatement.NONE;
+    }
+
+    @Override
     public int deleteAll(Class<?> claxx) {
         acquireReference();
         try {
@@ -299,8 +313,8 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     public <T> T queryById(String id, Class<T> claxx) {
         EntityTable table = TableManager.getTable(claxx);
         ArrayList<T> list = checkTableAndQuery(claxx,
-                                               new QueryBuilder(claxx)
-                                                       .whereEquals(table.key.column, String.valueOf(id)));
+                new QueryBuilder(claxx)
+                        .whereEquals(table.key.column, String.valueOf(id)));
         if (!Checker.isEmpty(list)) {
             return list.get(0);
         }
@@ -446,9 +460,9 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                 List<String> subList = key2List.subList(start, end);
                 start = next;
 
-                SQLStatement entitySql = QueryBuilder.create(compClass).whereIn(table2.key.column,
-                                                                                subList.toArray(
-                                                                                        new String[subList.size()]))
+                SQLStatement entitySql = QueryBuilder.create(compClass)
+                                                     .whereIn(table2.key.column,
+                                                             subList.toArray(new String[subList.size()]))
                                                      .createStatement();
 
                 Querier.doQuery(db, entitySql, new Querier.CursorParser() {
@@ -612,7 +626,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
             Integer rowID = Transaction.execute(db, new Worker<Integer>() {
                 @Override
                 public Integer doTransaction(SQLiteDatabase db) throws Exception {
-                    //0. 保存第一个实体
+                    //0. 删除第一个实体
                     HashMap<String, Integer> handleMap = new HashMap<String, Integer>();
                     Iterator<?> iterator = collection.iterator();
                     Object entity = iterator.next();

@@ -12,10 +12,7 @@ import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
 
 public class SQLBuilder {
@@ -69,8 +66,6 @@ public class SQLBuilder {
 
     /**
      * 构建【获取SQLite全部表】sql语句
-     *
-     * @return
      */
     public static SQLStatement buildTableObtainAll() {
         return new SQLStatement(SELECT_TABLES, null);
@@ -78,8 +73,6 @@ public class SQLBuilder {
 
     /**
      * 构建【获取SQLite全部表】sql语句
-     *
-     * @return
      */
     public static SQLStatement buildColumnsObtainAll(String table) {
         return new SQLStatement(PRAGMA_TABLE_INFO + table + PARENTHESES_RIGHT, null);
@@ -87,18 +80,14 @@ public class SQLBuilder {
 
     /**
      * 构建【获取最新插入的数据的主键】sql语句
-     *
-     * @return
      */
     public static SQLStatement buildGetLastRowId(EntityTable table) {
         return new SQLStatement(SELECT_MAX + PARENTHESES_LEFT + table.key.column
-                + PARENTHESES_RIGHT + FROM + table.name, null);
+                                + PARENTHESES_RIGHT + FROM + table.name, null);
     }
 
     /**
      * 构建【表删除】sql语句
-     *
-     * @return
      */
     public static SQLStatement buildDropTable(EntityTable table) {
         return new SQLStatement(DROP_TABLE + table.name, null);
@@ -106,8 +95,6 @@ public class SQLBuilder {
 
     /**
      * 构建【表删除】sql语句
-     *
-     * @return
      */
     public static SQLStatement buildDropTable(String tableName) {
         return new SQLStatement(DROP_TABLE + tableName, null);
@@ -116,9 +103,6 @@ public class SQLBuilder {
     /**
      * 构建【表】sql语句
      * create [temp] table if not exists (table-name) (co1 TEXT, co2 TEXT, UNIQUE (co1, co2))
-     *
-     * @param table
-     * @return
      */
     public static SQLStatement buildCreateTable(EntityTable table) {
         StringBuilder sb = new StringBuilder();
@@ -254,9 +238,9 @@ public class SQLBuilder {
      * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值
      * @param type      {@link #TYPE_INSERT}  or {@link #TYPE_REPLACE}
      * @param algorithm {@link ConflictAlgorithm}
-     * @return
      */
-    private static SQLStatement buildInsertSql(Object entity, boolean needValue, int type, ConflictAlgorithm algorithm) {
+    private static SQLStatement buildInsertSql(Object entity, boolean needValue, int type,
+                                               ConflictAlgorithm algorithm) {
         SQLStatement stmt = new SQLStatement();
         try {
             EntityTable table = TableManager.getTable(entity);
@@ -332,9 +316,9 @@ public class SQLBuilder {
      * @param cvs       更新的列,为NULL则更新全部
      * @param algorithm {@link ConflictAlgorithm}
      * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值（批量更新时，仅构建sql语句，插入操作时循环赋值）
-     * @return
      */
-    private static SQLStatement buildUpdateSql(Object entity, ColumnsValue cvs, ConflictAlgorithm algorithm, boolean needValue) {
+    private static SQLStatement buildUpdateSql(Object entity, ColumnsValue cvs,
+                                               ConflictAlgorithm algorithm, boolean needValue) {
         SQLStatement stmt = new SQLStatement();
         try {
             EntityTable table = TableManager.getTable(entity);
@@ -399,10 +383,61 @@ public class SQLBuilder {
     }
 
     /**
-     * 构建删除sql语句
+     * 构建 update SQL语句
+     * update (or replace) [table] set col1=?, col2=? where ...
      *
-     * @param entity
-     * @return
+     * @param where     更新语句
+     * @param cvs       更新的列,为NULL则更新全部
+     * @param algorithm {@link ConflictAlgorithm}
+     */
+    private static SQLStatement buildUpdateSql(WhereBuilder where, ColumnsValue cvs, ConflictAlgorithm algorithm) {
+        SQLStatement stmt = new SQLStatement();
+        try {
+            EntityTable table = TableManager.getTable(where.getTableClass());
+            StringBuilder sql = new StringBuilder(128);
+            sql.append(UPDATE);
+            if (algorithm != null) {
+                sql.append(algorithm.getAlgorithm());
+            }
+            sql.append(table.name);
+            sql.append(SET);
+            // 分两部分构建SQL语句，用一个for循环完成SQL构建和值的反射获取，以提高效率。
+            Object[] args = null;
+            if (cvs != null && cvs.checkColumns()) {
+                Object[] wArgs = where.getWhereArgs();
+                if (wArgs != null) {
+                    args = new Object[cvs.columns.length + wArgs.length];
+                } else {
+                    args = new Object[cvs.columns.length];
+                }
+                int i = 0;
+                for (; i < cvs.columns.length; i++) {
+                    if (i > 0) {
+                        sql.append(COMMA);
+                    }
+                    sql.append(cvs.columns[i]).append(EQUALS_HOLDER);
+                    args[i] = cvs.values[i];
+                }
+                if (wArgs != null) {
+                    for (Object o : wArgs) {
+                        args[i++] = o;
+                    }
+                }
+            } else {
+                args = where.getWhereArgs();
+            }
+            sql.append(where.createWhereString());
+            stmt.sql = sql.toString();
+            stmt.bindArgs = args;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return stmt;
+    }
+
+    /**
+     * 构建删除sql语句
+     * delete from [table] where key=?
      */
     public static SQLStatement buildDeleteSql(Object entity) {
         SQLStatement stmt = new SQLStatement();
@@ -435,9 +470,7 @@ public class SQLBuilder {
 
     /**
      * 构建批量删除sql语句
-     *
-     * @param collection
-     * @return
+     * delete from [table] where [key] in (?,?)
      */
     public static SQLStatement buildDeleteSql(Collection<?> collection) {
         SQLStatement stmt = new SQLStatement();
@@ -450,7 +483,7 @@ public class SQLBuilder {
                 if (i == 0) {
                     table = TableManager.getTable(entity);
                     sb.append(DELETE_FROM).append(table.name).append(WHERE)
-                            .append(table.key.column).append(IN).append(PARENTHESES_LEFT).append(HOLDER);
+                      .append(table.key.column).append(IN).append(PARENTHESES_LEFT).append(HOLDER);
                 } else {
                     sb.append(COMMA_HOLDER);
                 }
@@ -467,9 +500,6 @@ public class SQLBuilder {
 
     /**
      * 构建全部删除sql语句
-     *
-     * @param claxx
-     * @return
      */
     public static SQLStatement buildDeleteAllSql(Class<?> claxx) {
         SQLStatement stmt = new SQLStatement();
@@ -480,9 +510,6 @@ public class SQLBuilder {
 
     /**
      * 构建部分删除sql语句
-     *
-     * @param claxx
-     * @return
      */
     public static SQLStatement buildDeleteSql(Class<?> claxx, long start, long end, String orderAscColumn) {
         SQLStatement stmt = new SQLStatement();
@@ -491,21 +518,17 @@ public class SQLBuilder {
         String orderBy = Checker.isEmpty(orderAscColumn) ? key : orderAscColumn;
         StringBuilder sb = new StringBuilder();
         sb.append(DELETE_FROM).append(table.name).append(WHERE).append(key)
-                .append(IN).append(PARENTHESES_LEFT)
-                .append(SELECT).append(key)
-                .append(FROM).append(table.name)
-                .append(ORDER_BY).append(orderBy)
-                .append(ASC).append(LIMIT).append(start).append(COMMA).append(end).append(PARENTHESES_RIGHT);
+          .append(IN).append(PARENTHESES_LEFT)
+          .append(SELECT).append(key)
+          .append(FROM).append(table.name)
+          .append(ORDER_BY).append(orderBy)
+          .append(ASC).append(LIMIT).append(start).append(COMMA).append(end).append(PARENTHESES_RIGHT);
         stmt.sql = sb.toString();
         return stmt;
     }
 
     /**
      * 构建添加列语句
-     *
-     * @param tableName
-     * @param column
-     * @return
      */
     public static SQLStatement buildAddColumnSql(String tableName, String column) {
         SQLStatement stmt = new SQLStatement();
@@ -532,9 +555,6 @@ public class SQLBuilder {
 
     /**
      * 构建关系映射语句
-     *
-     * @param claxx
-     * @return
      */
     public static MapInfo buildDelAllMappingSql(Class claxx) {
         EntityTable table1 = TableManager.getTable(claxx);
@@ -564,9 +584,6 @@ public class SQLBuilder {
      * 构建关系映射语句
      * 1. 如果是插入或更新数据，先删除旧映射，再建立新映射。
      * 2. 如果是删除，直接删除就映射即可。
-     *
-     * @param entity
-     * @return
      */
     public static MapInfo buildMappingSql(Object entity, boolean insertNew) {
         EntityTable table1 = TableManager.getTable(entity);
@@ -629,7 +646,8 @@ public class SQLBuilder {
         return calxx;
     }
 
-    private static SQLStatement buildMappingDeleteAllSql(EntityTable table1, EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
+    private static SQLStatement buildMappingDeleteAllSql(EntityTable table1,
+                                                         EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
         if (table2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             SQLStatement stmt = new SQLStatement();
@@ -662,7 +680,8 @@ public class SQLBuilder {
         return null;
     }
 
-    public static SQLStatement buildMappingToManySql(Object key1, EntityTable table1, EntityTable table2, Object obj) throws IllegalArgumentException, IllegalAccessException {
+    public static SQLStatement buildMappingToManySql(Object key1, EntityTable table1, EntityTable table2,
+                                                     Object obj) throws IllegalArgumentException, IllegalAccessException {
         if (obj instanceof Collection<?>) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             Collection<?> coll = (Collection<?>) obj;
@@ -703,15 +722,16 @@ public class SQLBuilder {
         return null;
     }
 
-    public static SQLStatement buildMappingToOneSql(Object key1, EntityTable table1, EntityTable table2, Object obj) throws IllegalArgumentException, IllegalAccessException {
+    public static SQLStatement buildMappingToOneSql(Object key1, EntityTable table1, EntityTable table2,
+                                                    Object obj) throws IllegalArgumentException, IllegalAccessException {
         Object key2 = FieldUtil.getAssignedKeyObject(table2.key, obj);
         if (key2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             StringBuilder sql = new StringBuilder(128);
             sql.append(INSERT).append(INTO).append(mapTableName)
-                    .append(PARENTHESES_LEFT).append(table1.name)
-                    .append(COMMA).append(table2.name)
-                    .append(PARENTHESES_RIGHT).append(VALUES).append(TWO_HOLDER);
+               .append(PARENTHESES_LEFT).append(table1.name)
+               .append(COMMA).append(table2.name)
+               .append(PARENTHESES_RIGHT).append(VALUES).append(TWO_HOLDER);
             SQLStatement stmt = new SQLStatement();
             stmt.sql = sql.toString();
             stmt.bindArgs = new Object[]{key1, key2};
@@ -726,9 +746,9 @@ public class SQLBuilder {
         if (key2 != null) {
             StringBuilder sql = new StringBuilder(128);
             sql.append(INSERT).append(INTO).append(mapTableName)
-                    .append(PARENTHESES_LEFT).append(table1.name)
-                    .append(COMMA).append(table2.name)
-                    .append(PARENTHESES_RIGHT).append(VALUES).append(TWO_HOLDER);
+               .append(PARENTHESES_LEFT).append(table1.name)
+               .append(COMMA).append(table2.name)
+               .append(PARENTHESES_RIGHT).append(VALUES).append(TWO_HOLDER);
             SQLStatement stmt = new SQLStatement();
             stmt.sql = sql.toString();
             stmt.bindArgs = new Object[]{key1, key2};
@@ -740,7 +760,8 @@ public class SQLBuilder {
     /**
      * 构建查询关系映射语句
      */
-    public static SQLStatement buildQueryRelationSql(Class class1, Class class2, List<String> key1List, List<String> key2List) {
+    public static SQLStatement buildQueryRelationSql(Class class1, Class class2, List<String> key1List,
+                                                     List<String> key2List) {
         final EntityTable table1 = TableManager.getTable(class1);
         final EntityTable table2 = TableManager.getTable(class2);
         QueryBuilder builder = new QueryBuilder(class1).queryMappingInfo(class2);
@@ -789,7 +810,7 @@ public class SQLBuilder {
     public static SQLStatement buildQueryRelationSql(EntityTable table1, EntityTable table2, Object key1) {
         SQLStatement sqlStatement = new SQLStatement();
         sqlStatement.sql = SELECT_ANY_FROM + TableManager.getMapTableName(table1, table2)
-                + WHERE + table1.name + EQUALS_HOLDER;
+                           + WHERE + table1.name + EQUALS_HOLDER;
         sqlStatement.bindArgs = new String[]{String.valueOf(key1)};
         return sqlStatement;
     }

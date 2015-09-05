@@ -93,7 +93,6 @@ public class SingleTestActivity extends BaseActivity {
      * <item>Query By WhereBuilder</item>
      * <item>Query By ID</item>
      * <item>Query Any U Want</item>
-     * <item>Relation Restore</item>
      * <item>Delete</item>
      * <item>Delete By Index</item>
      * <item>Delete By WhereBuilder</item>
@@ -126,18 +125,15 @@ public class SingleTestActivity extends BaseActivity {
                 testQueryAnyUwant();
                 break;
             case 8:
-                testMapping();
-                break;
-            case 9:
                 testDelete();
                 break;
-            case 10:
+            case 9:
                 testDeleteByIndex();
                 break;
-            case 11:
+            case 10:
                 testDeleteByWhereBuilder();
                 break;
-            case 12:
+            case 11:
                 testDeleteAll();
                 break;
             default:
@@ -151,11 +147,11 @@ public class SingleTestActivity extends BaseActivity {
         liteOrm.save(uMin);
 
         liteOrm.save(company);
+
         liteOrm.save(wife1);
         liteOrm.save(wife2);
-        //插入任意集合
-        liteOrm.save(addrList);
         //保存任意集合
+        liteOrm.save(addrList);
         liteOrm.save(bossList);
     }
 
@@ -201,7 +197,7 @@ public class SingleTestActivity extends BaseActivity {
 
         ColumnsValue cv = new ColumnsValue(new String[]{"phone"});
         long c = liteOrm.update(bossList, cv, ConflictAlgorithm.None);
-        OrmLog.i(this, "update teacher ：" + c);
+        OrmLog.i(this, "update boss ：" + c);
 
 
         //2. 更新单个实体（强制赋指定值）示例：
@@ -245,30 +241,28 @@ public class SingleTestActivity extends BaseActivity {
 
         //AND关系 获取 南京的香港路
         qb = new QueryBuilder(Address.class)
-                .where(WhereBuilder.create()
-                                   .equals(Address.COL_ADDRESS, "香港路")
-                                   .andEquals(Address.COL_CITY, "南京"));
+                .whereEquals(Address.COL_CITY, "南京")
+                .whereAppendAnd()
+                .whereEquals(Address.COL_ADDRESS, "香港路");
         printAddress(liteOrm.<Address>query(qb));
 
         //OR关系 获取所有 地址为香港路 ，和 青岛 的所有地址
         qb = new QueryBuilder(Address.class)
-                .where(WhereBuilder.create()
-                                   .equals(Address.COL_ADDRESS, "香港路")
-                                   .orEquals(Address.COL_CITY, "青岛"));
+                .whereEquals(Address.COL_ADDRESS, "香港路")
+                .whereAppendOr()
+                .whereEquals(Address.COL_CITY, "青岛");
         printAddress(liteOrm.<Address>query(qb));
 
         //IN语句 获取所有 城市为杭州 和 北京 的地址
         qb = new QueryBuilder(Address.class)
-                .where(WhereBuilder.create()
-                                   .in(Address.COL_CITY, new String[]{"杭州", "北京"}));
+                .whereIn(Address.COL_CITY, new String[]{"杭州", "北京"});
         printAddress(liteOrm.<Address>query(qb));
 
         //IN语句 获取所有 非香港路 并且 ID>10
         qb = new QueryBuilder(Address.class)
-                .where(WhereBuilder.create()
-                                   .noEquals(Address.COL_ADDRESS, "香港路")
-                                   .and()
-                                   .greaterThan(Address.COL_ID, 5));
+                .whereNoEquals(Address.COL_ADDRESS, "香港路")
+                .whereAppendAnd()
+                .whereGreaterThan(Address.COL_ID, 5);
         printAddress(liteOrm.<Address>query(qb));
     }
 
@@ -358,27 +352,27 @@ public class SingleTestActivity extends BaseActivity {
 
     private void testDeleteByWhereBuilder() {
         //AND关系 删掉 南京 的 香港路
-        liteOrm.delete(Address.class, WhereBuilder.create()
-                                             .equals(Address.COL_ADDRESS, "香港路")
-                                             .andEquals(Address.COL_CITY, "南京"));
+        liteOrm.delete(WhereBuilder.create(Address.class)
+                                   .equals(Address.COL_ADDRESS, "香港路")
+                                   .andEquals(Address.COL_CITY, "南京"));
         printAllAddress();
 
         //OR关系 删掉所有地址为 香港路 ，同时删掉 青岛的所有地址
-        liteOrm.delete(Address.class, WhereBuilder.create()
-                                             .equals(Address.COL_ADDRESS, "香港路")
-                                             .orEquals(Address.COL_CITY, "青岛"));
+        liteOrm.delete(WhereBuilder.create(Address.class)
+                                   .equals(Address.COL_ADDRESS, "香港路")
+                                   .orEquals(Address.COL_CITY, "青岛"));
         printAllAddress();
 
         //IN语句 删掉所有城市为 杭州 或 北京的地址
-        liteOrm.delete(Address.class, WhereBuilder.create()
-                                             .in(Address.COL_CITY, new String[]{"杭州", "北京"}));
+        liteOrm.delete(WhereBuilder.create(Address.class)
+                                   .in(Address.COL_CITY, new String[]{"杭州", "北京"}));
         printAllAddress();
 
         //IN语句 删掉所有 非香港路 并且 ID>10
-        liteOrm.delete(Address.class, WhereBuilder.create()
-                                             .equals(Address.COL_ADDRESS, "夫子庙")
-                                             .and()
-                                             .greaterThan(Address.COL_ID, 5));
+        liteOrm.delete(WhereBuilder.create(Address.class)
+                                   .equals(Address.COL_ADDRESS, "夫子庙")
+                                   .and()
+                                   .greaterThan(Address.COL_ID, 5));
         printAllAddress();
     }
 
@@ -396,9 +390,9 @@ public class SingleTestActivity extends BaseActivity {
         }
         uAlice = new Man(0, "alice", 18, false, (short) 12345, (byte) 123, 0.56f, 123.456d, 'c');
         uMax = new Man(0, "max", 99, false, Short.MAX_VALUE, Byte.MAX_VALUE, Float.MAX_VALUE, Double.MAX_VALUE,
-                       Character.MAX_VALUE);
+                Character.MAX_VALUE);
         uMin = new Man(0, "min", 1, true, Short.MIN_VALUE, Byte.MIN_VALUE, Float.MIN_VALUE, Double.MIN_VALUE,
-                       Character.MIN_VALUE);
+                Character.MIN_VALUE);
         uComplex = new Man(0, null, 0, false);
         uComplex.name = "complex";
         uComplex.setAge(18);

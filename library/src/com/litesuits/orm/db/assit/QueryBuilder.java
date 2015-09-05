@@ -33,27 +33,23 @@ public class QueryBuilder {
     public static final String COMMA_HOLDER = ",?";
     public static final String COMMA = ",";
 
-    private Class clazz;
-    private Class clazzMapping;
-    private boolean distinct;
-    private String[] columns;
-    //private String where;
-    //private Object[] whereArgs;
-    private String group;
-    private String having;
-    private String order;
-    private String limit;
-    private WhereBuilder whereBuilder = new WhereBuilder();
-
-    public QueryBuilder() {
-    }
+    protected Class clazz;
+    protected Class clazzMapping;
+    protected boolean distinct;
+    protected String[] columns;
+    protected String group;
+    protected String having;
+    protected String order;
+    protected String limit;
+    protected WhereBuilder whereBuilder;
 
     public Class getQueryClass() {
         return clazz;
     }
 
     public QueryBuilder(Class claxx) {
-        queryWho(claxx);
+        this.clazz = claxx;
+        whereBuilder = new WhereBuilder(claxx);
     }
 
     public static QueryBuilder create(Class claxx) {
@@ -62,11 +58,6 @@ public class QueryBuilder {
 
     public static QueryBuilder get(Class claxx) {
         return create(claxx);
-    }
-
-    public QueryBuilder queryWho(Class claxx) {
-        this.clazz = claxx;
-        return this;
     }
 
     public QueryBuilder where(WhereBuilder builder) {
@@ -84,7 +75,6 @@ public class QueryBuilder {
      *                  "id LIKE %?"
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
-     * @return
      */
     public QueryBuilder where(String where, Object[] whereArgs) {
         whereBuilder.where(where, whereArgs);
@@ -99,7 +89,6 @@ public class QueryBuilder {
      *                  "id LIKE %?"
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
-     * @return
      */
     public QueryBuilder whereAnd(String where, Object[] whereArgs) {
         whereBuilder.and(where, whereArgs);
@@ -114,10 +103,17 @@ public class QueryBuilder {
      *                  "id LIKE %?"
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
-     * @return
      */
     public QueryBuilder whereOr(String where, Object[] whereArgs) {
         whereBuilder.or(where, whereArgs);
+        return this;
+    }
+
+    /**
+     * build as where+" AND "
+     */
+    public QueryBuilder whereAppendAnd() {
+        whereBuilder.and();
         return this;
     }
 
@@ -181,7 +177,6 @@ public class QueryBuilder {
      * 需要返回的列，不填写默认全部，即select * 。
      *
      * @param columns 列名,注意不是对象的属性名。
-     * @return
      */
     public QueryBuilder columns(String[] columns) {
         this.columns = columns;
@@ -192,7 +187,6 @@ public class QueryBuilder {
      * 累积需要返回的列，不填写默认全部，即select * 。
      *
      * @param columns 列名,注意不是对象的属性名。
-     * @return
      */
     public QueryBuilder appendColumns(String[] columns) {
         if (this.columns != null) {
@@ -208,8 +202,6 @@ public class QueryBuilder {
 
     /**
      * 唯一性保证
-     *
-     * @return
      */
     public QueryBuilder distinct(boolean distinct) {
         this.distinct = distinct;
@@ -218,9 +210,6 @@ public class QueryBuilder {
 
     /**
      * GROUP BY 语句用于结合合计函数，根据一个或多个列对结果集进行分组。
-     *
-     * @param group
-     * @return
      */
     public QueryBuilder groupBy(String group) {
         this.group = group;
@@ -229,9 +218,6 @@ public class QueryBuilder {
 
     /**
      * 在 SQL 中增加 HAVING 子句原因是，WHERE 关键字无法与合计函数一起使用。
-     *
-     * @param having
-     * @return
      */
     public QueryBuilder having(String having) {
         this.having = having;
@@ -280,13 +266,11 @@ public class QueryBuilder {
 
     /**
      * 构建查询语句
-     *
-     * @return
      */
     public SQLStatement createStatement() {
         if (clazz == null) {
             throw new IllegalArgumentException("U Must Set A Query Entity Class By queryWho(Class) or " +
-                    "QueryBuilder(Class)");
+                                               "QueryBuilder(Class)");
         }
         if (Checker.isEmpty(group) && !Checker.isEmpty(having)) {
             throw new IllegalArgumentException(
@@ -310,7 +294,7 @@ public class QueryBuilder {
         }
         query.append(FROM).append(getTableName());
 
-        query.append(whereBuilder.createWhereString(clazz));
+        query.append(whereBuilder.createWhereString());
 
         appendClause(query, GROUP_BY, group);
         appendClause(query, HAVING, having);
@@ -326,15 +310,13 @@ public class QueryBuilder {
     /**
      * Build a statement that returns a 1 by 1 table with a numeric value.
      * SELECT COUNT(*) FROM table;
-     *
-     * @return
      */
     public SQLStatement createStatementForCount() {
         StringBuilder query = new StringBuilder(120);
         query.append(SELECT_COUNT).append(getTableName());
         SQLStatement stmt = new SQLStatement();
         if (whereBuilder != null) {
-            query.append(whereBuilder.createWhereString(clazz));
+            query.append(whereBuilder.createWhereString());
             stmt.bindArgs = whereBuilder.transToStringArray();
         }
         stmt.sql = query.toString();
@@ -351,10 +333,6 @@ public class QueryBuilder {
 
     /**
      * 添加条件
-     *
-     * @param s
-     * @param name
-     * @param clause
      */
     private static void appendClause(StringBuilder s, String name, String clause) {
         if (!Checker.isEmpty(clause)) {
@@ -365,9 +343,6 @@ public class QueryBuilder {
 
     /**
      * 添加列，逗号分隔
-     *
-     * @param s
-     * @param columns
      */
     private static void appendColumns(StringBuilder s, String[] columns) {
         int n = columns.length;

@@ -14,7 +14,6 @@ import com.litesuits.orm.db.model.EntityTable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * 数据SQLite操作实现
@@ -77,7 +76,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
                 Object entity = collection.iterator().next();
                 SQLStatement stmt = SQLBuilder.buildReplaceAllSql(entity);
                 mTableManager.checkOrCreateTable(db, entity);
-                return stmt.execInsertCollection(db, collection, mTableManager);
+                return stmt.execInsertCollection(db, collection);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -121,7 +120,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
                 Object entity = collection.iterator().next();
                 SQLStatement stmt = SQLBuilder.buildInsertAllSql(entity, conflictAlgorithm);
                 mTableManager.checkOrCreateTable(db, entity);
-                return stmt.execInsertCollection(db, collection, mTableManager);
+                return stmt.execInsertCollection(db, collection);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -175,7 +174,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
                 Object entity = collection.iterator().next();
                 mTableManager.checkOrCreateTable(db, entity);
                 SQLStatement stmt = SQLBuilder.buildUpdateAllSql(entity, cvs, conflictAlgorithm);
-                return stmt.execUpdateCollection(db, collection, cvs, mTableManager);
+                return stmt.execUpdateCollection(db, collection, cvs);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -214,7 +213,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
                 SQLStatement stmt = SQLBuilder.buildDeleteSql(collection);
                 SQLiteDatabase db = mHelper.getWritableDatabase();
                 mTableManager.checkOrCreateTable(db, table.claxx);
-                return stmt.execDeleteCollection(db, collection, mTableManager);
+                return stmt.execDeleteCollection(db, collection);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -225,18 +224,18 @@ public final class SingleSQLiteImpl extends LiteOrm {
     }
 
     @Override
+    @Deprecated
     public int delete(Class<?> claxx, WhereBuilder where) {
+        return delete(where);
+    }
+
+    @Override
+    public int delete(WhereBuilder where) {
         acquireReference();
         try {
-            EntityTable table = TableManager.getTable(claxx);
             SQLiteDatabase db = mHelper.getWritableDatabase();
-            mTableManager.checkOrCreateTable(db, claxx);
-            if (table.key != null && !Checker.isEmpty(table.mappingList)) {
-                List<?> list = query(QueryBuilder.create(claxx).columns(new String[]{table.key.column}).where(where));
-                delete(list);
-            } else {
-                return where.createStatementDelete(claxx).execDelete(db);
-            }
+            mTableManager.checkOrCreateTable(db, where.getTableClass());
+            return where.createStatementDelete().execDelete(db);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -317,8 +316,9 @@ public final class SingleSQLiteImpl extends LiteOrm {
         try {
             SQLiteDatabase db = mHelper.getReadableDatabase();
             EntityTable table = TableManager.getTable(claxx);
-            SQLStatement stmt = new QueryBuilder(claxx).where(table.key.column + "=?", new String[]{id})
-                                                       .createStatement();
+            SQLStatement stmt = new QueryBuilder(claxx)
+                    .where(table.key.column + "=?", new String[]{id})
+                    .createStatement();
             mTableManager.checkOrCreateTable(db, claxx);
             ArrayList<T> list = stmt.query(db, claxx);
             if (!Checker.isEmpty(list)) {
