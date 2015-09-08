@@ -2,6 +2,7 @@ package com.litesuits.orm.model.cascade.tomany;
 
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.Table;
+import com.litesuits.orm.db.enums.Relation;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -12,7 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Table("teacher")
 public class Teacher extends Person {
 
-    @Mapping(Mapping.Relation.ManyToMany)
+    @Mapping(Relation.ManyToMany)
     private ConcurrentLinkedQueue<Student> studentLinkedQueue;
 
     public Teacher(String name) {

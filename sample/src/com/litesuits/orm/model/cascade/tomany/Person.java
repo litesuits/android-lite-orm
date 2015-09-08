@@ -1,6 +1,7 @@
 package com.litesuits.orm.model.cascade.tomany;
 
 import com.litesuits.orm.db.annotation.PrimaryKey;
+import com.litesuits.orm.db.enums.AssignType;
 
 /**
  * @author MaTianyu
@@ -8,7 +9,7 @@ import com.litesuits.orm.db.annotation.PrimaryKey;
  */
 public abstract class Person {
 
-    @PrimaryKey(PrimaryKey.AssignType.AUTO_INCREMENT)
+    @PrimaryKey(AssignType.AUTO_INCREMENT)
     private long id;
 
     protected String name;

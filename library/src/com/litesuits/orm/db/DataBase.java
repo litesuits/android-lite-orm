@@ -7,7 +7,7 @@ import com.litesuits.orm.db.impl.SQLStatement;
 import com.litesuits.orm.db.impl.SQLiteHelper;
 import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
-import com.litesuits.orm.db.model.Relation;
+import com.litesuits.orm.db.model.RelationKey;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -240,7 +240,7 @@ public interface DataBase {
      *
      * @return the relation list of class1 and class2;
      */
-    ArrayList<Relation> queryRelation(Class class1, Class class2, List<String> key1List,
+    ArrayList<RelationKey> queryRelation(Class class1, Class class2, List<String> key1List,
                                       List<String> key2List);
 
     /**

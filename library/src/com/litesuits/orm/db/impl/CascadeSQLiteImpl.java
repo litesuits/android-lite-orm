@@ -394,7 +394,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
             throws IllegalAccessException, InstantiationException {
         final EntityTable table2 = TableManager.getTable(field.getType());
         SQLStatement relationSql = SQLBuilder.buildQueryRelationSql(table1, table2, key1);
-        final Relation relation = new Relation();
+        final RelationKey relation = new RelationKey();
         Querier.doQuery(db, relationSql, new Querier.CursorParser() {
             @Override
             public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {

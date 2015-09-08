@@ -1,7 +1,7 @@
 package com.litesuits.orm.model.single;
 
 import com.litesuits.orm.db.annotation.*;
-import com.litesuits.orm.db.annotation.Mapping.Relation;
+import com.litesuits.orm.db.enums.Relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;

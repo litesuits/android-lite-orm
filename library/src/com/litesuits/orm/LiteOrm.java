@@ -129,17 +129,17 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     }
 
     @Override
-    public ArrayList<Relation> queryRelation(Class class1, Class class2, List<String> key1List, List<String> key2List) {
+    public ArrayList<RelationKey> queryRelation(Class class1, Class class2, List<String> key1List, List<String> key2List) {
         acquireReference();
         try {
             SQLStatement stmt = SQLBuilder.buildQueryRelationSql(class1, class2, key1List, key2List);
             final EntityTable table1 = TableManager.getTable(class1);
             final EntityTable table2 = TableManager.getTable(class2);
-            final ArrayList<Relation> list = new ArrayList<Relation>();
+            final ArrayList<RelationKey> list = new ArrayList<RelationKey>();
             Querier.doQuery(mHelper.getReadableDatabase(), stmt, new Querier.CursorParser() {
                 @Override
                 public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
-                    Relation relation = new Relation();
+                    RelationKey relation = new RelationKey();
                     relation.key1 = c.getString(c.getColumnIndex(table1.name));
                     relation.key2 = c.getString(c.getColumnIndex(table2.name));
                     list.add(relation);
@@ -393,7 +393,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                             }
                         }
                     }
-                    ArrayList<Relation> mapList = queryRelation(claxx1, claxx2, key1List, null);
+                    ArrayList<RelationKey> mapList = queryRelation(claxx1, claxx2, key1List, null);
                     if (!Checker.isEmpty(mapList)) {
                         HashMap<String, Object> map2 = new HashMap<String, Object>();
                         // 构建第2个对象的value映射
@@ -405,7 +405,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                                 }
                             }
                         }
-                        for (Relation m : mapList) {
+                        for (RelationKey m : mapList) {
                             Object obj1 = map1.get(m.key1);
                             Object obj2 = map2.get(m.key2);
                             if (obj1 != null && obj2 != null) {

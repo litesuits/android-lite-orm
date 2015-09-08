@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.litesuits.orm"
-          android:versionCode="152"
-          android:versionName="1.5.2">
+          android:versionCode="16"
+          android:versionName="1.5.3">
     <uses-sdk android:minSdkVersion="3"/>
 
     <!-- db文件在sd卡：在SDCard中创建与删除文件权限 -->

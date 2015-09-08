@@ -1,5 +1,7 @@
 package com.litesuits.orm.db.annotation;
 
+import com.litesuits.orm.db.enums.Strategy;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -9,22 +11,4 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Conflict {
     public Strategy value();
-
-    public static enum Strategy {
-        ROLLBACK(" ROLLBACK "),
-        ABORT(" ABORT "),
-        FAIL(" FAIL "),
-        IGNORE(" IGNORE "),
-        REPLACE(" REPLACE ");
-
-        Strategy(String sql) {
-            this.sql = sql;
-        }
-
-        public String sql;
-
-        public String getSql() {
-            return sql;
-        }
-    }
 }

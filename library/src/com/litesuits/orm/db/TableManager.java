@@ -3,7 +3,6 @@ package com.litesuits.orm.db;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.db.annotation.Column;
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.PrimaryKey;
@@ -12,10 +11,12 @@ import com.litesuits.orm.db.assit.Checker;
 import com.litesuits.orm.db.assit.Querier;
 import com.litesuits.orm.db.assit.SQLBuilder;
 import com.litesuits.orm.db.assit.Transaction;
+import com.litesuits.orm.db.enums.AssignType;
 import com.litesuits.orm.db.impl.SQLStatement;
 import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
+import com.litesuits.orm.log.OrmLog;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -428,12 +429,12 @@ public final class TableManager {
                             if (p.field.getType() == String.class) {
                                 // 主键移除属性Map
                                 table.pmap.remove(col);
-                                table.key = new Primarykey(p, PrimaryKey.AssignType.BY_MYSELF);
+                                table.key = new Primarykey(p, AssignType.BY_MYSELF);
                                 break;
                             } else if (FieldUtil.isNumber(p.field.getType())) {
                                 // 主键移除属性Map
                                 table.pmap.remove(col);
-                                table.key = new Primarykey(p, PrimaryKey.AssignType.AUTO_INCREMENT);
+                                table.key = new Primarykey(p, AssignType.AUTO_INCREMENT);
                                 break;
                             }
 
@@ -458,14 +459,14 @@ public final class TableManager {
         if (key.isAssignedBySystem()) {
             if (!FieldUtil.isNumber(key.field.getType())) {
                 throw new RuntimeException(
-                        PrimaryKey.AssignType.AUTO_INCREMENT
+                        AssignType.AUTO_INCREMENT
                         + " Auto increment primary key must be a number ...\n " +
                         "错误提示：自增主键必须设置为数字类型");
             }
         } else if (key.isAssignedByMyself()) {
             if (String.class != key.field.getType() && !FieldUtil.isNumber(key.field.getType())) {
                 throw new RuntimeException(
-                        PrimaryKey.AssignType.BY_MYSELF
+                        AssignType.BY_MYSELF
                         + " Custom primary key must be string or number ...\n " +
                         "错误提示：自定义主键值必须为String或者Number类型");
             }

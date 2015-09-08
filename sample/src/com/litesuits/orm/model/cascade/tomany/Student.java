@@ -2,6 +2,7 @@ package com.litesuits.orm.model.cascade.tomany;
 
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.Table;
+import com.litesuits.orm.db.enums.Relation;
 
 /**
  * @author MaTianyu
@@ -10,7 +11,7 @@ import com.litesuits.orm.db.annotation.Table;
 @Table("student")
 public class Student extends Person {
 
-    @Mapping(Mapping.Relation.ManyToMany)
+    @Mapping(Relation.ManyToMany)
     private Teacher[] teachersArray;
 
     public Student(String name) {

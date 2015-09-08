@@ -2,6 +2,7 @@ package com.litesuits.orm.model.cascade;
 
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.Table;
+import com.litesuits.orm.db.enums.Relation;
 import com.litesuits.orm.model.cascade.tomany.Student;
 import com.litesuits.orm.model.cascade.tomany.Teacher;
 
@@ -17,10 +18,10 @@ import java.util.Stack;
 @Table("class")
 public class Classes extends Model {
 
-    @Mapping(Mapping.Relation.ManyToMany)
+    @Mapping(Relation.ManyToMany)
     private Stack<Teacher> teacherStack;
 
-    @Mapping(Mapping.Relation.OneToMany)
+    @Mapping(Relation.OneToMany)
     private LinkedList<Student> studentLinkedList;
 
     public Classes(String title) {

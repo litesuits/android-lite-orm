@@ -1,0 +1,18 @@
+#Orm混淆建议：
+# 1. 给你要持久化的每一个Java（Model）类设置一个表名：即为类添加@Table("table_name")注解。
+# 2. 给你要持久化的每一个属性（成员变量）设置一个列名： 即为属性加@Column("column_name")注解。
+# 满足1、2则可以将你要持久化的类和者属性随意混淆；
+# 反之，则需要将你要持久化的类和属性keep住，不可混淆。
+
+另外，枚举和注解、签名要keep：
+# 使用注解
+-keepattributes *Annotation*,Signature,Exceptions
+
+# For enumeration classes, see http://proguard.sourceforge.net/manual/examples.html#enumerations
+-keepclassmembers enum * {
+    **[] $VALUES;
+    public *;
+}
+
+使用1.5.3mini以及更新的版本请注意：
+因为混淆压缩的问题，内部枚举类无法使用，导致1.5.3以及以后版本将枚举类从内部类调整出来成为独立的类，因此你的代码里如果用到里PrimaryKey.AssignType, Mapping.Relation, Conflict.Strategy，那么package包名需要重新引入一下，带来不便，敬请见谅。
