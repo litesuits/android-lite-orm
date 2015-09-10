@@ -5,7 +5,6 @@ A fast, small, powerful ORM framework for Android. LiteOrm makes you do CRUD ope
 
 #### Goal：simple, powerful, and most userful android ORM framework library. 
 
-
 Principles :
 ---
 
@@ -13,6 +12,16 @@ Principles :
 - No tools to assist, no constructor with no arguments, no many annotations, convention over configuration.
 - Use extreme simplicity, such as: db.save (u); db.query (U.class); db.deleteAll (U.class);
 
+在采用反射、注解，各种自动化的情况下LiteOrm框架比系统的SQLiteDatabase的insert API快接近一倍。【基于系统，却超越了系统API】以后做框架原则仍然会坚持专注第一、兼顾性能、易用、拓展性。
+
+10万条数插入对比系统API
+![10万条数插入对比系统API](http://litesuits.com/imgs/lite-vs-system.png)
+
+100 000条数据测试
+![100 000条数据测试](http://litesuits.com/imgs/lite-10w-test.png)
+
+http://litesuits.com/imgs/lite-vs-system.png
+http://litesuits.com/imgs/lite-10w-test.png
 
 Features :
 ---
@@ -67,7 +76,7 @@ LiteOrm super lightweight, focused, you do not even see any other features inclu
 And all of this is due to the reduction of the object-oriented experience, so part of the increase, not increased.
 
 
-Lite Orm 中文
+Lite Orm 中文文档
 ================
 
 LiteOrm是一个速度快、小巧、强大的android ORM框架类库，让你一行代码实现数据库的增删改查操作，以及实体关系的持久化和自动映射。
