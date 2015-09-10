@@ -20,9 +20,6 @@ Principles :
 100 000条数据测试
 ![100 000条数据测试](http://litesuits.com/imgs/lite-10w-test.png)
 
-http://litesuits.com/imgs/lite-vs-system.png
-http://litesuits.com/imgs/lite-10w-test.png
-
 Features :
 ---
 
