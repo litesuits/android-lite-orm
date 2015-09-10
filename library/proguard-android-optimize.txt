@@ -18,7 +18,7 @@
 -verbose
 
 # 使用注解
--keepattributes *Annotation*,Signature,Exceptions
+-keepattributes *Annotation*,Signature,Exceptions,InnerClasses
 
 # For enumeration classes, see http://proguard.sourceforge.net/manual/examples.html#enumerations
 -keepclassmembers enum * {

@@ -1,15 +1,11 @@
-package com.litesuits.orm.db.impl;
+package com.litesuits.orm.db.assit;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
 import com.litesuits.orm.db.TableManager;
-import com.litesuits.orm.db.assit.Checker;
-import com.litesuits.orm.db.assit.Querier;
 import com.litesuits.orm.db.assit.Querier.CursorParser;
-import com.litesuits.orm.db.assit.SQLBuilder;
-import com.litesuits.orm.db.assit.Transaction;
 import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.EntityTable;
 import com.litesuits.orm.db.model.MapInfo;

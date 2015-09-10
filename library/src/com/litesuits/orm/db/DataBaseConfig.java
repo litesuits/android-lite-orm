@@ -2,7 +2,7 @@ package com.litesuits.orm.db;
 
 import android.content.Context;
 import com.litesuits.orm.db.assit.Checker;
-import com.litesuits.orm.db.impl.SQLiteHelper.OnUpdateListener;
+import com.litesuits.orm.db.assit.SQLiteHelper.OnUpdateListener;
 
 /**
  * 数据操作配置

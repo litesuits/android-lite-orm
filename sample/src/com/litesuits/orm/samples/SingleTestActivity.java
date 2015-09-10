@@ -10,6 +10,7 @@ import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.model.single.*;
+import com.litesuits.orm.test.SqliteUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -97,6 +98,8 @@ public class SingleTestActivity extends BaseActivity {
      * <item>Delete By Index</item>
      * <item>Delete By WhereBuilder</item>
      * <item>Delete All</item>
+     * <item>Use LiteOrm : Large-scale Test</item>
+     * <item>Use SQLiteDatabase: Large-scale Test </item>
      */
     private void makeOrmTest(int id) {
         switch (id) {
@@ -135,6 +138,12 @@ public class SingleTestActivity extends BaseActivity {
                 break;
             case 11:
                 testDeleteAll();
+                break;
+            case 12:
+                testLargeScaleUseLite();
+                break;
+            case 13:
+                testLargeScaleUseSystem();
                 break;
             default:
                 break;
@@ -469,5 +478,62 @@ public class SingleTestActivity extends BaseActivity {
         System.out.println(uAlice);
         System.out.println(uMax);
         System.out.println(uMin);
+    }
+
+
+    /**
+     * 100 000 条数据
+     */
+    final int MAX = 100000;
+
+    private void testLargeScaleUseLite() {
+
+        // 1. 初始化数据
+        List<Boss> list = new ArrayList<>();
+        for (int i = 0; i < MAX; i++) {
+            Boss boss = new Boss();
+            boss.setAddress("ZheJiang Xihu " + i);
+            boss.setPhone("1860000" + i);
+            boss.setName("boss" + i);
+            list.add(boss);
+        }
+
+        // 2. 全部插入测试
+        long start = System.currentTimeMillis();
+        int num = liteOrm.insert(list);
+        long end = System.currentTimeMillis();
+        OrmLog.i(TAG, "insert boss model num: " + num + " , use time: " + (end - start) + " MS");
+
+        // 3. 查询数量测试
+        start = System.currentTimeMillis();
+        long count = liteOrm.queryCount(Boss.class);
+        end = System.currentTimeMillis();
+        OrmLog.i(TAG, "query all boss model num: " + count + " , use time: " + (end - start) + " MS");
+
+        // 4. 查询最后10条测试
+        start = System.currentTimeMillis();
+        List<Boss> subList = liteOrm.query(new QueryBuilder(Boss.class)
+                .appendOrderDescBy("_id")
+                .limit(0, 9));
+        end = System.currentTimeMillis();
+        OrmLog.i(TAG, "select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");
+        OrmLog.i(TAG, subList);
+
+        // 5. 删除全部测试
+        start = System.currentTimeMillis();
+        num = liteOrm.delete(Boss.class);
+        end = System.currentTimeMillis();
+        OrmLog.i(TAG, "delete boss model num: " + num + " , use time: " + (end - start) + " MS");
+
+        // 6. 再次查询数量测试
+        start = System.currentTimeMillis();
+        count = liteOrm.queryCount(Boss.class);
+        end = System.currentTimeMillis();
+        OrmLog.i(TAG, "query all boss model num: " + count + " , use time: " + (end - start) + " MS");
+    }
+
+    private void testLargeScaleUseSystem() {
+        // 解注下面三行代码，即可查看原生android代码插入10w条数的效率。
+        SqliteUtils.testLargeScaleUseDefault(SingleTestActivity.this, MAX);
     }
 }

@@ -1,4 +1,4 @@
-package com.litesuits.orm.db.impl;
+package com.litesuits.orm.db.assit;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

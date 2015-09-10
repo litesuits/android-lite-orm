@@ -1,7 +1,6 @@
 package com.litesuits.orm.db.assit;
 
 import com.litesuits.orm.db.TableManager;
-import com.litesuits.orm.db.impl.SQLStatement;
 
 import java.util.regex.Pattern;
 

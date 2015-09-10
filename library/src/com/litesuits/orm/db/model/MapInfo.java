@@ -1,7 +1,7 @@
 package com.litesuits.orm.db.model;
 
 import com.litesuits.orm.db.assit.Checker;
-import com.litesuits.orm.db.impl.SQLStatement;
+import com.litesuits.orm.db.assit.SQLStatement;
 
 import java.util.ArrayList;
 

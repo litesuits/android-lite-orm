@@ -4,7 +4,6 @@ import android.util.SparseArray;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.annotation.*;
 import com.litesuits.orm.db.enums.AssignType;
-import com.litesuits.orm.db.impl.SQLStatement;
 import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.model.MapInfo.MapTable;
 import com.litesuits.orm.db.utils.ClassUtil;
@@ -105,7 +104,10 @@ public class SQLBuilder {
 
     /**
      * 构建【表】sql语句
+     *
      * create [temp] table if not exists (table-name) (co1 TEXT, co2 TEXT, UNIQUE (co1, co2))
+     *
+     * such as : CREATE TABLE IF NOT EXISTS table-name (_id INTEGER PRIMARY KEY AUTOINCREMENT ,xx TEXT)
      */
     public static SQLStatement buildCreateTable(EntityTable table) {
         StringBuilder sb = new StringBuilder();

@@ -12,7 +12,7 @@ import com.litesuits.orm.db.assit.Querier;
 import com.litesuits.orm.db.assit.SQLBuilder;
 import com.litesuits.orm.db.assit.Transaction;
 import com.litesuits.orm.db.enums.AssignType;
-import com.litesuits.orm.db.impl.SQLStatement;
+import com.litesuits.orm.db.assit.SQLStatement;
 import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;

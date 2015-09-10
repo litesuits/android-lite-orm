@@ -22,6 +22,8 @@
         <item>Delete By Index</item>
         <item>Delete By WhereBuilder</item>
         <item>Delete All</item>
+        <item>Use LiteOrm : Large-scale Test</item>
+        <item>Use SQLiteDatabase: Large-scale Test </item>
     </string-array>
 
 </resources>
