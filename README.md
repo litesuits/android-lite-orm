@@ -12,14 +12,6 @@ Principles :
 - No tools to assist, no constructor with no arguments, no many annotations, convention over configuration.
 - Use extreme simplicity, such as: db.save (u); db.query (U.class); db.deleteAll (U.class);
 
-在采用反射、注解，各种自动化的情况下LiteOrm框架比系统的SQLiteDatabase的insert API快接近一倍。【基于系统，却超越了系统API】以后做框架原则仍然会坚持专注第一、兼顾性能、易用、拓展性。
-
-10万条数插入对比系统API
-![10万条数插入对比系统API](http://litesuits.com/imgs/lite-vs-system.png)
-
-100 000条数据测试
-![100 000条数据测试](http://litesuits.com/imgs/lite-10w-test.png)
-
 Features :
 ---
 
@@ -79,6 +71,14 @@ Lite Orm 中文文档
 LiteOrm是一个速度快、小巧、强大的android ORM框架类库，让你一行代码实现数据库的增删改查操作，以及实体关系的持久化和自动映射。
 
 #### 目标：简单、强大、最有用的android ORM 框架库
+
+在采用反射、注解，各种自动化处理的情况下LiteOrm框架比系统的SQLiteDatabase#insert方法性能好接近一倍。【基于系统，超越系统】坚持专注第一、兼顾性能、易用、拓展性。
+
+10万条数插入对比系统API
+![10万条数插入对比系统API](http://litesuits.com/imgs/lite-vs-system.png)
+
+100 000条数据测试
+![100 000条数据测试](http://litesuits.com/imgs/lite-10w-test.png)
 
 使用案例1：http://blog.csdn.net/napoleonbai/article/details/41958725
 使用案例2：http://www.apkbus.com/ask/article/13859
