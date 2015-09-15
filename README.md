@@ -21,7 +21,7 @@ Features :
 - **Relational storage and recovery**: real entity-relational mapping persistence and recovery, just mark the relationship type to the associated attributes of the entity.
 - **Independent and cascading**: You can smooth handoff, independent operation of high performance, save only the object data; cascade operation more powerful, associated objects and relationships kept together.
 - **Intelligent Column Detection**: App Model upgrade or change, added a new property field, which will be detected and added to the database, so no need to worry about the new fields will not be stored.
-- **Rich API support: save (replace), insert, update, delete, query, mapping, etc.
+- **Rich API support: save (replace)**, insert, update, delete, query, mapping, etc.
 - **Automatic Identification Type**: respectively into with sqlite support TEXT, REAL, INTEGER, BLOB data type stores several.
 - **Automatically build an object**, the new object is detected by the reflection and constructor parameters hack techniques, most cases nor requires no-argument constructor.
 - **Updates the designated column can be flexible, force, mass assignment**, the assignment will be forced to disregard the real value of the object to be operated.
@@ -81,6 +81,7 @@ LiteOrm是一个速度快、小巧、强大的android ORM框架类库，让你�
 ![100 000条数据测试](http://litesuits.com/imgs/lite-10w-test.png)
 
 使用案例1：http://blog.csdn.net/napoleonbai/article/details/41958725
+
 使用案例2：http://www.apkbus.com/ask/article/13859
 
 
