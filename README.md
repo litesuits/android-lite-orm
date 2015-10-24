@@ -1,4 +1,4 @@
-Lite Orm
+LiteOrm:Android SQLite Framework
 ================
 
 A fast, small, powerful ORM framework for Android. LiteOrm makes you do CRUD operarions on SQLite database with a sigle line of code efficiently.
@@ -36,37 +36,22 @@ Futures:
 - Data validation features to prevent tampering after breaking the library.
 
 
-## On basic functions
-About demand function, the demand knows no boundaries, it is impossible to meet all the needs of the perfect, we do have a choice framework.
-
-When a person to buy a drill to hang murals, Is he not a hole in the wall to buy it?
-
-If you can provide holes and hang the mural service, not more convenient that lets the user satisfaction?
-
-Back to think about the user to buy a drill, just to hang mural it? It can also be used to do more things.
-
-When do the framework, the basic function is to be provided, but it can also provide a more direct, more specialized and more convenient interface to allow developers to complete the task.
-
 About ## design
-Behind the simplicity is often complex.
-
-To save a developer when accessing large amounts of complex data duplication, design and implementation of this automated ORM framework.
 
 LiteOrm most cases does not require the developer for each object, add a constructor with no arguments, a lot more than it looks silly.
 
 LiteOrm main idea is that the agreement is greater than the configuration, so you can use very few notes complete storage complex data.
 
-LiteOrm each method must assume their mission never superfluous, and use extreme simplicity.
-
 LiteOrm concerned about performance, the code for each module I have to digest, bypassing implement various functions provides a direct interface to android and more closely tied to the underlying implementation.
 
 LiteOrm super lightweight, focused, you do not even see any other features include threads, including the existence, you do not have to worry about the increased burden on your project, the introduction of a large burden.
 
-And all of this is due to the reduction of the object-oriented experience, so part of the increase, not increased.
+Behind the simplicity is often complex. And all of this is due to the reduction of the object-oriented experience, so part of the increase, not increased.
 
 
-Lite Orm 中文文档
+LiteOrm:Android SQLite框架库
 ================
+换个语种，再来一次
 
 LiteOrm是一个速度快、小巧、强大的android ORM框架类库，让你一行代码实现数据库的增删改查操作，以及实体关系的持久化和自动映射。
 
@@ -126,24 +111,20 @@ LiteOrm是一个速度快、小巧、强大的android ORM框架类库，让你�
 
 回头再想一下用户买了电钻，仅为了挂壁画吗？还可能用来做更多的事。
 
-做框架时，基础功能是要提供的，但也会提供一些更直接、更专项的接口来更便捷的让开发者完成任务。
+做框架时基础功能是要提供的，但也会提供一些更直接、更专项的接口来更便捷的让开发者完成任务。
 
 ##关于设计理念
-简约的背后，往往是复杂。
-
-为了省掉开发者存取数据时大量的繁杂重复劳动，设计并实现了这款自动化ORM框架。
 
 LiteOrm 大多情况下不要求开发者为每个对象添加一个无参构造，这看起来傻傻的很多余。
 
 LiteOrm 主线思路是约定大于配置，所以你可以用极少的注解完成复杂数据的存储。
 
-LiteOrm 各个方法都承担着自己的使命从不多余，且使用极致简约。
-
 LiteOrm 关注性能，代码每个模块我都有仔细琢磨，各个功能的实现绕过了android提供的直接接口而比较贴近底层的实现。
 
 LiteOrm 超级轻量、专注，你甚至看不到任何包括线程在内的其他功能存在，你根本不用担心增加你项目的负担，引入一个大包袱。
 
-而这一切，就是为了还原面向对象本应有的体验，让增加的部分，并未增加。
+简约的背后，往往是复杂。而这一切，就是为了还原面向对象本应有的体验，让增加的部分，并未增加。
+
 
 
 关于作者（About Author）
@@ -154,15 +135,11 @@ LiteOrm 超级轻量、专注，你甚至看不到任何包括线程在内的其
 
 点击加入QQ群: [47357508](http://jq.qq.com/?_wv=1027&k=Z7l0Av)
 
+
 我的论坛帖子
 -----
-[LiteHttp：极简且智能的 android HTTP 框架库 (专注于网络)](http://www.eoeandroid.com/thread-326584-1-1.html)
+[LiteHttp：简单智能的 android HTTP 框架库 (专注于网络)](http://blog.csdn.net/ko33600/article/details/49367409)
 
-[LiteOrm：极简且智能的 android ORM 框架库 (专注数据库)](http://www.eoeandroid.com/thread-538203-1-1.html)
-
-[LiteAsync：强势的 android 异步 框架库 (专注异步与并发)](http://www.eoeandroid.com/thread-538212-1-1.html)
-
-[LiteCommon：丰富通用的android工具类库(专注于基础组件)](http://www.eoeandroid.com/thread-557246-1-1.html)
 
 我的博客帖子
 -----
