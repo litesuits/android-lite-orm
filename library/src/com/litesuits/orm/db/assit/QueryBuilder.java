@@ -81,6 +81,18 @@ public class QueryBuilder {
     }
 
     /**
+     * @param where     "id = ?";
+     *                  "id in(?,?,?)";
+     *                  "id LIKE %?"
+     * @param whereArgs new String[]{"",""};
+     *                  new Integer[]{1,2}
+     */
+    public QueryBuilder whereAppend(String where, Object[] whereArgs) {
+        whereBuilder.append(null, where, whereArgs);
+        return this;
+    }
+
+    /**
      * build as " AND " + where
      *
      * @param where     "id = ?";

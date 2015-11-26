@@ -24,6 +24,11 @@ import java.util.List;
  * 数据SQLite操作实现
  * 可查阅 <a href="http://www.sqlite.org/lang.html">SQLite操作指南</a>
  *
+ * 问题列表：
+ * 1. 抽象类对象new实例的问题
+ * 2. 级联操作时未建表异常
+ * 3. 保存集合时数据过多报too many sql variables
+ *
  * @author mty
  * @date 2013-6-2下午2:32:56
  */

@@ -72,7 +72,7 @@ public class WhereBuilder {
      * @return
      */
     public WhereBuilder and(String where, Object[] whereArgs) {
-        return appendWhere(AND, where, whereArgs);
+        return append(AND, where, whereArgs);
     }
 
     /**
@@ -84,7 +84,7 @@ public class WhereBuilder {
      * @return
      */
     public WhereBuilder or(String where, Object[] whereArgs) {
-        return appendWhere(OR, where, whereArgs);
+        return append(OR, where, whereArgs);
     }
 
     /**
@@ -121,63 +121,63 @@ public class WhereBuilder {
      * build as " column != ? "
      */
     public WhereBuilder noEquals(String column, Object value) {
-        return appendWhere(null, column + NOT_EQUAL_HOLDER, value);
+        return append(null, column + NOT_EQUAL_HOLDER, value);
     }
 
     /**
      * build as " column > ? "
      */
     public WhereBuilder greaterThan(String column, Object value) {
-        return appendWhere(null, column + GREATER_THAN_HOLDER, value);
+        return append(null, column + GREATER_THAN_HOLDER, value);
     }
 
     /**
      * build as " column < ? "
      */
     public WhereBuilder lessThan(String column, Object value) {
-        return appendWhere(null, column + LESS_THAN_HOLDER, value);
+        return append(null, column + LESS_THAN_HOLDER, value);
     }
 
     /**
      * build as " column = ? "
      */
     public WhereBuilder equals(String column, Object value) {
-        return appendWhere(null, column + EQUAL_HOLDER, value);
+        return append(null, column + EQUAL_HOLDER, value);
     }
 
     /**
      * build as " or column = ? "
      */
     public WhereBuilder orEquals(String column, Object value) {
-        return appendWhere(OR, column + EQUAL_HOLDER, value);
+        return append(OR, column + EQUAL_HOLDER, value);
     }
 
     /**
      * build as " and column = ? "
      */
     public WhereBuilder andEquals(String column, Object value) {
-        return appendWhere(AND, column + EQUAL_HOLDER, value);
+        return append(AND, column + EQUAL_HOLDER, value);
     }
 
     /**
      * build as " column in(?,?...) "
      */
     public WhereBuilder in(String column, Object[] values) {
-        return appendWhere(null, buildWhereIn(column, values.length), values);
+        return append(null, buildWhereIn(column, values.length), values);
     }
 
     /**
      * build as " or column in(?,?...) "
      */
     public WhereBuilder orIn(String column, Object[] values) {
-        return appendWhere(OR, buildWhereIn(column, values.length), values);
+        return append(OR, buildWhereIn(column, values.length), values);
     }
 
     /**
      * build as " and column in(?,?...) "
      */
     public WhereBuilder andIn(String column, Object[] values) {
-        return appendWhere(AND, buildWhereIn(column, values.length), values);
+        return append(AND, buildWhereIn(column, values.length), values);
     }
 
 
@@ -192,7 +192,7 @@ public class WhereBuilder {
      * @param connect     NULL or " AND " or " OR " or " NOT "
      * @return this
      */
-    private WhereBuilder appendWhere(String connect, String whereString, Object... value) {
+    public WhereBuilder append(String connect, String whereString, Object... value) {
         if (where == null) {
             where = whereString;
             whereArgs = value;
