@@ -133,8 +133,10 @@ LiteOrm 超级轻量、专注，你甚至看不到任何包括线程在内的其
 
 我的开源站点 ：[http://litesuits.com](http://litesuits.com/)
 
-点击加入QQ群: [47357508](http://jq.qq.com/?_wv=1027&k=Z7l0Av)
+点击加入QQ群: 
+[42960650](http://jq.qq.com/?_wv=1027&k=cxjcDa)
 
+[47357508](http://jq.qq.com/?_wv=1027&k=Z7l0Av)
 
 我的论坛帖子
 -----
