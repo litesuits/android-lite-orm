@@ -1,5 +1,6 @@
 package com.litesuits.orm.model.cascade.tomany;
 
+import com.litesuits.orm.db.annotation.MapCollection;
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.Table;
 import com.litesuits.orm.db.enums.Relation;
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class Teacher extends Person {
 
     @Mapping(Relation.ManyToMany)
+    @MapCollection(ConcurrentLinkedQueue.class)
     private ConcurrentLinkedQueue<Student> studentLinkedQueue;
 
     public Teacher(String name) {
@@ -39,8 +41,8 @@ public class Teacher extends Person {
             sb.append("]  ");
         }
         return "Teacher{" +
-                super.toString() +
-                sb.toString() +
-                "} ";
+               super.toString() +
+               sb.toString() +
+               "} ";
     }
 }

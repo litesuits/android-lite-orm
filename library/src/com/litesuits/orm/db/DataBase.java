@@ -34,7 +34,7 @@ public interface DataBase {
      *
      * @return the number of affected rows
      */
-    int save(Collection<?> collection);
+    <T> int save(Collection<T> collection);
 
     /**
      * insert a single entity
@@ -56,14 +56,14 @@ public interface DataBase {
      *
      * @return the number of affected rows
      */
-    int insert(Collection<?> collection);
+    <T> int insert(Collection<T> collection);
 
     /**
      * insert a collection with conflict algorithm
      *
      * @return the number of affected rows
      */
-    int insert(Collection<?> collection, ConflictAlgorithm conflictAlgorithm);
+    <T> int insert(Collection<T> collection, ConflictAlgorithm conflictAlgorithm);
 
     /**
      * update a single entity
@@ -92,14 +92,14 @@ public interface DataBase {
      *
      * @return the number of affected rows
      */
-    int update(Collection<?> collection);
+    <T> int update(Collection<T> collection);
 
     /**
      * update a collection with conflict algorithm
      *
      * @return number of affected rows
      */
-    int update(Collection<?> collection, ConflictAlgorithm conflictAlgorithm);
+    <T> int update(Collection<T> collection, ConflictAlgorithm conflictAlgorithm);
 
     /**
      * update a collection with conflict algorithm, and only update columns in {@link ColumnsValue}
@@ -107,7 +107,7 @@ public interface DataBase {
      *
      * @return number of affected rows
      */
-    int update(Collection<?> collection, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm);
+    <T> int update(Collection<T> collection, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm);
 
     /**
      * update model use custom where clause.
@@ -128,14 +128,14 @@ public interface DataBase {
      *
      * @return the number of affected rows
      */
-    int delete(Class<?> claxx);
+    <T> int delete(Class<T> claxx);
 
     /**
      * delete all rows
      *
      * @return the number of affected rows
      */
-    int deleteAll(Class<?> claxx);
+    <T> int deleteAll(Class<T> claxx);
 
     /**
      * <b>start must >=0 and smaller than end</b>
@@ -144,14 +144,14 @@ public interface DataBase {
      *
      * @return the number of affected rows
      */
-    int delete(Class<?> claxx, long start, long end, String orderAscColu);
+    <T> int delete(Class<T> claxx, long start, long end, String orderAscColu);
 
     /**
      * delete a collection
      *
      * @return the number of affected rows
      */
-    int delete(Collection<?> collection);
+    <T> int delete(Collection<T> collection);
 
     /**
      * delete by custem where syntax
@@ -159,7 +159,7 @@ public interface DataBase {
      * @return the number of affected rows
      * @deprecated use {@link #delete(WhereBuilder)} instead.
      */
-    int delete(Class<?> claxx, WhereBuilder where);
+    <T> int delete(Class<T> claxx, WhereBuilder where);
 
     /**
      * delete by custem where syntax
@@ -180,7 +180,7 @@ public interface DataBase {
      *
      * @return the query result list
      */
-    <T> ArrayList<T> query(QueryBuilder qb);
+    <T> ArrayList query(QueryBuilder<T> qb);
 
     /**
      * query entity by long id
@@ -201,7 +201,7 @@ public interface DataBase {
      *
      * @return the count of query result
      */
-    long queryCount(Class<?> claxx);
+    <T> long queryCount(Class<T> claxx);
 
     /**
      * query count of your sql query result rows and return
@@ -241,7 +241,7 @@ public interface DataBase {
      * @return the relation list of class1 and class2;
      */
     ArrayList<RelationKey> queryRelation(Class class1, Class class2, List<String> key1List,
-                                      List<String> key2List);
+            List<String> key2List);
 
     /**
      * auto entity relation mapping

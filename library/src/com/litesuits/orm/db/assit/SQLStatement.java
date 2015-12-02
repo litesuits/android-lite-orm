@@ -365,7 +365,7 @@ public class SQLStatement implements Serializable {
                 bind(i + 1, bindArgs[i]);
             }
         }
-        int nums = NONE;
+        int nums;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
             mStatement.execute();
             nums = collection.size();

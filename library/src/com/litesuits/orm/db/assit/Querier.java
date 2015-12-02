@@ -15,10 +15,6 @@ public class Querier {
 
     /**
      * 因为每个查询都不一样，但又有相同的结构，这种形式维持代码的统一性，也可以个性化解析。
-     *
-     * @param db
-     * @param st
-     * @param parser
      */
     public static <T> T doQuery(SQLiteDatabase db, SQLStatement st, CursorParser<T> parser) {
         if (OrmLog.isPrint) {
@@ -66,7 +62,7 @@ public class Querier {
             parse = false;
         }
 
-        public T returnResult(){
+        public T returnResult() {
             return null;
         }
 

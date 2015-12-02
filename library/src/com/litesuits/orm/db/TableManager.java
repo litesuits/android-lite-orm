@@ -43,7 +43,7 @@ public final class TableManager {
      * key : Class Name
      * value: {@link EntityTable}
      */
-    private HashMap<String, SQLiteTable> mSqlTableMap = new HashMap<String, SQLiteTable>();
+    private final HashMap<String, SQLiteTable> mSqlTableMap = new HashMap<String, SQLiteTable>();
 
     /**
      * 这里放的是类的实体信息表（主键、属性、关系映射...）
@@ -51,7 +51,7 @@ public final class TableManager {
      * key : Class Name
      * value: {@link EntityTable}
      */
-    private static HashMap<String, EntityTable> mEntityTableMap = new HashMap<String, EntityTable>();
+    private final static HashMap<String, EntityTable> mEntityTableMap = new HashMap<String, EntityTable>();
 
     public TableManager(String dbName) {
         this.dbName = dbName;
@@ -61,7 +61,7 @@ public final class TableManager {
      * 清空数据
      */
     public synchronized void clear() {
-        mSqlTableMap = null;
+        mSqlTableMap.clear();
         mEntityTableMap.clear();
     }
 
@@ -76,43 +76,50 @@ public final class TableManager {
      * 检测[数据库表]是否建立，没有则建一张新表。
      */
     public synchronized EntityTable checkOrCreateTable(SQLiteDatabase db, Class claxx) {
-        // 关键点0：[实体表]是否OK
+        // 关键点0：获取[实体表]
         EntityTable table = getTable(claxx);
-        //if (!table.isChecked) {
         // 关键点1：初始化全部数据库表
         initAllTablesFromSQLite(db);
         // table lock synchronized
-        // 关键点2:判断[数据库表]是否存在，是否需要新加列。
+        // 关键点2: 判断[数据库表]是否存在，是否需要新加列。
         if (!checkExistAndColumns(db, table)) {
             // 关键点3：新建[数据库表]并加入表队列
             if (createTable(db, table)) {
                 putNewSqlTableIntoMap(table);
             }
         }
-        //    table.isChecked = true;
-        //}
         return table;
     }
+
 
     /**
      * 检测[映射表]是否建立，没有则建一张新表。
      */
     public synchronized void checkOrCreateMappingTable(SQLiteDatabase db, String tableName,
                                                        String column1, String column2) {
-        // 关键点0：[实体表]是否OK
+        // 关键点1：获取[实体表]
         EntityTable table = getMappingTable(tableName, column1, column2);
-        //if (!table.isChecked) {
-        // 关键点1：初始化全部数据库表
-        initAllTablesFromSQLite(db);
-        // 关键点2:判断[数据库表]是否存在，是否需要新加列。
+        // 关键点2: 判断[数据库表]是否存在，是否需要新加列。
         if (!checkExistAndColumns(db, table)) {
             // 关键点3：新建[数据库表]并加入表队列
             if (createTable(db, table)) {
                 putNewSqlTableIntoMap(table);
             }
         }
-        //table.isChecked = true;
-        //}
+    }
+
+    /**
+     * 仅仅检测[数据库表]是否建立
+     */
+    public boolean isSQLMapTableCreated(String tableName1, String tableName2) {
+        return mSqlTableMap.get(getMapTableName(tableName1, tableName2)) == null;
+    }
+
+    /**
+     * 仅仅检测[数据库表]是否建立
+     */
+    public boolean isSQLTableCreated(String tableName) {
+        return mSqlTableMap.get(tableName) != null;
     }
 
     /**
@@ -122,56 +129,54 @@ public final class TableManager {
      * <p> http://www.sqlite.org/lang_altertable.html
      */
     private boolean checkExistAndColumns(SQLiteDatabase db, EntityTable entityTable) {
-        if (!Checker.isEmpty(mSqlTableMap)) {
-            SQLiteTable sqlTable = mSqlTableMap.get(entityTable.name);
-            if (sqlTable != null) {
-                if (OrmLog.isPrint) {
-                    OrmLog.d(TAG, "Table [" + entityTable.name + "] Exist");
-                }
-                if (!sqlTable.isTableChecked) {
-                    // 表仅进行一次检查，检验是否有新字段加入。
-                    sqlTable.isTableChecked = true;
-                    if (OrmLog.isPrint) {
-                        OrmLog.i(TAG, "Table [" + entityTable.name + "] check column now.");
-                    }
-                    if (entityTable.key != null) {
-                        if (sqlTable.columns.get(entityTable.key.column) == null) {
-                            SQLStatement stmt = SQLBuilder.buildDropTable(sqlTable.name);
-                            stmt.execute(db);
-                            if (OrmLog.isPrint) {
-                                OrmLog.i(TAG, "Table [" + entityTable.name + "] Primary Key has changed, " +
-                                              "so drop and recreate it later.");
-                            }
-                            return false;
-                        }
-                    }
-                    if (entityTable.pmap != null) {
-                        ArrayList<String> newColumns = new ArrayList<String>();
-                        for (String col : entityTable.pmap.keySet()) {
-                            if (sqlTable.columns.get(col) == null) {
-                                newColumns.add(col);
-                            }
-                        }
-                        if (!Checker.isEmpty(newColumns)) {
-                            for (String col : newColumns) {
-                                sqlTable.columns.put(col, 1);
-                            }
-                            int sum = insertNewColunms(db, entityTable.name, newColumns);
-                            if (OrmLog.isPrint) {
-                                if (sum > 0) {
-                                    OrmLog.i(TAG,
-                                            "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
-                                } else {
-                                    OrmLog.e(TAG,
-                                            "Table [" + entityTable.name + "] add " + sum + " new column error ： " +
-                                            newColumns);
-                                }
-                            }
-                        }
-                    }
-                }
-                return true;
+        SQLiteTable sqlTable = mSqlTableMap.get(entityTable.name);
+        if (sqlTable != null) {
+            if (OrmLog.isPrint) {
+                OrmLog.d(TAG, "Table [" + entityTable.name + "] Exist");
             }
+            if (!sqlTable.isTableChecked) {
+                // 表仅进行一次检查，检验是否有新字段加入。
+                sqlTable.isTableChecked = true;
+                if (OrmLog.isPrint) {
+                    OrmLog.i(TAG, "Table [" + entityTable.name + "] check column now.");
+                }
+                if (entityTable.key != null) {
+                    if (sqlTable.columns.get(entityTable.key.column) == null) {
+                        SQLStatement stmt = SQLBuilder.buildDropTable(sqlTable.name);
+                        stmt.execute(db);
+                        if (OrmLog.isPrint) {
+                            OrmLog.i(TAG, "Table [" + entityTable.name + "] Primary Key has changed, " +
+                                          "so drop and recreate it later.");
+                        }
+                        return false;
+                    }
+                }
+                if (entityTable.pmap != null) {
+                    ArrayList<String> newColumns = new ArrayList<String>();
+                    for (String col : entityTable.pmap.keySet()) {
+                        if (sqlTable.columns.get(col) == null) {
+                            newColumns.add(col);
+                        }
+                    }
+                    if (!Checker.isEmpty(newColumns)) {
+                        for (String col : newColumns) {
+                            sqlTable.columns.put(col, 1);
+                        }
+                        int sum = insertNewColunms(db, entityTable.name, newColumns);
+                        if (OrmLog.isPrint) {
+                            if (sum > 0) {
+                                OrmLog.i(TAG,
+                                        "Table [" + entityTable.name + "] add " + sum + " new column ： " + newColumns);
+                            } else {
+                                OrmLog.e(TAG,
+                                        "Table [" + entityTable.name + "] add " + sum + " new column error ： " +
+                                        newColumns);
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
         }
         if (OrmLog.isPrint) {
             OrmLog.d(TAG, "Table [" + entityTable.name + "] Not Exist");
@@ -230,7 +235,7 @@ public final class TableManager {
                         }
                         if (OrmLog.isPrint) {
                             OrmLog.i(TAG, "Find One SQL Table: " + sqlTable);
-                            OrmLog.i(TAG, "Table Column: "+colS);
+                            OrmLog.i(TAG, "Table Column: " + colS);
                         }
                         mSqlTableMap.put(sqlTable.name, sqlTable);
                     }
@@ -376,9 +381,6 @@ public final class TableManager {
      * @return {@link EntityTable}
      */
     public static synchronized EntityTable getTable(Class<?> claxx, boolean needPK) {
-        if (claxx == null) {
-            return null;
-        }
         EntityTable table = getEntityTable(claxx.getName());
         //if(OrmLog.isPrint)OrmLog.i(TAG, "table : " + table + "  , claxx: " + claxx);
         if (table == null) {

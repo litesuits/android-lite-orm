@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
  * @author mty
  * @date 2013-6-14下午3:47:16
  */
-public class QueryBuilder {
+public class QueryBuilder<T> {
     private static final Pattern limitPattern = Pattern.compile("\\s*\\d+\\s*(,\\s*\\d+\\s*)?");
 
     public static final String ASC = " ASC";
@@ -32,7 +32,7 @@ public class QueryBuilder {
     public static final String COMMA_HOLDER = ",?";
     public static final String COMMA = ",";
 
-    protected Class clazz;
+    protected Class<T> clazz;
     protected Class clazzMapping;
     protected boolean distinct;
     protected String[] columns;
@@ -42,24 +42,20 @@ public class QueryBuilder {
     protected String limit;
     protected WhereBuilder whereBuilder;
 
-    public Class getQueryClass() {
+    public Class<T> getQueryClass() {
         return clazz;
     }
 
-    public QueryBuilder(Class claxx) {
+    public QueryBuilder(Class<T> claxx) {
         this.clazz = claxx;
         whereBuilder = new WhereBuilder(claxx);
     }
 
-    public static QueryBuilder create(Class claxx) {
-        return new QueryBuilder(claxx);
+    public static <T> QueryBuilder<T> create(Class<T> claxx) {
+        return new QueryBuilder<T>(claxx);
     }
 
-    public static QueryBuilder get(Class claxx) {
-        return create(claxx);
-    }
-
-    public QueryBuilder where(WhereBuilder builder) {
+    public QueryBuilder<T> where(WhereBuilder builder) {
         this.whereBuilder = builder;
         return this;
     }
@@ -75,7 +71,7 @@ public class QueryBuilder {
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
      */
-    public QueryBuilder where(String where, Object[] whereArgs) {
+    public QueryBuilder<T> where(String where, Object[] whereArgs) {
         whereBuilder.where(where, whereArgs);
         return this;
     }
@@ -87,7 +83,7 @@ public class QueryBuilder {
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
      */
-    public QueryBuilder whereAppend(String where, Object[] whereArgs) {
+    public QueryBuilder<T> whereAppend(String where, Object[] whereArgs) {
         whereBuilder.append(null, where, whereArgs);
         return this;
     }
@@ -101,7 +97,7 @@ public class QueryBuilder {
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
      */
-    public QueryBuilder whereAnd(String where, Object[] whereArgs) {
+    public QueryBuilder<T> whereAnd(String where, Object[] whereArgs) {
         whereBuilder.and(where, whereArgs);
         return this;
     }
@@ -115,7 +111,7 @@ public class QueryBuilder {
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
      */
-    public QueryBuilder whereOr(String where, Object[] whereArgs) {
+    public QueryBuilder<T> whereOr(String where, Object[] whereArgs) {
         whereBuilder.or(where, whereArgs);
         return this;
     }
@@ -123,7 +119,7 @@ public class QueryBuilder {
     /**
      * build as where+" AND "
      */
-    public QueryBuilder whereAppendAnd() {
+    public QueryBuilder<T> whereAppendAnd() {
         whereBuilder.and();
         return this;
     }
@@ -131,7 +127,7 @@ public class QueryBuilder {
     /**
      * build as where+" OR "
      */
-    public QueryBuilder whereAppendOr() {
+    public QueryBuilder<T> whereAppendOr() {
         whereBuilder.or();
         return this;
     }
@@ -139,7 +135,7 @@ public class QueryBuilder {
     /**
      * build as where+" NOT "
      */
-    public QueryBuilder whereAppendNot() {
+    public QueryBuilder<T> whereAppendNot() {
         whereBuilder.not();
         return this;
     }
@@ -147,7 +143,7 @@ public class QueryBuilder {
     /**
      * build as where+" column != ? "
      */
-    public QueryBuilder whereNoEquals(String column, Object value) {
+    public QueryBuilder<T> whereNoEquals(String column, Object value) {
         whereBuilder.noEquals(column, value);
         return this;
     }
@@ -155,7 +151,7 @@ public class QueryBuilder {
     /**
      * build as where+" column > ? "
      */
-    public QueryBuilder whereGreaterThan(String column, Object value) {
+    public QueryBuilder<T> whereGreaterThan(String column, Object value) {
         whereBuilder.greaterThan(column, value);
         return this;
     }
@@ -163,7 +159,7 @@ public class QueryBuilder {
     /**
      * build as where+" column < ? "
      */
-    public QueryBuilder whereLessThan(String column, Object value) {
+    public QueryBuilder<T> whereLessThan(String column, Object value) {
         whereBuilder.lessThan(column, value);
         return this;
     }
@@ -171,7 +167,7 @@ public class QueryBuilder {
     /**
      * build as where+" column = ? "
      */
-    public QueryBuilder whereEquals(String column, Object value) {
+    public QueryBuilder<T> whereEquals(String column, Object value) {
         whereBuilder.equals(column, value);
         return this;
     }
@@ -179,7 +175,7 @@ public class QueryBuilder {
     /**
      * build as where+" column IN(?, ?, ?...)"
      */
-    public QueryBuilder whereIn(String column, Object[] values) {
+    public QueryBuilder<T> whereIn(String column, Object[] values) {
         whereBuilder.in(column, values);
         return this;
     }
@@ -189,7 +185,7 @@ public class QueryBuilder {
      *
      * @param columns 列名,注意不是对象的属性名。
      */
-    public QueryBuilder columns(String[] columns) {
+    public QueryBuilder<T> columns(String[] columns) {
         this.columns = columns;
         return this;
     }
@@ -199,7 +195,7 @@ public class QueryBuilder {
      *
      * @param columns 列名,注意不是对象的属性名。
      */
-    public QueryBuilder appendColumns(String[] columns) {
+    public QueryBuilder<T> appendColumns(String[] columns) {
         if (this.columns != null) {
             String[] newCols = new String[this.columns.length + columns.length];
             System.arraycopy(this.columns, 0, newCols, 0, this.columns.length);
@@ -214,7 +210,7 @@ public class QueryBuilder {
     /**
      * 唯一性保证
      */
-    public QueryBuilder distinct(boolean distinct) {
+    public QueryBuilder<T> distinct(boolean distinct) {
         this.distinct = distinct;
         return this;
     }
@@ -222,7 +218,7 @@ public class QueryBuilder {
     /**
      * GROUP BY 语句用于结合合计函数，根据一个或多个列对结果集进行分组。
      */
-    public QueryBuilder groupBy(String group) {
+    public QueryBuilder<T> groupBy(String group) {
         this.group = group;
         return this;
     }
@@ -230,18 +226,18 @@ public class QueryBuilder {
     /**
      * 在 SQL 中增加 HAVING 子句原因是，WHERE 关键字无法与合计函数一起使用。
      */
-    public QueryBuilder having(String having) {
+    public QueryBuilder<T> having(String having) {
         this.having = having;
         return this;
     }
 
-    public QueryBuilder orderBy(String order) {
+    public QueryBuilder<T> orderBy(String order) {
         this.order = order;
         return this;
     }
 
 
-    public QueryBuilder appendOrderAscBy(String column) {
+    public QueryBuilder<T> appendOrderAscBy(String column) {
         if (order == null) {
             order = column + ASC;
         } else {
@@ -250,7 +246,7 @@ public class QueryBuilder {
         return this;
     }
 
-    public QueryBuilder appendOrderDescBy(String column) {
+    public QueryBuilder<T> appendOrderDescBy(String column) {
         if (order == null) {
             order = column + DESC;
         } else {
@@ -259,17 +255,17 @@ public class QueryBuilder {
         return this;
     }
 
-    public QueryBuilder limit(String limit) {
+    public QueryBuilder<T> limit(String limit) {
         this.limit = limit;
         return this;
     }
 
-    public QueryBuilder limit(int start, int length) {
+    public QueryBuilder<T> limit(int start, int length) {
         this.limit = start + COMMA + length;
         return this;
     }
 
-    public QueryBuilder queryMappingInfo(Class clazzMapping) {
+    public QueryBuilder<T> queryMappingInfo(Class clazzMapping) {
         this.clazzMapping = clazzMapping;
         return this;
     }
@@ -334,7 +330,7 @@ public class QueryBuilder {
         return stmt;
     }
 
-    private String getTableName() {
+    public String getTableName() {
         if (clazzMapping == null) {
             return TableManager.getTableName(clazz);
         } else {

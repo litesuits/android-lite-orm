@@ -238,6 +238,7 @@ public class SQLBuilder {
 
     /**
      * 构建 insert SQL 语句
+     * insert(replace) [algorithm] into {table} (key,col...) values (?,?...)
      *
      * @param entity    实体
      * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值
@@ -316,6 +317,7 @@ public class SQLBuilder {
 
     /**
      * 构建 update SQL语句
+     * update [algorithm] {table} set col=?,... where key=value
      *
      * @param entity    实体
      * @param cvs       更新的列,为NULL则更新全部
@@ -389,7 +391,7 @@ public class SQLBuilder {
 
     /**
      * 构建 update SQL语句
-     * update (or replace) [table] set col1=?, col2=? where ...
+     * update [algorithm] {table} set col1=?, col2=? where ...
      *
      * @param where     更新语句
      * @param cvs       更新的列,为NULL则更新全部
@@ -505,6 +507,7 @@ public class SQLBuilder {
 
     /**
      * 构建全部删除sql语句
+     * delete from {table}
      */
     public static SQLStatement buildDeleteAllSql(Class<?> claxx) {
         SQLStatement stmt = new SQLStatement();
@@ -515,6 +518,7 @@ public class SQLBuilder {
 
     /**
      * 构建部分删除sql语句
+     * delete form {table} where {key} in (select {key} from {table} order by {col} ASC limit {start},{end}) )
      */
     public static SQLStatement buildDeleteSql(Class<?> claxx, long start, long end, String orderAscColumn) {
         SQLStatement stmt = new SQLStatement();
@@ -534,6 +538,7 @@ public class SQLBuilder {
 
     /**
      * 构建添加列语句
+     * alter {table} add column {col}
      */
     public static SQLStatement buildAddColumnSql(String tableName, String column) {
         SQLStatement stmt = new SQLStatement();
@@ -675,7 +680,7 @@ public class SQLBuilder {
     }
 
     public static SQLStatement buildMappingDeleteSql(String mapTableName, Object key1, EntityTable table1) throws
-            IllegalArgumentException, IllegalAccessException {
+                                                                                                           IllegalArgumentException, IllegalAccessException {
         if (mapTableName != null) {
             SQLStatement stmt = new SQLStatement();
             stmt.sql = DELETE_FROM + mapTableName + WHERE + table1.name + EQUALS_HOLDER;
@@ -685,6 +690,10 @@ public class SQLBuilder {
         return null;
     }
 
+    /**
+     * 构建N对多关系SQL
+     * replace into {table} (col1=?,col2=?) values (v1,v2),(va,vb)...
+     */
     public static SQLStatement buildMappingToManySql(Object key1, EntityTable table1, EntityTable table2,
                                                      Object obj) throws IllegalArgumentException, IllegalAccessException {
         if (obj instanceof Collection<?>) {
@@ -765,8 +774,8 @@ public class SQLBuilder {
     /**
      * 构建查询关系映射语句
      */
-    public static SQLStatement buildQueryRelationSql(Class class1, Class class2, List<String> key1List,
-                                                     List<String> key2List) {
+    public static SQLStatement buildQueryRelationSql(Class class1, Class class2,
+                                                     List<String> key1List, List<String> key2List) {
         final EntityTable table1 = TableManager.getTable(class1);
         final EntityTable table2 = TableManager.getTable(class2);
         QueryBuilder builder = new QueryBuilder(class1).queryMappingInfo(class2);

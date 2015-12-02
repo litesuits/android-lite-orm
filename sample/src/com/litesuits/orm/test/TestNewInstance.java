@@ -1,5 +1,8 @@
 package com.litesuits.orm.test;
 
+import com.litesuits.orm.db.annotation.MapCollection;
+import com.litesuits.orm.db.utils.ClassUtil;
+
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -12,31 +15,44 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class TestNewInstance {
     public static void main(String[] args) {
         try {
-            Field ab = A.class.getDeclaredField("ab");
-            Class c1 = ab.getType();
-            Class c2 = (Class) ((ParameterizedType) ab.getGenericType()).getActualTypeArguments()[0];
+            Field absList = A.class.getDeclaredField("absList");
+            Class c1 = absList.getType();
+            Class c2 = (Class) ((ParameterizedType) absList.getGenericType()).getActualTypeArguments()[0];
 
-            System.out.println("容器类型： "+c1);
-            System.out.println(Collection.class.isAssignableFrom(c1));
-            System.out.println(c1.isAssignableFrom(Collection.class));
-            System.out.println("承载类： "+c2);
+            System.out.println("容器类型： " + c1);
+            System.out.println("承载类： " + c2);
 
             A a = new A();
+            absList.set(a, ClassUtil.newCollectionForField(absList));
+            Collection ca = a.absList;
+            ca.add("hello ");
+            ca.add(" a test ");
+            System.out.println(a);
+            System.out.println("------------------\n\n");
+
+            Field ab = A.class.getDeclaredField("ab");
+            c1 = ab.getType();
+            c2 = (Class) ((ParameterizedType) ab.getGenericType()).getActualTypeArguments()[0];
+            System.out.println("容器类型： " + c1);
+            System.out.println(Collection.class.isAssignableFrom(c1));
+            System.out.println(c1.isAssignableFrom(Collection.class));
+            System.out.println("承载类： " + c2);
+
             ab.set(a, c1.newInstance());
-            Collection ca = a.ab;
+            ca = a.ab;
             ca.add(c2.newInstance());
             ca.add(c2.newInstance());
             System.out.println(a);
-
+            System.out.println("------------------\n\n");
 
 
             Field ac = A.class.getDeclaredField("ac");
             c1 = ac.getType();
             c2 = ac.getType().getComponentType();
-            System.out.println("容器类型： "+c1);
+            System.out.println("容器类型： " + c1);
             System.out.println(c1.isArray());
             System.out.println(Collection.class.isAssignableFrom(c1));
-            System.out.println("承载类： "+c2);
+            System.out.println("承载类： " + c2);
             System.out.println(ac.getType().getComponentType());
             //Constructor cons = c1.getConstructor(int.class);
             //System.out.println("cons : " + cons);
@@ -44,19 +60,21 @@ public class TestNewInstance {
             C o1 = (C) c2.newInstance();
             C o2 = (C) c2.newInstance();
             Object array = Array.newInstance(c2, 10);
-            Array.set(array,0,o1);
-            Array.set(array,1,o2);
+            Array.set(array, 0, o1);
+            Array.set(array, 1, o2);
             ac.set(a, array);
             Object[] oa = a.ac;
-            System.out.println("A is ： "+a);
+            System.out.println("A is ： " + a);
+            System.out.println("------------------\n\n");
+
 
             Field cc = A.class.getDeclaredField("cc");
             c1 = cc.getType();
             c2 = (Class) ((ParameterizedType) cc.getGenericType()).getActualTypeArguments()[0];
 
-            System.out.println("容器类型： "+c1);
+            System.out.println("容器类型： " + c1);
             System.out.println(Collection.class.isAssignableFrom(c1));
-            System.out.println("承载类： "+c2);
+            System.out.println("承载类： " + c2);
 
             cc.set(a, c1.newInstance());
             ca = a.cc;
@@ -64,6 +82,8 @@ public class TestNewInstance {
             ca.add(c2.newInstance());
 
             System.out.println(a);
+            System.out.println("------------------\n\n");
+
 
             List<C> l = new ArrayList<C>();
             l.add(new C());
@@ -83,37 +103,39 @@ public class TestNewInstance {
 
     /**
      * 获取域的泛型类型，如果不带泛型返回null
-     *
-     * @param f
-     * @return
      */
     public static Class<?> getGenericType(Field f) {
         Type type = f.getGenericType();
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType) type).getActualTypeArguments()[0];
-            if (type instanceof Class<?>) return (Class<?>) type;
-        } else if (type instanceof Class<?>) return (Class<?>) type;
+            if (type instanceof Class<?>)
+                return (Class<?>) type;
+        } else if (type instanceof Class<?>)
+            return (Class<?>) type;
         return null;
     }
 
     public static class A {
-        C[]                      ac;
-        ArrayList<B>             ab;
-        LinkedList<B>            bl;
-        Vector<B>                vb;
-        ConcurrentLinkedQueue<C> cc;
-        LinkedBlockingDeque<C>   lc;
+        @MapCollection(LinkedList.class)
+        List<String> absList;
 
-        @Override
-        public String toString() {
+        C[] ac;
+        ArrayList<B> ab;
+        LinkedList<B> bl;
+        Vector<B> vb;
+        ConcurrentLinkedQueue<C> cc;
+        LinkedBlockingDeque<C> lc;
+
+        @Override public String toString() {
             return "A{" +
-                    "ac=" + Arrays.toString(ac) +
-                    ", ab=" + ab +
-                    ", bl=" + bl +
-                    ", vb=" + vb +
-                    ", cc=" + cc +
-                    ", lc=" + lc +
-                    '}';
+                   "absList=" + absList +
+                   ", ac=" + Arrays.toString(ac) +
+                   ", ab=" + ab +
+                   ", bl=" + bl +
+                   ", vb=" + vb +
+                   ", cc=" + cc +
+                   ", lc=" + lc +
+                   '}';
         }
     }
 

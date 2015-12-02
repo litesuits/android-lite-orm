@@ -225,54 +225,64 @@ public class SingleTestActivity extends BaseActivity {
         ArrayList<Wife> ws = liteOrm.query(Wife.class);
         ArrayList<Company> cs = liteOrm.query(Company.class);
         ArrayList<Boss> ts = liteOrm.query(Boss.class);
-        for (Address uu : as) {
-            OrmLog.i(this, "query Address: " + uu);
+        if (as != null) {
+            for (Address uu : as) {
+                OrmLog.i(this, "query Address: " + uu);
+            }
         }
-        for (Wife uu : ws) {
-            OrmLog.i(this, "query Wife: " + uu);
+        if (ws != null) {
+            for (Wife uu : ws) {
+                OrmLog.i(this, "query Wife: " + uu);
+            }
         }
-        for (Company uu : cs) {
-            OrmLog.i(this, "query Company: " + uu);
+        if (cs != null) {
+            for (Company uu : cs) {
+                OrmLog.i(this, "query Company: " + uu);
+            }
         }
-        for (Boss uu : ts) {
-            OrmLog.i(this, "query Teacher: " + uu);
+        if (ts != null) {
+            for (Boss uu : ts) {
+                OrmLog.i(this, "query Teacher: " + uu);
+            }
         }
-        for (Man uu : query) {
-            OrmLog.i(this, "query user: " + uu);
+        if (query != null) {
+            for (Man uu : query) {
+                OrmLog.i(this, "query user: " + uu);
+            }
         }
     }
 
     private void testQueryByWhere() {
         // 模糊查询：所有带“山”字的地址
-        QueryBuilder qb = new QueryBuilder(Address.class)
+        QueryBuilder<Address> qb = new QueryBuilder<>(Address.class)
                 .where(Address.COL_ADDRESS + " LIKE ?", new String[]{"%山%"});
-        printAddress(liteOrm.<Address>query(qb));
+        printAddress(liteOrm.query(qb));
 
         //AND关系 获取 南京的香港路
-        qb = new QueryBuilder(Address.class)
+        qb = new QueryBuilder<>(Address.class)
                 .whereEquals(Address.COL_CITY, "南京")
                 .whereAppendAnd()
                 .whereEquals(Address.COL_ADDRESS, "香港路");
-        printAddress(liteOrm.<Address>query(qb));
+        printAddress(liteOrm.query(qb));
 
         //OR关系 获取所有 地址为香港路 ，和 青岛 的所有地址
-        qb = new QueryBuilder(Address.class)
+        qb = new QueryBuilder<>(Address.class)
                 .whereEquals(Address.COL_ADDRESS, "香港路")
                 .whereAppendOr()
                 .whereEquals(Address.COL_CITY, "青岛");
-        printAddress(liteOrm.<Address>query(qb));
+        printAddress(liteOrm.query(qb));
 
         //IN语句 获取所有 城市为杭州 和 北京 的地址
-        qb = new QueryBuilder(Address.class)
+        qb = new QueryBuilder<>(Address.class)
                 .whereIn(Address.COL_CITY, new String[]{"杭州", "北京"});
-        printAddress(liteOrm.<Address>query(qb));
+        printAddress(liteOrm.query(qb));
 
         //IN语句 获取所有 非香港路 并且 ID>10
-        qb = new QueryBuilder(Address.class)
+        qb = new QueryBuilder<>(Address.class)
                 .whereNoEquals(Address.COL_ADDRESS, "香港路")
                 .whereAppendAnd()
                 .whereGreaterThan(Address.COL_ID, 5);
-        printAddress(liteOrm.<Address>query(qb));
+        printAddress(liteOrm.query(qb));
     }
 
     private void testQueryByID() {
@@ -295,7 +305,7 @@ public class SingleTestActivity extends BaseActivity {
         long nums = liteOrm.queryCount(Address.class);
         OrmLog.i(this, "Address All Count : " + nums);
 
-        QueryBuilder qb = new QueryBuilder(Address.class)
+        QueryBuilder<Address> qb = new QueryBuilder<>(Address.class)
                 .columns(new String[]{Address.COL_ADDRESS})
                 .appendOrderAscBy(Address.COL_ADDRESS)
                 .appendOrderDescBy(Address.COL_ID)
@@ -399,9 +409,9 @@ public class SingleTestActivity extends BaseActivity {
         }
         uAlice = new Man(0, "alice", 18, false, (short) 12345, (byte) 123, 0.56f, 123.456d, 'c');
         uMax = new Man(0, "max", 99, false, Short.MAX_VALUE, Byte.MAX_VALUE, Float.MAX_VALUE, Double.MAX_VALUE,
-                Character.MAX_VALUE);
+                       Character.MAX_VALUE);
         uMin = new Man(0, "min", 1, true, Short.MIN_VALUE, Byte.MIN_VALUE, Float.MIN_VALUE, Double.MIN_VALUE,
-                Character.MIN_VALUE);
+                       Character.MIN_VALUE);
         uComplex = new Man(0, null, 0, false);
         uComplex.name = "complex";
         uComplex.setAge(18);
@@ -484,7 +494,7 @@ public class SingleTestActivity extends BaseActivity {
     /**
      * 100 000 条数据
      */
-    final int MAX = 100000;
+    final int MAX = 999;
 
     private void testLargeScaleUseLite() {
 
@@ -512,16 +522,15 @@ public class SingleTestActivity extends BaseActivity {
 
         // 4. 查询最后10条测试
         start = System.currentTimeMillis();
-        List<Boss> subList = liteOrm.query(new QueryBuilder(Boss.class)
-                .appendOrderDescBy("_id")
-                .limit(0, 9));
+        List<Boss> subList = liteOrm.query(
+                new QueryBuilder<>(Boss.class).appendOrderDescBy("_id").limit(0, 9));
         end = System.currentTimeMillis();
         OrmLog.i(TAG, "select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");
         OrmLog.i(TAG, subList);
 
         // 5. 删除全部测试
         start = System.currentTimeMillis();
-        num = liteOrm.delete(Boss.class);
+        num = liteOrm.delete(list);
         end = System.currentTimeMillis();
         OrmLog.i(TAG, "delete boss model num: " + num + " , use time: " + (end - start) + " MS");
 
@@ -533,7 +542,7 @@ public class SingleTestActivity extends BaseActivity {
     }
 
     private void testLargeScaleUseSystem() {
-        // 解注下面三行代码，即可查看原生android代码插入10w条数的效率。
+        // 原生android代码插入10w条数的效率测试
         SqliteUtils.testLargeScaleUseDefault(SingleTestActivity.this, MAX);
     }
 }

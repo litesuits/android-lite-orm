@@ -65,7 +65,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int save(Collection<?> collection) {
+    public <T> int save(Collection<T> collection) {
         acquireReference();
         try {
             if (!Checker.isEmpty(collection)) {
@@ -104,12 +104,12 @@ public final class SingleSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int insert(Collection<?> collection) {
+    public <T> int insert(Collection<T> collection) {
         return insert(collection, null);
     }
 
     @Override
-    public int insert(Collection<?> collection, ConflictAlgorithm conflictAlgorithm) {
+    public <T> int insert(Collection<T> collection, ConflictAlgorithm conflictAlgorithm) {
         acquireReference();
         try {
             if (!Checker.isEmpty(collection)) {
@@ -153,17 +153,17 @@ public final class SingleSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int update(Collection<?> collection) {
+    public <T> int update(Collection<T> collection) {
         return update(collection, null, null);
     }
 
     @Override
-    public int update(Collection<?> collection, ConflictAlgorithm conflictAlgorithm) {
+    public <T> int update(Collection<T> collection, ConflictAlgorithm conflictAlgorithm) {
         return update(collection, null, conflictAlgorithm);
     }
 
     @Override
-    public int update(Collection<?> collection, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm) {
+    public <T> int update(Collection<T> collection, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm) {
         acquireReference();
         try {
             if (!Checker.isEmpty(collection)) {
@@ -197,20 +197,32 @@ public final class SingleSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int delete(Class<?> claxx) {
+    public <T> int delete(Class<T> claxx) {
         return deleteAll(claxx);
     }
 
     @Override
-    public int delete(final Collection<?> collection) {
+    public <T> int delete(final Collection<T> collection) {
         acquireReference();
         try {
             if (!Checker.isEmpty(collection)) {
                 EntityTable table = TableManager.getTable(collection.iterator().next());
-                SQLStatement stmt = SQLBuilder.buildDeleteSql(collection);
-                SQLiteDatabase db = mHelper.getWritableDatabase();
-                mTableManager.checkOrCreateTable(db, table.claxx);
-                return stmt.execDeleteCollection(db, collection);
+                if (mTableManager.isSQLTableCreated(table.name)) {
+                    int rows;
+                    final SQLiteDatabase db = mHelper.getWritableDatabase();
+                    db.beginTransaction();
+                    try {
+                        rows = CollSpliter.split(collection, SQLStatement.IN_TOP_LIMIT, new CollSpliter.Spliter<T>() {
+                            @Override public int oneSplit(ArrayList<T> list) throws Exception {
+                                return SQLBuilder.buildDeleteSql(list).execDeleteCollection(db, list);
+                            }
+                        });
+                        db.setTransactionSuccessful();
+                    } finally {
+                        db.endTransaction();
+                    }
+                    return rows;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -222,7 +234,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
 
     @Override
     @Deprecated
-    public int delete(Class<?> claxx, WhereBuilder where) {
+    public <T> int delete(Class<T> claxx, WhereBuilder where) {
         return delete(where);
     }
 
@@ -242,14 +254,13 @@ public final class SingleSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int deleteAll(Class<?> claxx) {
+    public <T> int deleteAll(Class<T> claxx) {
         acquireReference();
         try {
             SQLiteDatabase db = mHelper.getWritableDatabase();
             SQLStatement stmt = SQLBuilder.buildDeleteAllSql(claxx);
             mTableManager.checkOrCreateTable(db, claxx);
-            int num = stmt.execDelete(db);
-            return num;
+            return stmt.execDelete(db);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -262,7 +273,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
      * 删除从[start,end]的数据
      */
     @Override
-    public int delete(Class<?> claxx, long start, long end, String orderAscColumn) {
+    public <T> int delete(Class<T> claxx, long start, long end, String orderAscColumn) {
         acquireReference();
         try {
             if (start < 0 || end < start) { throw new RuntimeException("start must >=0 and smaller than end"); }
@@ -284,22 +295,22 @@ public final class SingleSQLiteImpl extends LiteOrm {
 
     @Override
     public <T> ArrayList<T> query(Class<T> claxx) {
-        acquireReference();
-        try {
-            SQLStatement stmt = new QueryBuilder(claxx).createStatement();
-            SQLiteDatabase db = mHelper.getReadableDatabase();
-            mTableManager.checkOrCreateTable(db, claxx);
-            return stmt.query(db, claxx);
-        } finally {
-            releaseReference();
-        }
+        return query(new QueryBuilder<>(claxx));
     }
 
     @Override
-    public <T> ArrayList<T> query(QueryBuilder qb) {
-        SQLiteDatabase db = mHelper.getReadableDatabase();
-        mTableManager.checkOrCreateTable(db, qb.getQueryClass());
-        return qb.createStatement().query(db, qb.getQueryClass());
+    public <T> ArrayList<T> query(QueryBuilder<T> qb) {
+        acquireReference();
+        try {
+            final EntityTable table = TableManager.getTable(qb.getQueryClass(), false);
+            if (mTableManager.isSQLTableCreated(table.name)) {
+                return qb.createStatement().query(mHelper.getReadableDatabase(), qb.getQueryClass());
+            } else {
+                return new ArrayList<>();
+            }
+        } finally {
+            releaseReference();
+        }
     }
 
     @Override
@@ -311,15 +322,15 @@ public final class SingleSQLiteImpl extends LiteOrm {
     public <T> T queryById(String id, Class<T> claxx) {
         acquireReference();
         try {
-            SQLiteDatabase db = mHelper.getReadableDatabase();
-            EntityTable table = TableManager.getTable(claxx);
-            SQLStatement stmt = new QueryBuilder(claxx)
-                    .where(table.key.column + "=?", new String[]{id})
-                    .createStatement();
-            mTableManager.checkOrCreateTable(db, claxx);
-            ArrayList<T> list = stmt.query(db, claxx);
-            if (!Checker.isEmpty(list)) {
-                return list.get(0);
+            final EntityTable table = TableManager.getTable(claxx, false);
+            if (mTableManager.isSQLTableCreated(table.name)) {
+                SQLStatement stmt = new QueryBuilder<>(claxx)
+                        .where(table.key.column + "=?", new String[]{id})
+                        .createStatement();
+                ArrayList<T> list = stmt.query(mHelper.getReadableDatabase(), claxx);
+                if (!Checker.isEmpty(list)) {
+                    return list.get(0);
+                }
             }
         } finally {
             releaseReference();

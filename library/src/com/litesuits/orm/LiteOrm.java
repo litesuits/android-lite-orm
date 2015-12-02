@@ -25,8 +25,8 @@ import java.util.List;
  * 可查阅 <a href="http://www.sqlite.org/lang.html">SQLite操作指南</a>
  *
  * 问题列表：
- * 1. 抽象类对象new实例的问题
- * 2. 级联操作时未建表异常
+ * 1. 一对多关系时如果是抽象容器比如List，反射new对象不成功。 通过@MapCollection注解解决
+ * 2. 级联操作时未建表异常  已解决
  * 3. 保存集合时数据过多报too many sql variables
  *
  * @author mty
@@ -62,10 +62,10 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
         mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(),
                 mConfig.dbName, null, mConfig.dbVersion, config.onUpdateListener);
         mConfig.context = null;
-        mTableManager = new TableManager(mConfig.dbName);
         if (mConfig.dbName.contains(File.separator)) {
             createDatabase();
         }
+        mTableManager = new TableManager(mConfig.dbName);
     }
 
     /**
@@ -134,22 +134,25 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     }
 
     @Override
-    public ArrayList<RelationKey> queryRelation(Class class1, Class class2, List<String> key1List, List<String> key2List) {
+    public ArrayList<RelationKey> queryRelation(Class class1, Class class2, List<String> key1List,
+            List<String> key2List) {
         acquireReference();
         try {
-            SQLStatement stmt = SQLBuilder.buildQueryRelationSql(class1, class2, key1List, key2List);
+            final ArrayList<RelationKey> list = new ArrayList<>();
             final EntityTable table1 = TableManager.getTable(class1);
             final EntityTable table2 = TableManager.getTable(class2);
-            final ArrayList<RelationKey> list = new ArrayList<RelationKey>();
-            Querier.doQuery(mHelper.getReadableDatabase(), stmt, new Querier.CursorParser() {
-                @Override
-                public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
-                    RelationKey relation = new RelationKey();
-                    relation.key1 = c.getString(c.getColumnIndex(table1.name));
-                    relation.key2 = c.getString(c.getColumnIndex(table2.name));
-                    list.add(relation);
-                }
-            });
+            if (mTableManager.isSQLMapTableCreated(table1.name, table2.name)) {
+                SQLStatement stmt = SQLBuilder.buildQueryRelationSql(class1, class2, key1List, key2List);
+                Querier.doQuery(mHelper.getReadableDatabase(), stmt, new Querier.CursorParser() {
+                    @Override
+                    public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
+                        RelationKey relation = new RelationKey();
+                        relation.key1 = c.getString(c.getColumnIndex(table1.name));
+                        relation.key2 = c.getString(c.getColumnIndex(table2.name));
+                        list.add(relation);
+                    }
+                });
+            }
             return list;
         } finally {
             releaseReference();
@@ -222,17 +225,21 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
 
 
     @Override
-    public long queryCount(Class<?> claxx) {
-        return queryCount(new QueryBuilder(claxx));
+    public <T> long queryCount(Class<T> claxx) {
+        return queryCount(new QueryBuilder<>(claxx));
     }
 
     @Override
     public long queryCount(QueryBuilder qb) {
         acquireReference();
         try {
-            SQLiteDatabase db = mHelper.getReadableDatabase();
-            SQLStatement stmt = qb.createStatementForCount();
-            return stmt.queryForLong(db);
+            if (mTableManager.isSQLTableCreated(qb.getTableName())) {
+                SQLiteDatabase db = mHelper.getReadableDatabase();
+                SQLStatement stmt = qb.createStatementForCount();
+                return stmt.queryForLong(db);
+            } else {
+                return 0;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -310,8 +317,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
             if (file == null) {
                 throw new IllegalArgumentException("file must not be null");
             }
-            boolean deleted = false;
-            deleted |= file.delete();
+            boolean deleted = file.delete();
             deleted |= new File(file.getPath() + "-journal").delete();
             deleted |= new File(file.getPath() + "-shm").delete();
             deleted |= new File(file.getPath() + "-wal").delete();
@@ -366,7 +372,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     /* --------------------------------  私有方法 -------------------------------- */
     @SuppressWarnings("unchecked")
     private <E, T> boolean keepMapping(Collection<E> col1,
-                                       Collection<T> col2) throws IllegalAccessException, InstantiationException {
+            Collection<T> col2) throws IllegalAccessException, InstantiationException {
         Class claxx1 = col1.iterator().next().getClass();
         Class claxx2 = col2.iterator().next().getClass();
         EntityTable table1 = TableManager.getTable(claxx1);
@@ -386,8 +392,8 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                     itemClass = fieldClass;
                 }
                 if (itemClass == claxx2) {
-                    ArrayList<String> key1List = new ArrayList<String>();
-                    HashMap<String, Object> map1 = new HashMap<String, Object>();
+                    ArrayList<String> key1List = new ArrayList<>();
+                    HashMap<String, Object> map1 = new HashMap<>();
                     // 构建第1个对象的key集合以及value映射
                     for (Object o1 : col1) {
                         if (o1 != null) {
@@ -400,7 +406,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                     }
                     ArrayList<RelationKey> mapList = queryRelation(claxx1, claxx2, key1List, null);
                     if (!Checker.isEmpty(mapList)) {
-                        HashMap<String, Object> map2 = new HashMap<String, Object>();
+                        HashMap<String, Object> map2 = new HashMap<>();
                         // 构建第2个对象的value映射
                         for (Object o2 : col2) {
                             if (o2 != null) {

@@ -13,7 +13,6 @@ import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -72,7 +71,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int save(Collection<?> collection) {
+    public <T> int save(Collection<T> collection) {
         acquireReference();
         try {
             return saveCollection(collection);
@@ -94,10 +93,9 @@ public final class CascadeSQLiteImpl extends LiteOrm {
             Long rowID = Transaction.execute(db, new Worker<Long>() {
                 @Override
                 public Long doTransaction(SQLiteDatabase db) throws Exception {
-                    HashMap<String, Integer> handleMap = new HashMap<String, Integer>();
-                    SQLStatement stmt = SQLBuilder.buildInsertSql(entity, conflictAlgorithm);
                     mTableManager.checkOrCreateTable(db, entity);
-                    return insertRecursive(stmt, entity, db, handleMap);
+                    return insertRecursive(SQLBuilder.buildInsertSql(entity, conflictAlgorithm),
+                            entity, db, new HashMap<String, Integer>());
                 }
             });
             return rowID == null ? SQLStatement.NONE : rowID;
@@ -110,12 +108,12 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int insert(Collection<?> collection) {
+    public <T> int insert(Collection<T> collection) {
         return insert(collection, null);
     }
 
     @Override
-    public int insert(Collection<?> collection, ConflictAlgorithm conflictAlgorithm) {
+    public <T> int insert(Collection<T> collection, ConflictAlgorithm conflictAlgorithm) {
         acquireReference();
         try {
             return insertCollection(collection, conflictAlgorithm);
@@ -161,17 +159,17 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int update(Collection<?> collection) {
+    public <T> int update(Collection<T> collection) {
         return update(collection, null, null);
     }
 
     @Override
-    public int update(Collection<?> collection, ConflictAlgorithm conflictAlgorithm) {
+    public <T> int update(Collection<T> collection, ConflictAlgorithm conflictAlgorithm) {
         return update(collection, null, conflictAlgorithm);
     }
 
     @Override
-    public int update(Collection<?> collection, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm) {
+    public <T> int update(Collection<T> collection, ColumnsValue cvs, ConflictAlgorithm conflictAlgorithm) {
         acquireReference();
         try {
             return updateCollection(collection, cvs, conflictAlgorithm);
@@ -210,13 +208,13 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int delete(Class<?> claxx) {
+    public <T> int delete(Class<T> claxx) {
         return deleteAll(claxx);
     }
 
 
     @Override
-    public int delete(final Collection<?> collection) {
+    public <T> int delete(final Collection<T> collection) {
         acquireReference();
         try {
             return deleteCollection(collection);
@@ -229,11 +227,11 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int delete(Class<?> claxx, WhereBuilder where) {
+    public <T> int delete(Class<T> claxx, WhereBuilder where) {
         acquireReference();
         try {
             EntityTable table = TableManager.getTable(claxx);
-            List<?> list = query(QueryBuilder.create(claxx).columns(new String[]{table.key.column}).where(where));
+            List<T> list = query(QueryBuilder.create(claxx).columns(new String[]{table.key.column}).where(where));
             delete(list);
         } catch (Exception e) {
             e.printStackTrace();
@@ -248,7 +246,8 @@ public final class CascadeSQLiteImpl extends LiteOrm {
         acquireReference();
         try {
             EntityTable table = TableManager.getTable(where.getTableClass());
-            List<?> list = query(QueryBuilder.create(where.getTableClass()).columns(new String[]{table.key.column}).where(where));
+            List<?> list = query(
+                    QueryBuilder.create(where.getTableClass()).columns(new String[]{table.key.column}).where(where));
             deleteCollection(list);
         } catch (Exception e) {
             e.printStackTrace();
@@ -259,11 +258,11 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public int deleteAll(Class<?> claxx) {
+    public <T> int deleteAll(Class<T> claxx) {
         acquireReference();
         try {
             EntityTable table = TableManager.getTable(claxx);
-            List<?> list = query(QueryBuilder.create(claxx).columns(new String[]{table.key.column}));
+            List<T> list = query(QueryBuilder.create(claxx).columns(new String[]{table.key.column}));
             return delete(list);
         } finally {
             releaseReference();
@@ -275,7 +274,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * 此方法暂不会删除关联映射表里的关系数据
      */
     @Override
-    public int delete(Class<?> claxx, long start, long end, String orderAscColumn) {
+    public <T> int delete(Class<T> claxx, long start, long end, String orderAscColumn) {
         acquireReference();
         try {
             if (start < 0 || end < start) { throw new RuntimeException("start must >=0 and smaller than end"); }
@@ -284,7 +283,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
             }
             end = end == Integer.MAX_VALUE ? -1 : end - start;
             EntityTable table = TableManager.getTable(claxx);
-            List<?> list = query(QueryBuilder.create(claxx)
+            List<T> list = query(QueryBuilder.create(claxx)
                                              .limit(start + SQLBuilder.COMMA + end)
                                              .appendOrderAscBy(orderAscColumn)
                                              .columns(new String[]{table.key.column}));
@@ -300,7 +299,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     }
 
     @Override
-    public <T> ArrayList<T> query(QueryBuilder qb) {
+    public <T> ArrayList<T> query(QueryBuilder<T> qb) {
         return checkTableAndQuery(qb.getQueryClass(), qb);
     }
 
@@ -312,9 +311,8 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     @Override
     public <T> T queryById(String id, Class<T> claxx) {
         EntityTable table = TableManager.getTable(claxx);
-        ArrayList<T> list = checkTableAndQuery(claxx,
-                new QueryBuilder(claxx)
-                        .whereEquals(table.key.column, String.valueOf(id)));
+        ArrayList<T> list = checkTableAndQuery(claxx, new QueryBuilder(claxx)
+                .whereEquals(table.key.column, String.valueOf(id)));
         if (!Checker.isEmpty(list)) {
             return list.get(0);
         }
@@ -335,24 +333,24 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     private <T> ArrayList<T> checkTableAndQuery(final Class<T> claxx, QueryBuilder builder) {
         acquireReference();
         final ArrayList<T> list = new ArrayList<T>();
-        final HashMap<String, Object> entityMap = new HashMap<String, Object>();
-        final HashMap<String, Integer> queryMap = new HashMap<String, Integer>();
         try {
-            mTableManager.checkOrCreateTable(mHelper.getWritableDatabase(), claxx);
-            SQLiteDatabase db = mHelper.getReadableDatabase();
-            //list = builder.createStatement().query(db, claxx);
             final EntityTable table = TableManager.getTable(claxx, false);
-            Querier.doQuery(db, builder.createStatement(), new Querier.CursorParser() {
-                @Override
-                public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
-                    T t = ClassUtil.newInstance(claxx);
-                    DataUtil.injectDataToObject(c, t, table);
-                    list.add(t);
-                    entityMap.put(table.name + FieldUtil.get(table.key.field, t), t);
+            if (mTableManager.isSQLTableCreated(table.name)) {
+                final HashMap<String, Object> entityMap = new HashMap<String, Object>();
+                final HashMap<String, Integer> queryMap = new HashMap<String, Integer>();
+                SQLiteDatabase db = mHelper.getReadableDatabase();
+                Querier.doQuery(db, builder.createStatement(), new Querier.CursorParser() {
+                    @Override
+                    public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
+                        T t = ClassUtil.newInstance(claxx);
+                        DataUtil.injectDataToObject(c, t, table);
+                        list.add(t);
+                        entityMap.put(table.name + FieldUtil.get(table.key.field, t), t);
+                    }
+                });
+                for (T t : list) {
+                    queryForMappingRecursive(t, db, queryMap, entityMap);
                 }
-            });
-            for (T t : list) {
-                queryForMappingRecursive(t, db, queryMap, entityMap);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -366,7 +364,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * 循环遍历查找当前实体的关联实体
      */
     private void queryForMappingRecursive(Object obj1, SQLiteDatabase db, HashMap<String, Integer> queryMap,
-                                          HashMap<String, Object> entityMap)
+            HashMap<String, Object> entityMap)
             throws IllegalAccessException, InstantiationException {
         final EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.getAssignedKeyObject(table1.key, obj1);
@@ -389,31 +387,33 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * 查找N对一关系的实体
      */
     private void queryMapToOne(final EntityTable table1, Object key1, Object obj1,
-                               Field field, SQLiteDatabase db, HashMap<String, Integer> queryMap,
-                               HashMap<String, Object> entityMap)
+            Field field, SQLiteDatabase db, HashMap<String, Integer> queryMap,
+            HashMap<String, Object> entityMap)
             throws IllegalAccessException, InstantiationException {
         final EntityTable table2 = TableManager.getTable(field.getType());
-        SQLStatement relationSql = SQLBuilder.buildQueryRelationSql(table1, table2, key1);
-        final RelationKey relation = new RelationKey();
-        Querier.doQuery(db, relationSql, new Querier.CursorParser() {
-            @Override
-            public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
-                relation.key1 = c.getString(c.getColumnIndex(table1.name));
-                relation.key2 = c.getString(c.getColumnIndex(table2.name));
-                stopParse();
-            }
-        });
-        if (relation.isOK()) {
-            String key = table2.name + relation.key2;
-            Object obj2 = entityMap.get(key);
-            if (obj2 == null) {
-                SQLStatement entitySql = SQLBuilder.buildQueryMapEntitySql(table2, relation.key2);
-                obj2 = entitySql.queryOneEntity(db, table2.claxx);
-                entityMap.put(key, obj2);
-            }
-            if (obj2 != null) {
-                FieldUtil.set(field, obj1, obj2);
-                queryForMappingRecursive(obj2, db, queryMap, entityMap);
+        if (mTableManager.isSQLMapTableCreated(table1.name, table2.name)) {
+            SQLStatement relationSql = SQLBuilder.buildQueryRelationSql(table1, table2, key1);
+            final RelationKey relation = new RelationKey();
+            Querier.doQuery(db, relationSql, new Querier.CursorParser() {
+                @Override
+                public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
+                    relation.key1 = c.getString(c.getColumnIndex(table1.name));
+                    relation.key2 = c.getString(c.getColumnIndex(table2.name));
+                    stopParse();
+                }
+            });
+            if (relation.isOK()) {
+                String key = table2.name + relation.key2;
+                Object obj2 = entityMap.get(key);
+                if (obj2 == null) {
+                    SQLStatement entitySql = SQLBuilder.buildQueryMapEntitySql(table2, relation.key2);
+                    obj2 = entitySql.queryOneEntity(db, table2.claxx);
+                    entityMap.put(key, obj2);
+                }
+                if (obj2 != null) {
+                    FieldUtil.set(field, obj1, obj2);
+                    queryForMappingRecursive(obj2, db, queryMap, entityMap);
+                }
             }
         }
     }
@@ -421,79 +421,81 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     /**
      * 查找N对关系的实体
      */
+    @SuppressWarnings("unchecked")
     private void queryMapToMany(final EntityTable table1, Object key1, Object obj1,
-                                Field field, SQLiteDatabase db, HashMap<String, Integer> queryMap,
-                                final HashMap<String, Object> entityMap) throws IllegalAccessException,
-            InstantiationException {
-        Class<?> compClass;
+            Field field, SQLiteDatabase db, HashMap<String, Integer> queryMap,
+            final HashMap<String, Object> entityMap)
+            throws IllegalAccessException, InstantiationException {
+        final Class<?> class2;
         if (Collection.class.isAssignableFrom(field.getType())) {
-            compClass = FieldUtil.getGenericType(field);
+            class2 = FieldUtil.getGenericType(field);
         } else if (field.getType().isArray()) {
-            compClass = FieldUtil.getComponentType(field);
+            class2 = FieldUtil.getComponentType(field);
         } else {
             throw new RuntimeException("OneToMany and ManyToMany Relation, " +
                                        "you must use collection or array object");
         }
-        final EntityTable table2 = TableManager.getTable(compClass);
-        final ArrayList<String> key2List = new ArrayList<String>();
-        SQLStatement relationSql = SQLBuilder.buildQueryRelationSql(table1, table2, key1);
-        Querier.doQuery(db, relationSql, new Querier.CursorParser() {
-            @Override
-            public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
-                key2List.add(c.getString(c.getColumnIndex(table2.name)));
-            }
-        });
-        if (!Checker.isEmpty(key2List)) {
-            final ArrayList<Object> allList2 = new ArrayList<Object>();
-            for (int i = key2List.size() - 1; i >= 0; i--) {
-                Object obj2 = entityMap.get(table2.name + key2List.get(i));
-                if (obj2 != null) {
-                    allList2.add(obj2);
-                    key2List.remove(i);
+        final EntityTable table2 = TableManager.getTable(class2);
+        if (mTableManager.isSQLMapTableCreated(table1.name, table2.name)) {
+            SQLStatement relationSql = SQLBuilder.buildQueryRelationSql(table1, table2, key1);
+            final ArrayList<String> key2List = new ArrayList<String>();
+            Querier.doQuery(db, relationSql, new Querier.CursorParser() {
+                @Override
+                public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
+                    key2List.add(c.getString(c.getColumnIndex(table2.name)));
                 }
-            }
-            final Class<?> class2 = compClass;
-            int i = 0, start = 0, end;
-            while (start < key2List.size()) {
-                int next = ++i * SQLStatement.IN_TOP_LIMIT;
-                end = Math.min(key2List.size(), next);
-                List<String> subList = key2List.subList(start, end);
-                start = next;
-
-                SQLStatement entitySql = QueryBuilder.create(compClass)
-                                                     .whereIn(table2.key.column,
-                                                             subList.toArray(new String[subList.size()]))
-                                                     .createStatement();
-
-                Querier.doQuery(db, entitySql, new Querier.CursorParser() {
-                    @Override
-                    public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
-                        Object t = ClassUtil.newInstance(class2);
-                        DataUtil.injectDataToObject(c, t, table2);
-                        allList2.add(t);
-                        entityMap.put(table2.name + FieldUtil.get(table2.key.field, t), t);
+            });
+            if (!Checker.isEmpty(key2List)) {
+                final ArrayList<Object> allList2 = new ArrayList<Object>();
+                for (int i = key2List.size() - 1; i >= 0; i--) {
+                    Object obj2 = entityMap.get(table2.name + key2List.get(i));
+                    if (obj2 != null) {
+                        allList2.add(obj2);
+                        key2List.remove(i);
                     }
-                });
-            }
-            if (!Checker.isEmpty(allList2)) {
-                if (Collection.class.isAssignableFrom(field.getType())) {
-                    Collection coll = (Collection) ClassUtil.newCollection(field.getType());
-                    coll.addAll(allList2);
-                    FieldUtil.set(field, obj1, coll);
-                } else if (field.getType().isArray()) {
-                    Object[] arrObj = (Object[]) Array.newInstance(compClass, allList2.size());
-                    arrObj = allList2.toArray(arrObj);
-                    FieldUtil.set(field, obj1, arrObj);
-                } else {
-                    throw new RuntimeException("OneToMany and ManyToMany Relation, " +
-                                               "you must use collection or array object");
                 }
-                for (Object obj2 : allList2) {
-                    queryForMappingRecursive(obj2, db, queryMap, entityMap);
+                //final Class<?> class2 = compClass;
+                int i = 0, start = 0, end;
+                while (start < key2List.size()) {
+                    int next = ++i * SQLStatement.IN_TOP_LIMIT;
+                    end = Math.min(key2List.size(), next);
+                    List<String> subList = key2List.subList(start, end);
+                    start = next;
+
+                    SQLStatement entitySql = QueryBuilder
+                            .create(class2)
+                            .whereIn(table2.key.column, subList.toArray(new String[subList.size()]))
+                            .createStatement();
+
+                    Querier.doQuery(db, entitySql, new Querier.CursorParser() {
+                        @Override
+                        public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
+                            Object t = ClassUtil.newInstance(class2);
+                            DataUtil.injectDataToObject(c, t, table2);
+                            allList2.add(t);
+                            entityMap.put(table2.name + FieldUtil.get(table2.key.field, t), t);
+                        }
+                    });
+                }
+                if (!Checker.isEmpty(allList2)) {
+                    if (Collection.class.isAssignableFrom(field.getType())) {
+                        Collection coll = (Collection) ClassUtil.newCollectionForField(field);
+                        coll.addAll(allList2);
+                        FieldUtil.set(field, obj1, coll);
+                    } else if (field.getType().isArray()) {
+                        Object[] arrObj = (Object[]) ClassUtil.newArray(class2, allList2.size());
+                        arrObj = allList2.toArray(arrObj);
+                        FieldUtil.set(field, obj1, arrObj);
+                    } else {
+                        throw new RuntimeException("OneToMany and ManyToMany Relation, " +
+                                                   "you must use collection or array object");
+                    }
+                    for (Object obj2 : allList2) {
+                        queryForMappingRecursive(obj2, db, queryMap, entityMap);
+                    }
                 }
             }
         }
-
     }
 
     /* --------------------------------  私有方法: 集合操作相关 -------------------------------- */
@@ -504,7 +506,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @param collection any collection
      * @return return size of collection if do successfully, -1 or not.
      */
-    private int saveCollection(final Collection<?> collection) {
+    private <T> int saveCollection(final Collection<T> collection) {
         if (!Checker.isEmpty(collection)) {
             SQLiteDatabase db = mHelper.getWritableDatabase();
             Integer rowID = Transaction.execute(db, new Worker<Integer>() {
@@ -512,7 +514,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                 public Integer doTransaction(SQLiteDatabase db) throws Exception {
                     //0. 保存第一个实体
                     HashMap<String, Integer> handleMap = new HashMap<String, Integer>();
-                    Iterator<?> iterator = collection.iterator();
+                    Iterator<T> iterator = collection.iterator();
                     Object entity = iterator.next();
                     SQLStatement stmt = SQLBuilder.buildReplaceSql(entity);
                     mTableManager.checkOrCreateTable(db, entity);
@@ -543,7 +545,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @param conflictAlgorithm when conflict
      * @return return size of collection if do successfully, -1 or not.
      */
-    private int insertCollection(final Collection<?> collection, final ConflictAlgorithm conflictAlgorithm) {
+    private <T> int insertCollection(final Collection<T> collection, final ConflictAlgorithm conflictAlgorithm) {
         if (!Checker.isEmpty(collection)) {
             SQLiteDatabase db = mHelper.getWritableDatabase();
             Integer rowID = Transaction.execute(db, new Worker<Integer>() {
@@ -551,7 +553,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                 public Integer doTransaction(SQLiteDatabase db) throws Exception {
                     //0. 保存第一个实体
                     HashMap<String, Integer> handleMap = new HashMap<String, Integer>();
-                    Iterator<?> iterator = collection.iterator();
+                    Iterator<T> iterator = collection.iterator();
                     Object entity = iterator.next();
                     SQLStatement stmt = SQLBuilder.buildInsertSql(entity, conflictAlgorithm);
                     mTableManager.checkOrCreateTable(db, entity);
@@ -582,8 +584,8 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @param conflictAlgorithm when conflict
      * @return return size of collection if do successfully, -1 or not.
      */
-    private int updateCollection(final Collection<?> collection, final ColumnsValue cvs,
-                                 final ConflictAlgorithm conflictAlgorithm) {
+    private <T> int updateCollection(final Collection<T> collection, final ColumnsValue cvs,
+            final ConflictAlgorithm conflictAlgorithm) {
         if (!Checker.isEmpty(collection)) {
             SQLiteDatabase db = mHelper.getWritableDatabase();
             Integer rowID = Transaction.execute(db, new Worker<Integer>() {
@@ -591,7 +593,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                 public Integer doTransaction(SQLiteDatabase db) throws Exception {
                     //0. 保存第一个实体
                     HashMap<String, Integer> handleMap = new HashMap<String, Integer>();
-                    Iterator<?> iterator = collection.iterator();
+                    Iterator<T> iterator = collection.iterator();
                     Object entity = iterator.next();
                     SQLStatement stmt = SQLBuilder.buildUpdateAllSql(entity, cvs, conflictAlgorithm);
                     mTableManager.checkOrCreateTable(db, entity);
@@ -620,7 +622,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @param collection any collection
      * @return return size of collection if do successfully, -1 or not.
      */
-    private int deleteCollection(final Collection<?> collection) {
+    private <T> int deleteCollection(final Collection<T> collection) {
         if (!Checker.isEmpty(collection)) {
             SQLiteDatabase db = mHelper.getWritableDatabase();
             Integer rowID = Transaction.execute(db, new Worker<Integer>() {
@@ -628,7 +630,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                 public Integer doTransaction(SQLiteDatabase db) throws Exception {
                     //0. 删除第一个实体
                     HashMap<String, Integer> handleMap = new HashMap<String, Integer>();
-                    Iterator<?> iterator = collection.iterator();
+                    Iterator<T> iterator = collection.iterator();
                     Object entity = iterator.next();
                     SQLStatement stmt = SQLBuilder.buildDeleteSql(entity);
                     mTableManager.checkOrCreateTable(db, entity);
@@ -703,7 +705,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private long handleEntityRecursive(int type, SQLStatement stmt, Object obj1, SQLiteDatabase db,
-                                       HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+            HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
         EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.get(table1.key.field, obj1);
 
@@ -742,7 +744,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private int updateRecursive(SQLStatement stmt, Object obj1, SQLiteDatabase db,
-                                HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+            HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
         EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.get(table1.key.field, obj1);
 
@@ -768,7 +770,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private int deleteRecursive(SQLStatement stmt, Object obj1, SQLiteDatabase db,
-                                HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+            HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
         EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.get(table1.key.field, obj1);
 
@@ -793,7 +795,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private long insertRecursive(SQLStatement stmt, Object obj1, SQLiteDatabase db,
-                                 HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+            HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
         EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.get(table1.key.field, obj1);
 
@@ -835,7 +837,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private int checkTableAndDeleteRecursive(Object obj1, SQLiteDatabase db,
-                                             HashMap<String, Integer> handleMap)
+            HashMap<String, Integer> handleMap)
             throws IOException, IllegalAccessException {
         mTableManager.checkOrCreateTable(db, obj1);
         return deleteRecursive(SQLBuilder.buildDeleteSql(obj1), obj1, db, handleMap);
@@ -845,7 +847,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * 处理一个实体中所有的关联实体。
      */
     private void handleMapping(Object key1, Object obj1, SQLiteDatabase db,
-                               boolean insertNew, HashMap<String, Integer> handleMap)
+            boolean insertNew, HashMap<String, Integer> handleMap)
             throws IOException, IllegalAccessException {
         EntityTable table1 = TableManager.getTable(obj1);
         // 2. 存储[关联实体]以及其[关系映射]
@@ -880,7 +882,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * 处理N对1关系的关联实体
      */
     private void handleMapToOne(EntityTable table1, Object key1, Object obj2, SQLiteDatabase db,
-                                boolean insertNew, HashMap<String, Integer> handleMap)
+            boolean insertNew, HashMap<String, Integer> handleMap)
             throws IllegalAccessException, IOException {
         if (obj2 != null) {
             if (insertNew) {
@@ -915,7 +917,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * 处理N对N关系的关联实体
      */
     private void handleMapToMany(EntityTable table1, Object key1, Collection coll, SQLiteDatabase db,
-                                 boolean insertNew, HashMap<String, Integer> handleMap)
+            boolean insertNew, HashMap<String, Integer> handleMap)
             throws IllegalAccessException, IOException {
         if (coll != null) {
             boolean isF = true;

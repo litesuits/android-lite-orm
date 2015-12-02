@@ -22,8 +22,8 @@
         <item>删除 指定数量</item>
         <item>删除 使用WhereBuilder</item>
         <item>删除全部</item>
-        <item>使用LiteOrm：较大规模数据测试</item>
-        <item>使用SQLiteDatabase：较大规模数据测试</item>
+        <item>LiteOrm 更快：大量(100,000)数据测试</item>
+        <item>SQLiteDatabase：大量(100,000)数据测试</item>
     </string-array>
 
 </resources>
