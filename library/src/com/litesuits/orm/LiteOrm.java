@@ -2,12 +2,14 @@ package com.litesuits.orm;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.*;
+import android.database.sqlite.SQLiteClosable;
+import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.assit.*;
-import com.litesuits.orm.db.impl.*;
+import com.litesuits.orm.db.impl.CascadeSQLiteImpl;
+import com.litesuits.orm.db.impl.SingleSQLiteImpl;
 import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
@@ -23,11 +25,6 @@ import java.util.List;
 /**
  * 数据SQLite操作实现
  * 可查阅 <a href="http://www.sqlite.org/lang.html">SQLite操作指南</a>
- *
- * 问题列表：
- * 1. 一对多关系时如果是抽象容器比如List，反射new对象不成功。 通过@MapCollection注解解决
- * 2. 级联操作时未建表异常  已解决
- * 3. 保存集合时数据过多报too many sql variables
  *
  * @author mty
  * @date 2013-6-2下午2:32:56
@@ -134,29 +131,36 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     }
 
     @Override
-    public ArrayList<RelationKey> queryRelation(Class class1, Class class2, List<String> key1List,
-            List<String> key2List) {
+    public ArrayList<RelationKey> queryRelation(final Class class1, final Class class2, final List<String> key1List) {
         acquireReference();
+        final ArrayList<RelationKey> rList = new ArrayList<>();
         try {
-            final ArrayList<RelationKey> list = new ArrayList<>();
             final EntityTable table1 = TableManager.getTable(class1);
             final EntityTable table2 = TableManager.getTable(class2);
             if (mTableManager.isSQLMapTableCreated(table1.name, table2.name)) {
-                SQLStatement stmt = SQLBuilder.buildQueryRelationSql(class1, class2, key1List, key2List);
-                Querier.doQuery(mHelper.getReadableDatabase(), stmt, new Querier.CursorParser() {
-                    @Override
-                    public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
-                        RelationKey relation = new RelationKey();
-                        relation.key1 = c.getString(c.getColumnIndex(table1.name));
-                        relation.key2 = c.getString(c.getColumnIndex(table2.name));
-                        list.add(relation);
+                CollSpliter.split(key1List, SQLStatement.IN_TOP_LIMIT, new CollSpliter.Spliter<String>() {
+                    @Override public int oneSplit(ArrayList<String> list) throws Exception {
+                        SQLStatement stmt = SQLBuilder.buildQueryRelationSql(class1, class2, key1List);
+                        Querier.doQuery(mHelper.getReadableDatabase(), stmt, new Querier.CursorParser() {
+                            @Override
+                            public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
+                                RelationKey relation = new RelationKey();
+                                relation.key1 = c.getString(c.getColumnIndex(table1.name));
+                                relation.key2 = c.getString(c.getColumnIndex(table2.name));
+                                rList.add(relation);
+                            }
+                        });
+                        return 0;
                     }
                 });
+
             }
-            return list;
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             releaseReference();
         }
+        return rList;
     }
 
     @Override
@@ -404,7 +408,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                             }
                         }
                     }
-                    ArrayList<RelationKey> mapList = queryRelation(claxx1, claxx2, key1List, null);
+                    ArrayList<RelationKey> mapList = queryRelation(claxx1, claxx2, key1List);
                     if (!Checker.isEmpty(mapList)) {
                         HashMap<String, Object> map2 = new HashMap<>();
                         // 构建第2个对象的value映射

@@ -240,8 +240,7 @@ public interface DataBase {
      *
      * @return the relation list of class1 and class2;
      */
-    ArrayList<RelationKey> queryRelation(Class class1, Class class2, List<String> key1List,
-            List<String> key2List);
+    ArrayList<RelationKey> queryRelation(Class class1, Class class2, List<String> key1List);
 
     /**
      * auto entity relation mapping

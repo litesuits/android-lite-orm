@@ -16,13 +16,13 @@ public class TestSpliter {
         for (int i = 0; i < 9; i++) {
             coll.add("a " + i);
         }
+
         CollSpliter.split(coll, 3, new CollSpliter.Spliter() {
             @Override public int oneSplit(ArrayList list) throws Exception {
                 System.out.println("-------  " + list.size());
                 for (Object o : list) {
                     System.out.println(o);
                 }
-
                 return 0;
             }
         });

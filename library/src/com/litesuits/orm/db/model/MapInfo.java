@@ -25,14 +25,15 @@ public class MapInfo {
         public String column2;
     }
 
-    public ArrayList<MapTable>     tableList;
+    public ArrayList<MapTable> tableList;
     public ArrayList<SQLStatement> mapNewRelationSQL;
     public ArrayList<SQLStatement> delOldRelationSQL;
 
     public boolean addTable(MapTable table) {
-        if (table.name == null) return false;
+        if (table.name == null)
+            return false;
         if (tableList == null) {
-            tableList = new ArrayList<MapTable>();
+            tableList = new ArrayList<>();
         }
         //for (MapTable mt : tableList) {
         //    if (mt.name.equals(table.name)) return false;
@@ -42,20 +43,27 @@ public class MapInfo {
 
     public boolean addNewRelationSQL(SQLStatement st) {
         if (mapNewRelationSQL == null) {
-            mapNewRelationSQL = new ArrayList<SQLStatement>();
+            mapNewRelationSQL = new ArrayList<>();
         }
         return mapNewRelationSQL.add(st);
     }
 
+    public boolean addNewRelationSQL(ArrayList<SQLStatement> list) {
+        if (mapNewRelationSQL == null) {
+            mapNewRelationSQL = new ArrayList<>();
+        }
+        return mapNewRelationSQL.addAll(list);
+    }
+
     public boolean addDelOldRelationSQL(SQLStatement st) {
         if (delOldRelationSQL == null) {
-            delOldRelationSQL = new ArrayList<SQLStatement>();
+            delOldRelationSQL = new ArrayList<>();
         }
         return delOldRelationSQL.add(st);
     }
 
     public boolean isEmpty() {
         return Checker.isEmpty(tableList)
-                || Checker.isEmpty(mapNewRelationSQL) && Checker.isEmpty(delOldRelationSQL);
+               || Checker.isEmpty(mapNewRelationSQL) && Checker.isEmpty(delOldRelationSQL);
     }
 }

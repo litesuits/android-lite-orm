@@ -176,11 +176,11 @@ public class SQLBuilder {
                     UniqueCombine uc = f.getAnnotation(UniqueCombine.class);
                     if (uc != null) {
                         if (combineUniqueMap == null) {
-                            combineUniqueMap = new SparseArray<ArrayList<String>>();
+                            combineUniqueMap = new SparseArray<>();
                         }
                         ArrayList<String> list = combineUniqueMap.get(uc.value());
                         if (list == null) {
-                            list = new ArrayList<String>();
+                            list = new ArrayList<>();
                             combineUniqueMap.put(uc.value(), list);
                         }
                         list.add(key);
@@ -246,7 +246,7 @@ public class SQLBuilder {
      * @param algorithm {@link ConflictAlgorithm}
      */
     private static SQLStatement buildInsertSql(Object entity, boolean needValue, int type,
-                                               ConflictAlgorithm algorithm) {
+            ConflictAlgorithm algorithm) {
         SQLStatement stmt = new SQLStatement();
         try {
             EntityTable table = TableManager.getTable(entity);
@@ -325,7 +325,7 @@ public class SQLBuilder {
      * @param needValue 构建批量sql不需要赋值，执行时临时遍历赋值（批量更新时，仅构建sql语句，插入操作时循环赋值）
      */
     private static SQLStatement buildUpdateSql(Object entity, ColumnsValue cvs,
-                                               ConflictAlgorithm algorithm, boolean needValue) {
+            ConflictAlgorithm algorithm, boolean needValue) {
         SQLStatement stmt = new SQLStatement();
         try {
             EntityTable table = TableManager.getTable(entity);
@@ -409,7 +409,7 @@ public class SQLBuilder {
             sql.append(table.name);
             sql.append(SET);
             // 分两部分构建SQL语句，用一个for循环完成SQL构建和值的反射获取，以提高效率。
-            Object[] args = null;
+            Object[] args;
             if (cvs != null && cvs.checkColumns()) {
                 Object[] wArgs = where.getWhereArgs();
                 if (wArgs != null) {
@@ -478,6 +478,8 @@ public class SQLBuilder {
     /**
      * 构建批量删除sql语句
      * delete from [table] where [key] in (?,?)
+     *
+     * 注意：collection 数量不能超过999
      */
     public static SQLStatement buildDeleteSql(Collection<?> collection) {
         SQLStatement stmt = new SQLStatement();
@@ -595,7 +597,7 @@ public class SQLBuilder {
      * 1. 如果是插入或更新数据，先删除旧映射，再建立新映射。
      * 2. 如果是删除，直接删除就映射即可。
      */
-    public static MapInfo buildMappingSql(Object entity, boolean insertNew) {
+    public static MapInfo buildMappingInfo(Object entity, boolean insertNew, TableManager tableManager) {
         EntityTable table1 = TableManager.getTable(entity);
         if (!Checker.isEmpty(table1.mappingList)) {
             try {
@@ -610,22 +612,33 @@ public class SQLBuilder {
                     String mapTableName = TableManager.getMapTableName(table1, table2);
                     MapTable mi = new MapTable(mapTableName, table1.name, table2.name);
                     mapInfo.addTable(mi);
-
-                    // add delete mapping sql to map info
-                    SQLStatement st = buildMappingDeleteSql(key1, table1, table2);
-                    mapInfo.addDelOldRelationSQL(st);
+                    if (tableManager.isSQLMapTableCreated(table1.name, table2.name)) {
+                        // add delete mapping sql to map info
+                        SQLStatement st = buildMappingDeleteSql(key1, table1, table2);
+                        mapInfo.addDelOldRelationSQL(st);
+                    }
 
                     if (insertNew) {
                         // also insert new mapping relation
                         Object mapObject = FieldUtil.get(map.field, entity);
                         if (mapObject != null) {
                             if (map.isToMany()) {
-                                st = buildMappingToManySql(key1, table1, table2, mapObject);
-                                if (st != null) {
-                                    mapInfo.addNewRelationSQL(st);
+                                ArrayList<SQLStatement> sqlList;
+                                if (mapObject instanceof Collection<?>) {
+                                    sqlList = buildMappingToManySql(key1, table1, table2,
+                                            (Collection<?>) mapObject);
+                                } else if (mapObject instanceof Object[]) {
+                                    sqlList = buildMappingToManySql(key1, table1, table2,
+                                            Arrays.asList((Object[]) mapObject));
+                                } else {
+                                    throw new RuntimeException("OneToMany and ManyToMany Relation," +
+                                                               " You must use array or collection object");
+                                }
+                                if (Checker.isEmpty(sqlList)) {
+                                    mapInfo.addNewRelationSQL(sqlList);
                                 }
                             } else {
-                                st = buildMappingToOneSql(key1, table1, table2, mapObject);
+                                SQLStatement st = buildMappingToOneSql(key1, table1, table2, mapObject);
                                 if (st != null) {
                                     mapInfo.addNewRelationSQL(st);
                                 }
@@ -656,8 +669,12 @@ public class SQLBuilder {
         return calxx;
     }
 
+    /**
+     * 构建删除全部映射关系数据语句
+     * delete from {map table}
+     */
     private static SQLStatement buildMappingDeleteAllSql(EntityTable table1,
-                                                         EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
+            EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
         if (table2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
             SQLStatement stmt = new SQLStatement();
@@ -667,20 +684,25 @@ public class SQLBuilder {
         return null;
     }
 
+    /**
+     * 构建SQL语句：删除Key1的全部映射关系数据
+     * delete from {map table} where {key1=?}
+     */
     public static SQLStatement buildMappingDeleteSql(Object key1, EntityTable table1,
-                                                     EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
+            EntityTable table2) throws IllegalArgumentException, IllegalAccessException {
         if (table2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
-            SQLStatement stmt = new SQLStatement();
-            stmt.sql = DELETE_FROM + mapTableName + WHERE + table1.name + EQUALS_HOLDER;
-            stmt.bindArgs = new Object[]{key1};
-            return stmt;
+            return buildMappingDeleteSql(mapTableName, key1, table1);
         }
         return null;
     }
 
-    public static SQLStatement buildMappingDeleteSql(String mapTableName, Object key1, EntityTable table1) throws
-                                                                                                           IllegalArgumentException, IllegalAccessException {
+    /**
+     * 构建SQL语句：删除Key1的全部映射关系数据
+     * delete from {map table} where {key1=?}
+     */
+    public static SQLStatement buildMappingDeleteSql(String mapTableName, Object key1,
+            EntityTable table1) throws IllegalArgumentException, IllegalAccessException {
         if (mapTableName != null) {
             SQLStatement stmt = new SQLStatement();
             stmt.sql = DELETE_FROM + mapTableName + WHERE + table1.name + EQUALS_HOLDER;
@@ -694,68 +716,79 @@ public class SQLBuilder {
      * 构建N对多关系SQL
      * replace into {table} (col1=?,col2=?) values (v1,v2),(va,vb)...
      */
-    public static SQLStatement buildMappingToManySql(Object key1, EntityTable table1, EntityTable table2,
-                                                     Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (obj instanceof Collection<?>) {
-            String mapTableName = TableManager.getMapTableName(table1, table2);
-            Collection<?> coll = (Collection<?>) obj;
-            if (!coll.isEmpty()) {
-                boolean isF = true;
-                StringBuilder values = new StringBuilder(128);
-                ArrayList<String> list = new ArrayList<String>();
-                String key1Str = String.valueOf(key1);
-                for (Object o : coll) {
-                    Object key2 = FieldUtil.getAssignedKeyObject(table2.key, o);
-                    if (key2 != null) {
-                        if (isF) {
-                            values.append(TWO_HOLDER);
-                            isF = false;
-                        } else {
-                            values.append(COMMA).append(TWO_HOLDER);
-                        }
-                        list.add(key1Str);
-                        list.add(String.valueOf(key2));
-                    }
+    public static <T> ArrayList<SQLStatement> buildMappingToManySql(final Object key1,
+            final EntityTable table1, final EntityTable table2, Collection<T> coll) throws Exception {
+        final ArrayList<SQLStatement> sqlList = new ArrayList<>();
+        CollSpliter.split(coll, SQLStatement.IN_TOP_LIMIT, new CollSpliter.Spliter<T>() {
+            @Override public int oneSplit(ArrayList<T> list) throws Exception {
+                SQLStatement sql = buildMappingToManySqlFragment(key1, table1, table2, list);
+                if (sql != null) {
+                    sqlList.add(sql);
                 }
+                return 0;
+            }
+        });
+        return sqlList;
+    }
 
-                Object[] args = list.toArray(new String[list.size()]);
-                if (!Checker.isEmpty(args)) {
-                    SQLStatement stmt = new SQLStatement();
-                    stmt.sql = REPLACE + INTO + mapTableName + PARENTHESES_LEFT + table1.name + COMMA + table2.name + PARENTHESES_RIGHT + VALUES + values;
-                    stmt.bindArgs = args;
-                    return stmt;
+    /**
+     * 构建N对多关系SQL
+     * replace into {table} (col1=?,col2=?) values (v1,v2),(va,vb)...
+     * 注意：collection 数量不能超过999
+     */
+    private static SQLStatement buildMappingToManySqlFragment(Object key1, EntityTable table1,
+            EntityTable table2, Collection<?> coll) throws IllegalArgumentException, IllegalAccessException {
+        String mapTableName = TableManager.getMapTableName(table1, table2);
+        if (!coll.isEmpty()) {
+            boolean isF = true;
+            StringBuilder values = new StringBuilder(128);
+            ArrayList<String> list = new ArrayList<>();
+            String key1Str = String.valueOf(key1);
+            for (Object o : coll) {
+                Object key2 = FieldUtil.getAssignedKeyObject(table2.key, o);
+                if (key2 != null) {
+                    if (isF) {
+                        values.append(TWO_HOLDER);
+                        isF = false;
+                    } else {
+                        values.append(COMMA).append(TWO_HOLDER);
+                    }
+                    list.add(key1Str);
+                    list.add(String.valueOf(key2));
                 }
             }
 
-        } else if (obj instanceof Object[]) {
-            List<Object> list = Arrays.asList((Object[]) obj);
-            return buildMappingToManySql(key1, table1, table2, list);
-        } else {
-            throw new RuntimeException("OneToMany and ManyToMany Relation, You must use array or collection object");
+            Object[] args = list.toArray(new String[list.size()]);
+            if (!Checker.isEmpty(args)) {
+                SQLStatement stmt = new SQLStatement();
+                stmt.sql = REPLACE + INTO + mapTableName + PARENTHESES_LEFT + table1.name + COMMA + table2.name + PARENTHESES_RIGHT + VALUES + values;
+                stmt.bindArgs = args;
+                return stmt;
+            }
         }
         return null;
     }
 
+    /**
+     * 构建N对一关系存储语句
+     * insert into {table} (key1,key2) values (?,?)
+     */
     public static SQLStatement buildMappingToOneSql(Object key1, EntityTable table1, EntityTable table2,
-                                                    Object obj) throws IllegalArgumentException, IllegalAccessException {
+            Object obj) throws IllegalArgumentException, IllegalAccessException {
         Object key2 = FieldUtil.getAssignedKeyObject(table2.key, obj);
         if (key2 != null) {
             String mapTableName = TableManager.getMapTableName(table1, table2);
-            StringBuilder sql = new StringBuilder(128);
-            sql.append(INSERT).append(INTO).append(mapTableName)
-               .append(PARENTHESES_LEFT).append(table1.name)
-               .append(COMMA).append(table2.name)
-               .append(PARENTHESES_RIGHT).append(VALUES).append(TWO_HOLDER);
-            SQLStatement stmt = new SQLStatement();
-            stmt.sql = sql.toString();
-            stmt.bindArgs = new Object[]{key1, key2};
-            return stmt;
+            return buildMappingToOneSql(mapTableName, key1, key2, table1, table2);
         }
         return null;
     }
 
+    /**
+     * 构建N对一关系存储语句
+     * insert into {table} (key1,key2) values (?,?)
+     */
     public static SQLStatement buildMappingToOneSql(String mapTableName, Object key1, Object key2,
-                                                    EntityTable table1, EntityTable table2)
+            EntityTable table1, EntityTable table2)
             throws IllegalArgumentException, IllegalAccessException {
         if (key2 != null) {
             StringBuilder sql = new StringBuilder(128);
@@ -773,9 +806,20 @@ public class SQLBuilder {
 
     /**
      * 构建查询关系映射语句
+     * select * from {map table} where {key1} in (?,?...) and {key2} in (?,?...)
+     * 注意：key1List数量不能超过999
      */
-    public static SQLStatement buildQueryRelationSql(Class class1, Class class2,
-                                                     List<String> key1List, List<String> key2List) {
+    public static SQLStatement buildQueryRelationSql(Class class1, Class class2, List<String> key1List) {
+        return buildQueryRelationSql(class1, class2, key1List, null);
+    }
+
+    /**
+     * 构建查询关系映射语句
+     * select * from {map table} where {key1} in (?,?...) and {key2} in (?,?...)
+     * 注意：keyList 数量不能超过999
+     */
+    private static SQLStatement buildQueryRelationSql(Class class1, Class class2,
+            List<String> key1List, List<String> key2List) {
         final EntityTable table1 = TableManager.getTable(class1);
         final EntityTable table2 = TableManager.getTable(class2);
         QueryBuilder builder = new QueryBuilder(class1).queryMappingInfo(class2);

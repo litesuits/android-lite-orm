@@ -237,7 +237,7 @@ public class SQLStatement implements Serializable {
      * 执行批量更新
      */
     public int execUpdateCollectionWithMapping(SQLiteDatabase db, Collection<?> list,
-                                               ColumnsValue cvs, TableManager tableManager) {
+            ColumnsValue cvs, TableManager tableManager) {
         printSQL();
         db.beginTransaction();
         if (OrmLog.isPrint) {
@@ -356,7 +356,7 @@ public class SQLStatement implements Serializable {
      * 并将关系映射删除
      */
     public int execDeleteCollectionWithMapping(final SQLiteDatabase db, final Collection<?> collection,
-                                               final TableManager tableManager) throws IOException {
+            final TableManager tableManager) throws IOException {
         printSQL();
         // 删除全部数据
         mStatement = db.compileStatement(sql);
@@ -378,23 +378,20 @@ public class SQLStatement implements Serializable {
         realease();
         if (tableManager != null) {
             // 删除关系映射
-            MapInfo mapTable = SQLBuilder.buildMappingSql(collection.iterator().next(), true);
-            if (mapTable != null && !mapTable.isEmpty()) {
-                Boolean suc = Transaction.execute(db, new Transaction.Worker<Boolean>() {
-                    @Override
-                    public Boolean doTransaction(SQLiteDatabase db) throws Exception {
-                        for (Object o : collection) {
-                            // 删除关系映射
-                            mapRelationToDb(o, false, false, db, tableManager);
-                        }
-                        return true;
+            Boolean suc = Transaction.execute(db, new Transaction.Worker<Boolean>() {
+                @Override
+                public Boolean doTransaction(SQLiteDatabase db) throws Exception {
+                    boolean mapTableCheck = true;
+                    for (Object o : collection) {
+                        // 删除关系映射
+                        mapRelationToDb(o, false, mapTableCheck, db, tableManager);
+                        mapTableCheck = false;
                     }
-                });
-                if (OrmLog.isPrint) {
-                    OrmLog.i(TAG, "Exec delete collection mapping: " + ((suc != null && suc) ? "成功" : "失败"));
+                    return true;
                 }
-            } else {
-                OrmLog.i(TAG, "this collection not contains relation mapping");
+            });
+            if (OrmLog.isPrint) {
+                OrmLog.i(TAG, "Exec delete collection mapping: " + ((suc != null && suc) ? "成功" : "失败"));
             }
         }
         return nums;
@@ -510,10 +507,10 @@ public class SQLStatement implements Serializable {
      * @param insertNew 仅在执行删除该实体时，此值为false
      */
     private void mapRelationToDb(Object entity, final boolean insertNew,
-                                 final boolean tableCheck, SQLiteDatabase db,
-                                 final TableManager tableManager) {
+            final boolean tableCheck, SQLiteDatabase db,
+            final TableManager tableManager) {
         // 插入关系映射
-        final MapInfo mapTable = SQLBuilder.buildMappingSql(entity, insertNew);
+        final MapInfo mapTable = SQLBuilder.buildMappingInfo(entity, insertNew, tableManager);
         if (mapTable != null && !mapTable.isEmpty()) {
             Transaction.execute(db, new Transaction.Worker<Boolean>() {
                 @Override
