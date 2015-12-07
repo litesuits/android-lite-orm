@@ -295,7 +295,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
 
     @Override
     public <T> ArrayList<T> query(Class<T> claxx) {
-        return query(new QueryBuilder<>(claxx));
+        return query(new QueryBuilder<T>(claxx));
     }
 
     @Override
@@ -306,7 +306,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
             if (mTableManager.isSQLTableCreated(table.name)) {
                 return qb.createStatement().query(mHelper.getReadableDatabase(), qb.getQueryClass());
             } else {
-                return new ArrayList<>();
+                return new ArrayList<T>();
             }
         } finally {
             releaseReference();
@@ -324,7 +324,7 @@ public final class SingleSQLiteImpl extends LiteOrm {
         try {
             final EntityTable table = TableManager.getTable(claxx, false);
             if (mTableManager.isSQLTableCreated(table.name)) {
-                SQLStatement stmt = new QueryBuilder<>(claxx)
+                SQLStatement stmt = new QueryBuilder<T>(claxx)
                         .where(table.key.column + "=?", new String[]{id})
                         .createStatement();
                 ArrayList<T> list = stmt.query(mHelper.getReadableDatabase(), claxx);

@@ -23,7 +23,7 @@ public class SqliteUtils {
     public static boolean testLargeScaleUseDefault(Context context, int max) {
 
         // 1. 初始化数据，并手工建表。
-        final List<Boss> list = new ArrayList<>();
+        final List<Boss> list = new ArrayList<Boss>();
         for (int i = 0; i < max; i++) {
             Boss boss = new Boss();
             boss.setAddress("ZheJiang Xihu " + i);
@@ -75,7 +75,7 @@ public class SqliteUtils {
 
         // 4. 查询最后10条测试
         start = System.currentTimeMillis();
-        List<Boss> subList = new ArrayList<>();
+        List<Boss> subList = new ArrayList<Boss>();
         cursor = rdb.rawQuery("select * from boss order by id desc limit 0,10", null);
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {

@@ -254,31 +254,31 @@ public class SingleTestActivity extends BaseActivity {
 
     private void testQueryByWhere() {
         // 模糊查询：所有带“山”字的地址
-        QueryBuilder<Address> qb = new QueryBuilder<>(Address.class)
+        QueryBuilder<Address> qb = new QueryBuilder<Address>(Address.class)
                 .where(Address.COL_ADDRESS + " LIKE ?", new String[]{"%山%"});
         printAddress(liteOrm.query(qb));
 
         //AND关系 获取 南京的香港路
-        qb = new QueryBuilder<>(Address.class)
+        qb = new QueryBuilder<Address>(Address.class)
                 .whereEquals(Address.COL_CITY, "南京")
                 .whereAppendAnd()
                 .whereEquals(Address.COL_ADDRESS, "香港路");
         printAddress(liteOrm.query(qb));
 
         //OR关系 获取所有 地址为香港路 ，和 青岛 的所有地址
-        qb = new QueryBuilder<>(Address.class)
+        qb = new QueryBuilder<Address>(Address.class)
                 .whereEquals(Address.COL_ADDRESS, "香港路")
                 .whereAppendOr()
                 .whereEquals(Address.COL_CITY, "青岛");
         printAddress(liteOrm.query(qb));
 
         //IN语句 获取所有 城市为杭州 和 北京 的地址
-        qb = new QueryBuilder<>(Address.class)
+        qb = new QueryBuilder<Address>(Address.class)
                 .whereIn(Address.COL_CITY, new String[]{"杭州", "北京"});
         printAddress(liteOrm.query(qb));
 
         //IN语句 获取所有 非香港路 并且 ID>10
-        qb = new QueryBuilder<>(Address.class)
+        qb = new QueryBuilder<Address>(Address.class)
                 .whereNoEquals(Address.COL_ADDRESS, "香港路")
                 .whereAppendAnd()
                 .whereGreaterThan(Address.COL_ID, 5);
@@ -305,7 +305,7 @@ public class SingleTestActivity extends BaseActivity {
         long nums = liteOrm.queryCount(Address.class);
         OrmLog.i(this, "Address All Count : " + nums);
 
-        QueryBuilder<Address> qb = new QueryBuilder<>(Address.class)
+        QueryBuilder<Address> qb = new QueryBuilder<Address>(Address.class)
                 .columns(new String[]{Address.COL_ADDRESS})
                 .appendOrderAscBy(Address.COL_ADDRESS)
                 .appendOrderDescBy(Address.COL_ID)
@@ -499,7 +499,7 @@ public class SingleTestActivity extends BaseActivity {
     private void testLargeScaleUseLite() {
 
         // 1. 初始化数据
-        List<Boss> list = new ArrayList<>();
+        List<Boss> list = new ArrayList<Boss>();
         for (int i = 0; i < MAX; i++) {
             Boss boss = new Boss();
             boss.setAddress("ZheJiang Xihu " + i);
@@ -523,7 +523,7 @@ public class SingleTestActivity extends BaseActivity {
         // 4. 查询最后10条测试
         start = System.currentTimeMillis();
         List<Boss> subList = liteOrm.query(
-                new QueryBuilder<>(Boss.class).appendOrderDescBy("_id").limit(0, 9));
+                new QueryBuilder<Boss>(Boss.class).appendOrderDescBy("_id").limit(0, 9));
         end = System.currentTimeMillis();
         OrmLog.i(TAG, "select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");
         OrmLog.i(TAG, subList);

@@ -33,7 +33,7 @@ public class MapInfo {
         if (table.name == null)
             return false;
         if (tableList == null) {
-            tableList = new ArrayList<>();
+            tableList = new ArrayList<MapTable>();
         }
         //for (MapTable mt : tableList) {
         //    if (mt.name.equals(table.name)) return false;
@@ -43,21 +43,21 @@ public class MapInfo {
 
     public boolean addNewRelationSQL(SQLStatement st) {
         if (mapNewRelationSQL == null) {
-            mapNewRelationSQL = new ArrayList<>();
+            mapNewRelationSQL = new ArrayList<SQLStatement>();
         }
         return mapNewRelationSQL.add(st);
     }
 
     public boolean addNewRelationSQL(ArrayList<SQLStatement> list) {
         if (mapNewRelationSQL == null) {
-            mapNewRelationSQL = new ArrayList<>();
+            mapNewRelationSQL = new ArrayList<SQLStatement>();
         }
         return mapNewRelationSQL.addAll(list);
     }
 
     public boolean addDelOldRelationSQL(SQLStatement st) {
         if (delOldRelationSQL == null) {
-            delOldRelationSQL = new ArrayList<>();
+            delOldRelationSQL = new ArrayList<SQLStatement>();
         }
         return delOldRelationSQL.add(st);
     }

@@ -19,7 +19,7 @@ public class CollSpliter {
      * @return sum of {@link Spliter#oneSplit(ArrayList)}
      */
     public static <T> int split(Collection<T> collection, int perSize, Spliter<T> spliter) throws Exception {
-        ArrayList<T> list = new ArrayList<>();
+        ArrayList<T> list = new ArrayList<T>();
         int count = 0;
         if (collection.size() <= perSize) {
             list.addAll(collection);

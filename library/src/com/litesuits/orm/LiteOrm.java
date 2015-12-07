@@ -133,7 +133,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     @Override
     public ArrayList<RelationKey> queryRelation(final Class class1, final Class class2, final List<String> key1List) {
         acquireReference();
-        final ArrayList<RelationKey> rList = new ArrayList<>();
+        final ArrayList<RelationKey> rList = new ArrayList<RelationKey>();
         try {
             final EntityTable table1 = TableManager.getTable(class1);
             final EntityTable table2 = TableManager.getTable(class2);
@@ -230,7 +230,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
 
     @Override
     public <T> long queryCount(Class<T> claxx) {
-        return queryCount(new QueryBuilder<>(claxx));
+        return queryCount(new QueryBuilder<T>(claxx));
     }
 
     @Override
@@ -396,8 +396,8 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                     itemClass = fieldClass;
                 }
                 if (itemClass == claxx2) {
-                    ArrayList<String> key1List = new ArrayList<>();
-                    HashMap<String, Object> map1 = new HashMap<>();
+                    ArrayList<String> key1List = new ArrayList<String>();
+                    HashMap<String, Object> map1 = new HashMap<String, Object>();
                     // 构建第1个对象的key集合以及value映射
                     for (Object o1 : col1) {
                         if (o1 != null) {
@@ -410,7 +410,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                     }
                     ArrayList<RelationKey> mapList = queryRelation(claxx1, claxx2, key1List);
                     if (!Checker.isEmpty(mapList)) {
-                        HashMap<String, Object> map2 = new HashMap<>();
+                        HashMap<String, Object> map2 = new HashMap<String, Object>();
                         // 构建第2个对象的value映射
                         for (Object o2 : col2) {
                             if (o2 != null) {

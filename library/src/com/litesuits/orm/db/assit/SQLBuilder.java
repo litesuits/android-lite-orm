@@ -176,11 +176,11 @@ public class SQLBuilder {
                     UniqueCombine uc = f.getAnnotation(UniqueCombine.class);
                     if (uc != null) {
                         if (combineUniqueMap == null) {
-                            combineUniqueMap = new SparseArray<>();
+                            combineUniqueMap = new SparseArray<ArrayList<String>>();
                         }
                         ArrayList<String> list = combineUniqueMap.get(uc.value());
                         if (list == null) {
-                            list = new ArrayList<>();
+                            list = new ArrayList<String>();
                             combineUniqueMap.put(uc.value(), list);
                         }
                         list.add(key);
@@ -718,7 +718,7 @@ public class SQLBuilder {
      */
     public static <T> ArrayList<SQLStatement> buildMappingToManySql(final Object key1,
             final EntityTable table1, final EntityTable table2, Collection<T> coll) throws Exception {
-        final ArrayList<SQLStatement> sqlList = new ArrayList<>();
+        final ArrayList<SQLStatement> sqlList = new ArrayList<SQLStatement>();
         CollSpliter.split(coll, SQLStatement.IN_TOP_LIMIT, new CollSpliter.Spliter<T>() {
             @Override public int oneSplit(ArrayList<T> list) throws Exception {
                 SQLStatement sql = buildMappingToManySqlFragment(key1, table1, table2, list);
@@ -742,7 +742,7 @@ public class SQLBuilder {
         if (!coll.isEmpty()) {
             boolean isF = true;
             StringBuilder values = new StringBuilder(128);
-            ArrayList<String> list = new ArrayList<>();
+            ArrayList<String> list = new ArrayList<String>();
             String key1Str = String.valueOf(key1);
             for (Object o : coll) {
                 Object key2 = FieldUtil.getAssignedKeyObject(table2.key, o);
