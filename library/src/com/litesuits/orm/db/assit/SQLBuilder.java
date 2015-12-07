@@ -397,7 +397,7 @@ public class SQLBuilder {
      * @param cvs       更新的列,为NULL则更新全部
      * @param algorithm {@link ConflictAlgorithm}
      */
-    private static SQLStatement buildUpdateSql(WhereBuilder where, ColumnsValue cvs, ConflictAlgorithm algorithm) {
+    public static SQLStatement buildUpdateSql(WhereBuilder where, ColumnsValue cvs, ConflictAlgorithm algorithm) {
         SQLStatement stmt = new SQLStatement();
         try {
             EntityTable table = TableManager.getTable(where.getTableClass());

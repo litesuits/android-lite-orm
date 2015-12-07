@@ -257,7 +257,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
         acquireReference();
         try {
             SQLiteDatabase db = mHelper.getWritableDatabase();
-            SQLStatement stmt = SQLBuilder.buildUpdateAllSql(where, cvs, conflictAlgorithm);
+            SQLStatement stmt = SQLBuilder.buildUpdateSql(where, cvs, conflictAlgorithm);
             return stmt.execUpdate(db);
         } catch (Exception e) {
             e.printStackTrace();
