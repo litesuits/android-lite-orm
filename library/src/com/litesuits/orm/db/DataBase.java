@@ -224,9 +224,18 @@ public interface DataBase {
     /**
      * drop a table
      *
+     * @deprecated
      * @return true if droped successfully.
      */
+    @Deprecated
     boolean dropTable(Object entity);
+
+    /**
+     * drop a table
+     *
+     * @return true if droped successfully.
+     */
+    boolean dropTable(Class<?> claxx);
 
     /**
      * drop a table

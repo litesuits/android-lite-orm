@@ -522,7 +522,7 @@ public class SingleTestActivity extends BaseActivity {
 
         // 4. 查询最后10条测试
         start = System.currentTimeMillis();
-        List<Boss> subList = liteOrm.query(
+        ArrayList subList = liteOrm.query(
                 new QueryBuilder<Boss>(Boss.class).appendOrderDescBy("_id").limit(0, 9));
         end = System.currentTimeMillis();
         OrmLog.i(TAG, "select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");
@@ -538,6 +538,7 @@ public class SingleTestActivity extends BaseActivity {
         start = System.currentTimeMillis();
         count = liteOrm.queryCount(Boss.class);
         end = System.currentTimeMillis();
+
         OrmLog.i(TAG, "query all boss model num: " + count + " , use time: " + (end - start) + " MS");
     }
 

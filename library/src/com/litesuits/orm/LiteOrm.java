@@ -202,16 +202,14 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     }
 
     @Override
+    @Deprecated
     public boolean dropTable(Object entity) {
-        acquireReference();
-        try {
-            return SQLBuilder.buildDropTable(TableManager.getTable(entity)).execute(mHelper.getWritableDatabase());
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            releaseReference();
-        }
-        return false;
+        return dropTable(entity.getClass());
+    }
+
+    @Override
+    public boolean dropTable(Class<?> claxx) {
+        return dropTable(TableManager.getTable(claxx, false).name);
     }
 
     @Override
