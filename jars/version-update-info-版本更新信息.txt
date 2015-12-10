@@ -1,0 +1,29 @@
+Version Update Info
+版本更新信息
+
+V 1.5.2
+1. 优化单实体操作性能
+2. 新增update(WhereBuilder where..)方法，支持自定义更新。
+3. 新增deleteDatabase，删除数据库文件API
+4. 新增releaseMemory，释放页面缓存
+
+
+V 1.5.3 更新(谨慎更新) 
+1. 压缩到76K
+2.因为混淆压缩的问题，内部枚举类无法使用，导致1.5.3以及以后版本将枚举类从内部类调整出来成为独立的类，
+因此你的代码里如果用到里PrimaryKey.AssignType, Mapping.Relation,Conflict.Strategy，
+那么package包名需要重新引入一下，带来不便，敬请见谅。
+
+V 1.5.4 版本提交（10万条数性能测试）
+ 100 000条数据压力性能测试demo提交
+
+V 1.6.0 修复bug：
+1. 一对多关系时如果是抽象容器比如List，反射new对象不成功。 通过@MapCollection注解解决
+2. 级联操作时未建表异常  已解决
+3. 保存集合时数据过多报too many sql variables
+
+V 1.6.
+兼容java1.6的编译器语法
+
+V 1.6.2
+修复update 更新到1.6.2 修复update

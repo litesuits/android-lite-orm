@@ -112,7 +112,7 @@ public final class TableManager {
      * 仅仅检测[数据库表]是否建立
      */
     public boolean isSQLMapTableCreated(String tableName1, String tableName2) {
-        return mSqlTableMap.get(getMapTableName(tableName1, tableName2)) == null;
+        return mSqlTableMap.get(getMapTableName(tableName1, tableName2)) != null;
     }
 
     /**
