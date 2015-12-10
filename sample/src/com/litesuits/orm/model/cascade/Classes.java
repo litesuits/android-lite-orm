@@ -3,11 +3,7 @@ package com.litesuits.orm.model.cascade;
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.Table;
 import com.litesuits.orm.db.enums.Relation;
-import com.litesuits.orm.model.cascade.tomany.Student;
-import com.litesuits.orm.model.cascade.tomany.Teacher;
-
-import java.util.LinkedList;
-import java.util.Stack;
+import com.litesuits.orm.model.Model;
 
 /**
  * 班级
@@ -18,38 +14,19 @@ import java.util.Stack;
 @Table("class")
 public class Classes extends Model {
 
-    @Mapping(Relation.ManyToMany)
-    private Stack<Teacher> teacherStack;
-
-    @Mapping(Relation.OneToMany)
-    private LinkedList<Student> studentLinkedList;
+    /**
+     * 假设一个班级只有一个老师
+     */
+    @Mapping(Relation.OneToOne)
+    public Teacher teacher;
 
     public Classes(String title) {
         super(title);
     }
 
-    public Stack<Teacher> getTeacherStack() {
-        return teacherStack;
-    }
-
-    public void setTeacherStack(Stack<Teacher> teacherStack) {
-        this.teacherStack = teacherStack;
-    }
-
-    public LinkedList<Student> getStudentLinkedList() {
-        return studentLinkedList;
-    }
-
-    public void setStudentLinkedList(LinkedList<Student> studentLinkedList) {
-        this.studentLinkedList = studentLinkedList;
-    }
-
-    @Override
-    public String toString() {
-        return "Class{" +
-                super.toString() +
-                "teacherStack=" + teacherStack +
-                ", studentLinkedList=" + studentLinkedList +
-                "} ";
+    @Override public String toString() {
+        return "Classes{" +
+               "teacher=" + teacher +
+               "} " + super.toString();
     }
 }

@@ -1,4 +1,4 @@
-package com.litesuits.orm.model.cascade.tomany;
+package com.litesuits.orm.model;
 
 import com.litesuits.orm.db.annotation.PrimaryKey;
 import com.litesuits.orm.db.enums.AssignType;

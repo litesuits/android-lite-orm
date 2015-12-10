@@ -5,7 +5,7 @@
     <string name="title">LiteLab-ORM</string>
     <string name="title_single">ORM-Simple-Single</string>
     <string name="title_cascade">ORM-Cascade</string>
-    <string name="sub_title">Result in The Log</string>
+    <string name="sub_title">See More Info in The Log</string>
     <string name="test_single">single persistence TEST</string>
     <string name="test_cascade">cascade persistence TEST</string>
 

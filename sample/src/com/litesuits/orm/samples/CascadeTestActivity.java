@@ -8,10 +8,9 @@ import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.model.cascade.Book;
 import com.litesuits.orm.model.cascade.Classes;
-import com.litesuits.orm.model.cascade.College;
 import com.litesuits.orm.model.cascade.School;
-import com.litesuits.orm.model.cascade.tomany.Student;
-import com.litesuits.orm.model.cascade.tomany.Teacher;
+import com.litesuits.orm.model.cascade.Student;
+import com.litesuits.orm.model.cascade.Teacher;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +25,15 @@ public class CascadeTestActivity extends BaseActivity {
     static Student studentC;
 
 
-    public static final String DB_NAME = Environment.getExternalStorageDirectory().getAbsolutePath()
-            + "/lite/orm/cascade.db";
+    public static final String SD_CARD = Environment.getExternalStorageDirectory().getAbsolutePath();
 
-    LiteOrm liteOrm;
+    /**
+     * 名字里包含路径符号"/"则将数据库建立到该路径下，可以使用sd卡路径。
+     * 不包含则在系统默认路径下创建DB文件。
+     */
+    public static final String DB_NAME = SD_CARD + "/lite/orm/cascade.db";
+
+    public static LiteOrm liteOrm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,16 +41,19 @@ public class CascadeTestActivity extends BaseActivity {
         setSubTitile(getString(R.string.sub_title));
 
         // 模拟数据
+        // school -> classes -> teacher -> student -> book
         mockData();
         // 使用级联操作
 
-        liteOrm = LiteOrm.newCascadeInstance(this, DB_NAME);
-        liteOrm.setDebugged(true);
+        if (liteOrm != null) {
+            liteOrm = LiteOrm.newCascadeInstance(this, DB_NAME);
+            liteOrm.setDebugged(true);
+        }
 
         //DataBase db = LiteOrm.newCascadeInstance(this, "cascade.db");
         //db.save(user);
-        //
-        //// 与非级联交叉使用：
+
+        // 与非级联交叉使用：
         //db.cascade().save(user);//级联操作：保存[当前对象]，以及该对象所有的[关联对象]以及它们的[映射关系]，超贱！
         //db.single().save(user);//非级联操作：仅保存[当前对象]，高效率。
     }
@@ -108,11 +115,11 @@ public class CascadeTestActivity extends BaseActivity {
         liteOrm.insert(ts, ConflictAlgorithm.Fail);
 
         Book book1 = new Book("书：year和author联合唯一");
-        book1.setYear(1988);
+        book1.setIndex(1988);
         book1.setAuthor("hehe");
 
         Book book2 = new Book("其实是同一本书：year和author联合唯一");
-        book2.setYear(1988);
+        book2.setIndex(1988);
         book2.setAuthor("hehe");
 
         liteOrm.insert(book1);
@@ -129,7 +136,6 @@ public class CascadeTestActivity extends BaseActivity {
 
     private void testQueryAll() {
         queryAndPrintAll(School.class);
-        queryAndPrintAll(College.class);
         queryAndPrintAll(Classes.class);
         queryAndPrintAll(Teacher.class);
         queryAndPrintAll(Student.class);
@@ -166,7 +172,6 @@ public class CascadeTestActivity extends BaseActivity {
 
     private void testDeleteAll() {
         liteOrm.deleteAll(School.class);
-        liteOrm.deleteAll(College.class);
         liteOrm.deleteAll(Classes.class);
         liteOrm.deleteAll(Teacher.class);
         liteOrm.deleteAll(Student.class);

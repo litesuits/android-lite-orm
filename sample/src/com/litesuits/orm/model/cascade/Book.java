@@ -1,6 +1,9 @@
 package com.litesuits.orm.model.cascade;
 
+import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.UniqueCombine;
+import com.litesuits.orm.db.enums.Relation;
+import com.litesuits.orm.model.Model;
 
 /**
  * @author MaTianyu
@@ -8,22 +11,34 @@ import com.litesuits.orm.db.annotation.UniqueCombine;
  */
 public class Book extends Model {
 
+    /**
+     * 和 author 联合唯一
+     */
     @UniqueCombine(1)
-    private int year;
+    private int index;
 
+    /**
+     * 和 index 联合唯一
+     */
     @UniqueCombine(1)
     private String author;
+
+    /**
+     * 书和学生：多对一关系
+     */
+    @Mapping(Relation.ManyToOne)
+    public Student student;
 
     public Book(String title) {
         super(title);
     }
 
-    public int getYear() {
-        return year;
+    public int getIndex() {
+        return index;
     }
 
-    public void setYear(int year) {
-        this.year = year;
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     public String getAuthor() {
@@ -37,9 +52,9 @@ public class Book extends Model {
     @Override
     public String toString() {
         return "Book{" +
-                super.toString() +
-                "year=" + year +
-                ", author='" + author + '\'' +
-                "} ";
+               super.toString() +
+               "index=" + index +
+               ", author='" + author + '\'' +
+               "} ";
     }
 }

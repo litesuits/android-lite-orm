@@ -1,4 +1,4 @@
-package com.litesuits.orm.model.cascade;
+package com.litesuits.orm.model;
 
 /**
  * @author MaTianyu

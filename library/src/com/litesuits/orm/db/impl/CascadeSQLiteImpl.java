@@ -295,7 +295,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
 
     @Override
     public <T> ArrayList<T> query(Class<T> claxx) {
-        return checkTableAndQuery(claxx, new QueryBuilder(claxx));
+        return checkTableAndQuery(claxx, new QueryBuilder<T>(claxx));
     }
 
     @Override
