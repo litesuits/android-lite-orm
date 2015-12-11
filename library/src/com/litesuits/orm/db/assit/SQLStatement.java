@@ -18,7 +18,6 @@ import com.litesuits.orm.log.OrmLog;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -114,7 +113,7 @@ public class SQLStatement implements Serializable {
             realease();
         }
         if (OrmLog.isPrint) {
-            OrmLog.i(TAG, "SQL Execute Insert RowID --> " + rowID);
+            OrmLog.i(TAG, "SQL Execute Insert RowID --> " + rowID + "    sql: " + sql);
         }
         if (entity != null) {
             FieldUtil.setKeyValueIfneed(entity, TableManager.getTable(entity).key, keyObj, rowID);
@@ -139,11 +138,11 @@ public class SQLStatement implements Serializable {
         if (OrmLog.isPrint) {
             OrmLog.i(TAG, "----> BeginTransaction[insert col]");
         }
+        EntityTable table = null;
         try {
             mStatement = db.compileStatement(sql);
             Iterator<?> it = list.iterator();
             boolean mapTableCheck = true;
-            EntityTable table = null;
             while (it.hasNext()) {
                 mStatement.clearBindings();
                 Object obj = it.next();
@@ -248,36 +247,17 @@ public class SQLStatement implements Serializable {
             Iterator<?> it = list.iterator();
             boolean mapTableCheck = true;
             EntityTable table = null;
-            boolean hasCol = cvs != null && cvs.checkColumns();
-            boolean hasVal = hasCol && cvs.hasValues();
             while (it.hasNext()) {
                 mStatement.clearBindings();
                 Object obj = it.next();
                 if (table == null) {
                     table = TableManager.getTable(obj);
                 }
-                int j = 1;
-                // 此种情况下，bindArgs非空表明开发者设置了默认值
-                if (hasCol) {
-                    for (int i = 0; i < cvs.columns.length; i++) {
-                        Object v = null;
-                        if (hasVal) {
-                            v = cvs.values[i];
-                        }
-                        if (v == null) {
-                            Field field = table.pmap.get(cvs.columns[i]).field;
-                            v = FieldUtil.get(field, obj);
-                        }
-                        bind(j++, v);
+                bindArgs = SQLBuilder.buildUpdateSqlArgsOnly(obj, cvs);
+                if (!Checker.isEmpty(bindArgs)) {
+                    for (int i = 0; i < bindArgs.length; i++) {
+                        bind(i + 1, bindArgs[i]);
                     }
-                } else if (!Checker.isEmpty(table.pmap)) {
-                    // 第一个是主键。其他属性从2开始。
-                    for (Property p : table.pmap.values()) {
-                        bind(j++, FieldUtil.get(p.field, obj));
-                    }
-                }
-                if (table.key != null) {
-                    bind(j, FieldUtil.getAssignedKeyObject(table.key, obj));
                 }
                 mStatement.execute();
                 if (tableManager != null) {

@@ -22,7 +22,7 @@
     <color name="main_bkg">#E3DBCF</color>
     <color name="button">#FFFFFF</color>
     <color name="button_disable">#f1f1f1</color>
-    <color name="button_press">#efefef</color>
+    <color name="button_press">#cecece</color>
     <color name="button_text">#000000</color>
   <!--   <color name="button_text">#698CD6</color> -->
 

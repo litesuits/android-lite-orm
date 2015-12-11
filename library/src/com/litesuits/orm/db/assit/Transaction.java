@@ -25,8 +25,6 @@ public class Transaction {
             if (OrmLog.isPrint)
                 OrmLog.i(TAG, "----> Transaction Successful");
         } catch (Exception e) {
-            if (OrmLog.isPrint)
-                OrmLog.e(TAG, "----> Transaction Failling");
             e.printStackTrace();
         } finally {
             db.endTransaction();

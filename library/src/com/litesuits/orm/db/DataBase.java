@@ -23,6 +23,13 @@ import java.util.List;
 public interface DataBase {
 
     /**
+     * {@link #openOrCreateDatabase(String, android.database.sqlite.SQLiteDatabase.CursorFactory)}
+     *
+     * @return true if create successfully.
+     */
+    SQLiteDatabase openOrCreateDatabase();
+
+    /**
      * save: insert or update a single entity
      *
      * @return the number of rows affected by this SQL statement execution.
@@ -224,11 +231,10 @@ public interface DataBase {
     /**
      * drop a table
      *
-     * @deprecated
      * @return true if droped successfully.
+     * @deprecated
      */
-    @Deprecated
-    boolean dropTable(Object entity);
+    @Deprecated boolean dropTable(Object entity);
 
     /**
      * drop a table
@@ -281,14 +287,6 @@ public interface DataBase {
      */
     DataBaseConfig getDataBaseConfig();
 
-
-    /**
-     * {@link #openOrCreateDatabase(String, android.database.sqlite.SQLiteDatabase.CursorFactory)}
-     *
-     * @return true if create successfully.
-     */
-    SQLiteDatabase createDatabase();
-
     /**
      * if database in sdcard , you will need this  in manifest:
      * <p/>
@@ -297,6 +295,8 @@ public interface DataBase {
      * Equivalent to {@link SQLiteDatabase#openDatabase(String, android.database.sqlite.SQLiteDatabase.CursorFactory, int)}.
      */
     SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory);
+
+    boolean deleteDatabase();
 
     /**
      * if database in sdcard , you will need this  in manifest:

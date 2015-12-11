@@ -302,6 +302,26 @@ public class SQLBuilder {
     }
 
     /**
+     * 获取 insert 语句被存储对象的参数
+     */
+    public static Object[] buildInsertSqlArgsOnly(Object entity) throws IllegalAccessException {
+        EntityTable table = TableManager.getTable(entity);
+        int size = 1, i = 0;
+        if (!Checker.isEmpty(table.pmap)) {
+            size += table.pmap.size();
+        }
+        Object[] args = new Object[size];
+        args[i++] = FieldUtil.getAssignedKeyObject(table.key, entity);
+        if (!Checker.isEmpty(table.pmap)) {
+            for (Property p : table.pmap.values()) {
+                // 后构造列名和占位符
+                args[i++] = FieldUtil.get(p.field, entity);
+            }
+        }
+        return args;
+    }
+
+    /**
      * 构建 update 语句
      */
     public static SQLStatement buildUpdateSql(Object entity, ColumnsValue cvs, ConflictAlgorithm algorithm) {
@@ -344,17 +364,15 @@ public class SQLBuilder {
                     size += cvs.columns.length;
                     args = new Object[size];
                 }
-                boolean hasVal = cvs.hasValues();
                 for (; i < cvs.columns.length; i++) {
                     if (i > 0) {
                         sql.append(COMMA);
                     }
                     sql.append(cvs.columns[i]).append(EQUALS_HOLDER);
                     if (needValue) {
-                        if (hasVal) {
+                        if (cvs.hasValues()) {
                             args[i] = cvs.values[i];
-                        }
-                        if (args[i] == null) {
+                        } else {
                             args[i] = FieldUtil.get(table.pmap.get(cvs.columns[i]).field, entity);
                         }
                     }
@@ -387,6 +405,39 @@ public class SQLBuilder {
             e.printStackTrace();
         }
         return stmt;
+    }
+
+    /**
+     * 获取 insert 语句被存储对象的参数
+     */
+    public static Object[] buildUpdateSqlArgsOnly(Object entity, ColumnsValue cvs) throws IllegalAccessException {
+        EntityTable table = TableManager.getTable(entity);
+        // 分两部分构建SQL语句，用一个for循环完成SQL构建和值的反射获取，以提高效率。
+        int size = 1, i = 0;
+        Object[] args = null;
+        if (cvs != null && cvs.checkColumns()) {
+            size += cvs.columns.length;
+            args = new Object[size];
+            for (; i < cvs.columns.length; i++) {
+                args[i] = cvs.values[i];
+                if (cvs.hasValues()) {
+                    args[i] = cvs.values[i];
+                } else {
+                    args[i] = FieldUtil.get(table.pmap.get(cvs.columns[i]).field, entity);
+                }
+            }
+        } else if (!Checker.isEmpty(table.pmap)) {
+            size += table.pmap.size();
+            args = new Object[size];
+            for (Entry<String, Property> en : table.pmap.entrySet()) {
+                args[i] = FieldUtil.get(en.getValue().field, entity);
+                i++;
+            }
+        } else {
+            args = new Object[size];
+        }
+        args[size - 1] = FieldUtil.getAssignedKeyObject(table.key, entity);
+        return args;
     }
 
     /**

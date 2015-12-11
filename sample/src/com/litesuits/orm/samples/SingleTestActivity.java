@@ -1,9 +1,7 @@
 package com.litesuits.orm.samples;
 
 import android.os.Bundle;
-import android.view.Menu;
 import com.litesuits.orm.LiteOrm;
-import com.litesuits.orm.R;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.model.ColumnsValue;
@@ -20,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class SingleTestActivity extends BaseActivity {
     //Timer    timer;
-    LiteOrm liteOrm;
+    static LiteOrm liteOrm;
     static Man uComplex, uAlice, uMax, uMin;
     /**
      * object relation mapping test
@@ -48,18 +46,10 @@ public class SingleTestActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setSubTitile(getString(R.string.sub_title));
         mockData();
-        liteOrm = LiteOrm.newSingleInstance(this, "liteorm.db");
+        if (liteOrm == null) {
+            liteOrm = LiteOrm.newSingleInstance(this, "liteorm.db");
+        }
         liteOrm.setDebugged(true);
-    }
-
-    public void onDestroy() {
-        super.onDestroy();
-        //if (timer != null) timer.cancel();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -69,7 +59,7 @@ public class SingleTestActivity extends BaseActivity {
 
     @Override
     public String[] getButtonTexts() {
-        return getResources().getStringArray(R.array.orm_test_list);
+        return getResources().getStringArray(R.array.orm_test_case);
     }
 
     @Override
@@ -94,12 +84,13 @@ public class SingleTestActivity extends BaseActivity {
      * <item>Query By WhereBuilder</item>
      * <item>Query By ID</item>
      * <item>Query Any U Want</item>
+     * <item>Mapping Test</item>
      * <item>Delete</item>
      * <item>Delete By Index</item>
      * <item>Delete By WhereBuilder</item>
      * <item>Delete All</item>
-     * <item>Use LiteOrm : Large-scale Test</item>
-     * <item>Use SQLiteDatabase: Large-scale Test </item>
+     * <item>LiteOrm Faster: Large-scale Test(100,000)</item>
+     * <item>SQLiteDatabase: Large-scale Test(100,000)</item>
      */
     private void makeOrmTest(int id) {
         switch (id) {
@@ -128,21 +119,24 @@ public class SingleTestActivity extends BaseActivity {
                 testQueryAnyUwant();
                 break;
             case 8:
-                testDelete();
+                testMapping();
                 break;
             case 9:
-                testDeleteByIndex();
+                testDelete();
                 break;
             case 10:
-                testDeleteByWhereBuilder();
+                testDeleteByIndex();
                 break;
             case 11:
-                testDeleteAll();
+                testDeleteByWhereBuilder();
                 break;
             case 12:
-                testLargeScaleUseLite();
+                testDeleteAll();
                 break;
             case 13:
+                testLargeScaleUseLite();
+                break;
+            case 14:
                 testLargeScaleUseSystem();
                 break;
             default:
@@ -277,27 +271,19 @@ public class SingleTestActivity extends BaseActivity {
                 .whereIn(Address.COL_CITY, new String[]{"杭州", "北京"});
         printAddress(liteOrm.query(qb));
 
-        //IN语句 获取所有 非香港路 并且 ID>10
+        //IN语句 获取同时满足：非香港路 & ID>5 & address包含山
         qb = new QueryBuilder<Address>(Address.class)
                 .whereNoEquals(Address.COL_ADDRESS, "香港路")
                 .whereAppendAnd()
-                .whereGreaterThan(Address.COL_ID, 5);
+                .whereGreaterThan(Address.COL_ID, 5)
+                .whereAppendAnd()
+                .whereAppend(Address.COL_ADDRESS + " LIKE ?", new String[]{"%山%"});
         printAddress(liteOrm.query(qb));
     }
 
     private void testQueryByID() {
         Man man = liteOrm.queryById(uComplex.getId(), Man.class);
         OrmLog.i(this, "query id: " + uComplex.getId() + ",MAN: " + man);
-    }
-
-    private void printAllAddress() {
-        printAddress(liteOrm.query(Address.class));
-    }
-
-    private void printAddress(List<Address> addrList) {
-        for (Address uu : addrList) {
-            OrmLog.i(this, "Address: " + uu);
-        }
     }
 
     private void testQueryAnyUwant() {
@@ -334,8 +320,9 @@ public class SingleTestActivity extends BaseActivity {
         liteOrm.mapping(mans, ws);
         liteOrm.mapping(mans, cs);
         liteOrm.mapping(mans, ts);
-        for (Address uu : as) {
-            OrmLog.i(this, "query Address: " + uu);
+        //可以看到与Man关联的Teacher、Company、Address都智能映射给Man对应的各个的实例了。
+        for (Man uu : mans) {
+            OrmLog.i(this, "query user: " + uu);
         }
         for (Wife uu : ws) {
             OrmLog.i(this, "query Wife: " + uu);
@@ -346,10 +333,7 @@ public class SingleTestActivity extends BaseActivity {
         for (Boss uu : ts) {
             OrmLog.i(this, "query Teacher: " + uu);
         }
-        //可以看到与Man关联的Teacher、Company、Address都智能映射给Man对应的各个的实例了。
-        for (Man uu : mans) {
-            OrmLog.i(this, "query user: " + uu);
-        }
+
     }
 
     private void testDelete() {
@@ -371,27 +355,31 @@ public class SingleTestActivity extends BaseActivity {
 
     private void testDeleteByWhereBuilder() {
         //AND关系 删掉 南京 的 香港路
-        liteOrm.delete(WhereBuilder.create(Address.class)
-                                   .equals(Address.COL_ADDRESS, "香港路")
-                                   .andEquals(Address.COL_CITY, "南京"));
+        liteOrm.delete(WhereBuilder
+                .create(Address.class)
+                .equals(Address.COL_ADDRESS, "香港路")
+                .andEquals(Address.COL_CITY, "南京"));
         printAllAddress();
 
         //OR关系 删掉所有地址为 香港路 ，同时删掉 青岛的所有地址
-        liteOrm.delete(WhereBuilder.create(Address.class)
-                                   .equals(Address.COL_ADDRESS, "香港路")
-                                   .orEquals(Address.COL_CITY, "青岛"));
+        liteOrm.delete(WhereBuilder
+                .create(Address.class)
+                .equals(Address.COL_ADDRESS, "香港路")
+                .orEquals(Address.COL_CITY, "青岛"));
         printAllAddress();
 
         //IN语句 删掉所有城市为 杭州 或 北京的地址
-        liteOrm.delete(WhereBuilder.create(Address.class)
-                                   .in(Address.COL_CITY, new String[]{"杭州", "北京"}));
+        liteOrm.delete(WhereBuilder
+                .create(Address.class)
+                .in(Address.COL_CITY, new String[]{"杭州", "北京"}));
         printAllAddress();
 
         //IN语句 删掉所有 非香港路 并且 ID>10
-        liteOrm.delete(WhereBuilder.create(Address.class)
-                                   .equals(Address.COL_ADDRESS, "夫子庙")
-                                   .and()
-                                   .greaterThan(Address.COL_ID, 5));
+        liteOrm.delete(WhereBuilder
+                .create(Address.class)
+                .equals(Address.COL_ADDRESS, "夫子庙")
+                .and()
+                .greaterThan(Address.COL_ID, 5));
         printAllAddress();
     }
 
@@ -401,6 +389,38 @@ public class SingleTestActivity extends BaseActivity {
         liteOrm.deleteAll(Wife.class);
         liteOrm.deleteAll(Man.class);
         liteOrm.deleteAll(Boss.class);
+
+        // 顺带测试：连库文件一起删掉
+        liteOrm.deleteDatabase();
+        // 顺带测试：然后重建一个新库
+        liteOrm.openOrCreateDatabase();
+        // 满血复活
+    }
+
+
+    /**
+     * 100 000 条数据
+     */
+    final int MAX = 100000;
+
+    private void testLargeScaleUseLite() {
+        // 原生android代码插入10w条数的效率测试
+        SqliteUtils.testLargeScaleUseLiteOrm(liteOrm, MAX);
+    }
+
+    private void testLargeScaleUseSystem() {
+        // 原生android代码插入10w条数的效率测试
+        SqliteUtils.testLargeScaleUseDefault(SingleTestActivity.this, MAX);
+    }
+
+    private void printAllAddress() {
+        printAddress(liteOrm.query(Address.class));
+    }
+
+    private void printAddress(List<Address> addrList) {
+        for (Address uu : addrList) {
+            OrmLog.i(this, "Address: " + uu);
+        }
     }
 
     private void mockData() {
@@ -409,9 +429,9 @@ public class SingleTestActivity extends BaseActivity {
         }
         uAlice = new Man(0, "alice", 18, false, (short) 12345, (byte) 123, 0.56f, 123.456d, 'c');
         uMax = new Man(0, "max", 99, false, Short.MAX_VALUE, Byte.MAX_VALUE, Float.MAX_VALUE, Double.MAX_VALUE,
-                       Character.MAX_VALUE);
+                Character.MAX_VALUE);
         uMin = new Man(0, "min", 1, true, Short.MIN_VALUE, Byte.MIN_VALUE, Float.MIN_VALUE, Double.MIN_VALUE,
-                       Character.MIN_VALUE);
+                Character.MIN_VALUE);
         uComplex = new Man(0, null, 0, false);
         uComplex.name = "complex";
         uComplex.setAge(18);
@@ -491,59 +511,4 @@ public class SingleTestActivity extends BaseActivity {
     }
 
 
-    /**
-     * 100 000 条数据
-     */
-    final int MAX = 999;
-
-    private void testLargeScaleUseLite() {
-
-        // 1. 初始化数据
-        List<Boss> list = new ArrayList<Boss>();
-        for (int i = 0; i < MAX; i++) {
-            Boss boss = new Boss();
-            boss.setAddress("ZheJiang Xihu " + i);
-            boss.setPhone("1860000" + i);
-            boss.setName("boss" + i);
-            list.add(boss);
-        }
-
-        // 2. 全部插入测试
-        long start = System.currentTimeMillis();
-        int num = liteOrm.insert(list);
-        long end = System.currentTimeMillis();
-        OrmLog.i(TAG, "insert boss model num: " + num + " , use time: " + (end - start) + " MS");
-
-        // 3. 查询数量测试
-        start = System.currentTimeMillis();
-        long count = liteOrm.queryCount(Boss.class);
-        end = System.currentTimeMillis();
-        OrmLog.i(TAG, "query all boss model num: " + count + " , use time: " + (end - start) + " MS");
-
-        // 4. 查询最后10条测试
-        start = System.currentTimeMillis();
-        ArrayList subList = liteOrm.query(
-                new QueryBuilder<Boss>(Boss.class).appendOrderDescBy("_id").limit(0, 9));
-        end = System.currentTimeMillis();
-        OrmLog.i(TAG, "select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");
-        OrmLog.i(TAG, subList);
-
-        // 5. 删除全部测试
-        start = System.currentTimeMillis();
-        num = liteOrm.delete(list);
-        end = System.currentTimeMillis();
-        OrmLog.i(TAG, "delete boss model num: " + num + " , use time: " + (end - start) + " MS");
-
-        // 6. 再次查询数量测试
-        start = System.currentTimeMillis();
-        count = liteOrm.queryCount(Boss.class);
-        end = System.currentTimeMillis();
-
-        OrmLog.i(TAG, "query all boss model num: " + count + " , use time: " + (end - start) + " MS");
-    }
-
-    private void testLargeScaleUseSystem() {
-        // 原生android代码插入10w条数的效率测试
-        SqliteUtils.testLargeScaleUseDefault(SingleTestActivity.this, MAX);
-    }
 }

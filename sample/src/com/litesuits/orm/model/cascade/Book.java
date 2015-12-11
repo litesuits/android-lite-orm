@@ -14,10 +14,12 @@ import com.litesuits.orm.model.Model;
 @Table("book")
 public class Book extends Model {
     public static final String COL_AUTHOR = "author";
+    public static final String COL_INDEX = "_index";
     /**
      * 和 author 联合唯一
      */
     @UniqueCombine(1)
+    @Column(COL_INDEX)//避开SQL关键词
     private int index;
 
     /**
@@ -69,7 +71,8 @@ public class Book extends Model {
                + super.toString() +
                "index = " + index +
                ", author = " + author +
-               ", student = " + student +
-               "} ";
+               ", student = "
+               + (student == null ? "" : student.getName())
+               + "} ";
     }
 }

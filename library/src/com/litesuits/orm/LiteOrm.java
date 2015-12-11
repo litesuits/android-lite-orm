@@ -49,6 +49,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     }
 
     protected LiteOrm(DataBaseConfig config) {
+        config.context = config.context.getApplicationContext();
         if (config.dbName == null) {
             config.dbName = DataBaseConfig.DEFAULT_DB_NAME;
         }
@@ -56,13 +57,30 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
             config.dbVersion = DataBaseConfig.DEFAULT_DB_VERSION;
         }
         mConfig = config;
-        mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(),
-                mConfig.dbName, null, mConfig.dbVersion, config.onUpdateListener);
-        mConfig.context = null;
-        if (mConfig.dbName.contains(File.separator)) {
-            createDatabase();
+        openOrCreateDatabase();
+    }
+
+    @Override
+    public SQLiteDatabase openOrCreateDatabase() {
+        initDatabasePath(mConfig.dbName);
+        if (mHelper != null) {
+            justRelease();
         }
+        mHelper = new SQLiteHelper(mConfig.context.getApplicationContext(),
+                mConfig.dbName, null, mConfig.dbVersion, mConfig.onUpdateListener);
         mTableManager = new TableManager(mConfig.dbName, mHelper.getReadableDatabase());
+        return mHelper.getWritableDatabase();
+    }
+
+    private void initDatabasePath(String path) {
+        OrmLog.i(TAG, "create  database path: " + path);
+        path = mConfig.context.getDatabasePath(mConfig.dbName).getPath();
+        OrmLog.i(TAG, "context database path: " + path);
+        File dbp = new File(path).getParentFile();
+        if (dbp != null && !dbp.exists()) {
+            boolean mks = dbp.mkdirs();
+            OrmLog.i(TAG, "create database, parent file mkdirs: " + mks + "  path:" + dbp.getAbsolutePath());
+        }
     }
 
     /**
@@ -139,9 +157,12 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
             final EntityTable table2 = TableManager.getTable(class2);
             if (mTableManager.isSQLMapTableCreated(table1.name, table2.name)) {
                 CollSpliter.split(key1List, SQLStatement.IN_TOP_LIMIT, new CollSpliter.Spliter<String>() {
-                    @Override public int oneSplit(ArrayList<String> list) throws Exception {
+
+                    @Override
+                    public int oneSplit(ArrayList<String> list) throws Exception {
                         SQLStatement stmt = SQLBuilder.buildQueryRelationSql(class1, class2, key1List);
                         Querier.doQuery(mHelper.getReadableDatabase(), stmt, new Querier.CursorParser() {
+
                             @Override
                             public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
                                 RelationKey relation = new RelationKey();
@@ -149,8 +170,10 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                                 relation.key2 = c.getString(c.getColumnIndex(table2.name));
                                 rList.add(relation);
                             }
+
                         });
                         return 0;
+
                     }
                 });
 
@@ -291,25 +314,17 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     }
 
     @Override
-    public SQLiteDatabase createDatabase() {
-        return openOrCreateDatabase(mConfig.dbName, null);
+    public SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory) {
+        path = mConfig.context.getDatabasePath(mConfig.dbName).getPath();
+        return SQLiteDatabase.openOrCreateDatabase(path, factory);
     }
 
     @Override
-    public SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory) {
-        acquireReference();
-        try {
-            File dbf = new File(path);
-            File dbp = dbf.getParentFile();
-            if (!dbp.exists()) {
-                boolean mks = dbp.mkdirs();
-                OrmLog.i(TAG, "create database, parent file mkdirs: " + mks + "  path:" + dbp.getAbsolutePath());
-            }
-            return SQLiteDatabase.openOrCreateDatabase(path, factory);
-        } finally {
-            releaseReference();
-        }
-        //return null;
+    public boolean deleteDatabase() {
+        String path = mHelper.getWritableDatabase().getPath();
+        justRelease();
+        OrmLog.i(TAG, "data has cleared. delete Database path: " + path);
+        return deleteDatabase(new File(path));
     }
 
     @Override
@@ -356,9 +371,19 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
      */
     @Override
     protected void onAllReferencesReleased() {
-        mConfig = null;
-        mHelper.close();
-        mTableManager.clear();
+        justRelease();
+    }
+
+    protected void justRelease() {
+        if (mHelper != null) {
+            mHelper.getWritableDatabase().close();
+            mHelper.close();
+            mHelper = null;
+        }
+        if (mTableManager != null) {
+            mTableManager.release();
+            mTableManager = null;
+        }
     }
 
     /**
@@ -387,8 +412,11 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                     // N对多关系
                     if (ClassUtil.isCollection(fieldClass)) {
                         itemClass = FieldUtil.getGenericType(mp.field);
+                    } else if (fieldClass.isArray()) {
+                        itemClass = FieldUtil.getComponentType(mp.field);
                     } else {
-                        throw new RuntimeException("OneToMany and ManyToMany Relation, You must use collection object");
+                        throw new RuntimeException(
+                                "OneToMany and ManyToMany Relation, Must use collection or array object");
                     }
                 } else {
                     itemClass = fieldClass;
@@ -396,7 +424,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                 if (itemClass == claxx2) {
                     ArrayList<String> key1List = new ArrayList<String>();
                     HashMap<String, Object> map1 = new HashMap<String, Object>();
-                    // 构建第1个对象的key集合以及value映射
+                    // 构建第1个集合对象的key集合以及value映射
                     for (Object o1 : col1) {
                         if (o1 != null) {
                             Object key1 = FieldUtil.get(table1.key.field, o1);

@@ -55,15 +55,25 @@ public final class TableManager {
 
     public TableManager(String dbName, SQLiteDatabase db) {
         this.dbName = dbName;
+        initSqlTable(db);
+    }
+
+    public void initSqlTable(SQLiteDatabase db) {
         // 关键点：初始化全部数据库表
         initAllTablesFromSQLite(db);
+    }
+
+    public void clearSqlTable() {
+        synchronized (mSqlTableMap) {
+            mSqlTableMap.clear();
+        }
     }
 
     /**
      * 清空数据
      */
-    public synchronized void clear() {
-        mSqlTableMap.clear();
+    public void release() {
+        clearSqlTable();
         mEntityTableMap.clear();
     }
 

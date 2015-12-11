@@ -10,6 +10,7 @@ import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.model.Person;
 import com.litesuits.orm.model.cascade.*;
+import com.litesuits.orm.test.SqliteUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class CascadeTestActivity extends BaseActivity {
         // 模拟数据 (1,N)一对多；（N,N）多对多；(N,1)多对一；(1,1)一对一
         mockData();
 
-        if (liteOrm != null) {
+        if (liteOrm == null) {
             // 使用级联操作
             liteOrm = LiteOrm.newCascadeInstance(this, DB_NAME);
             liteOrm.setDebugged(true);
@@ -53,6 +54,23 @@ public class CascadeTestActivity extends BaseActivity {
         //db.single().save(user);//非级联操作：仅保存[当前对象]，高效率。
     }
 
+    /**
+     * <item>Save(Insert Or Update)</item>
+     * <item>Insert</item>
+     * <item>Update</item>
+     * <item>Update Column</item>
+     * <item>Query All</item>
+     * <item>Query By WhereBuilder</item>
+     * <item>Query By ID</item>
+     * <item>Query Any U Want</item>
+     * <item>Mapping Test</item>
+     * <item>Delete</item>
+     * <item>Delete By Index</item>
+     * <item>Delete By WhereBuilder</item>
+     * <item>Delete All</item>
+     * <item>LiteOrm Faster: Large-scale Test(100,000)</item>
+     * <item>SQLiteDatabase: Large-scale Test(100,000)</item>
+     */
     private void makeOrmTest(int id) {
         switch (id) {
             case 0:
@@ -94,17 +112,23 @@ public class CascadeTestActivity extends BaseActivity {
             case 12:
                 testDeleteAll();
                 break;
+            case 13:
+                testLargeScaleUseLite();
+                break;
+            case 14:
+                testLargeScaleUseSystem();
+                break;
             default:
                 break;
         }
     }
 
     private void testSave() {
-        liteOrm.save(student0);
+        liteOrm.save(school);
     }
 
     private void testInsert() {
-        liteOrm.insert(school);
+        liteOrm.insert(bookList);
 
         // 联合唯一测试
         Book book1 = new Book("书：year和author联合唯一");
@@ -116,6 +140,7 @@ public class CascadeTestActivity extends BaseActivity {
         book2.setAuthor("hehe");
 
         liteOrm.insert(book1);
+        // 注意会报警告
         liteOrm.insert(book2, ConflictAlgorithm.Abort);
     }
 
@@ -131,13 +156,12 @@ public class CascadeTestActivity extends BaseActivity {
             }
             book.setIndex(book.getIndex() + 100);
         }
-        liteOrm.save(school);
-        // liteOrm.save(bookList);
+        liteOrm.save(bookList);
     }
 
     private void testUpdateColumn() {
         // 把所有书的作者改为liter
-        HashMap<String, String> bookIdMap = new HashMap<String, String>();
+        HashMap<String, Object> bookIdMap = new HashMap<String, Object>();
         bookIdMap.put(Book.COL_AUTHOR, "liter");
         liteOrm.update(bookList, new ColumnsValue(bookIdMap), ConflictAlgorithm.Fail);
 
@@ -147,18 +171,18 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     private void testQueryAll() {
+        queryAndPrintAll(Book.class);
+        queryAndPrintAll(Student.class);
+        queryAndPrintAll(Teacher.class);
+        queryAndPrintAll(Classes.class);
         queryAndPrintAll(School.class);
-        //queryAndPrintAll(Classes.class);
-        //queryAndPrintAll(Teacher.class);
-        //queryAndPrintAll(Student.class);
-        //queryAndPrintAll(Book.class);
     }
 
     private void testQueryByWhere() {
         List<Student> list = liteOrm.query(new QueryBuilder<Student>(Student.class)
-                .where(Person.COL_NAME + " LIKE ?", new String[]{"%a%"})
+                .where(Person.COL_NAME + " LIKE ?", new String[]{"%0"})
                 .whereAppendAnd()
-                .whereAppend(Person.COL_NAME + " LIKE %?%", new String[]{"s"}));
+                .whereAppend(Person.COL_NAME + " LIKE ?", new String[]{"%s%"}));
         OrmLog.i(TAG, list);
     }
 
@@ -169,17 +193,18 @@ public class CascadeTestActivity extends BaseActivity {
 
     private void testQueryAnyUwant() {
         List<Book> books = liteOrm.query(new QueryBuilder<Book>(Book.class)
-                .columns(new String[]{"id", "author", "index"})
+                .columns(new String[]{"id", "author", Book.COL_INDEX})
                 .distinct(true)
                 .whereGreaterThan("id", 0)
                 .whereAppendAnd()
                 .whereLessThan("id", 10000)
                 .limit(6, 9)
-                .appendOrderAscBy("index"));
+                .appendOrderAscBy(Book.COL_INDEX));
         OrmLog.i(TAG, books);
     }
 
     private void testMapping() {
+        // 级联实例本来就保存了关系映射
         queryAndPrintAll(School.class);
     }
 
@@ -198,6 +223,7 @@ public class CascadeTestActivity extends BaseActivity {
         // 删除 student-1
         liteOrm.delete(new WhereBuilder(Student.class)
                 .where(Person.COL_NAME + " LIKE ?", new String[]{"%1%"})
+                .and()
                 .greaterThan("id", 0)
                 .and()
                 .lessThan("id", 10000));
@@ -206,8 +232,30 @@ public class CascadeTestActivity extends BaseActivity {
     private void testDeleteAll() {
         // 连同其关联的classes，classes关联的其他对象一带删除
         liteOrm.deleteAll(School.class);
+        liteOrm.deleteAll(Book.class);
+
+
+        // 顺带测试：连库文件一起删掉
+        liteOrm.deleteDatabase();
+        // 顺带测试：然后重建一个新库
+        liteOrm.openOrCreateDatabase();
+        // 满血复活
     }
 
+    /**
+     * 100 000 条数据
+     */
+    final int MAX = 100000;
+
+    private void testLargeScaleUseLite() {
+        // 原生android代码插入10w条数的效率测试
+        SqliteUtils.testLargeScaleUseLiteOrm(liteOrm, MAX);
+    }
+
+    private void testLargeScaleUseSystem() {
+        // 原生android代码插入10w条数的效率测试
+        SqliteUtils.testLargeScaleUseDefault(CascadeTestActivity.this, MAX);
+    }
 
     private void queryAndPrintAll(Class claxx) {
         List list = liteOrm.query(claxx);
@@ -253,6 +301,7 @@ public class CascadeTestActivity extends BaseActivity {
         teacherA.setStudentLinkedQueue(new ConcurrentLinkedQueue<Student>());
         teacherA.getStudentLinkedQueue().add(student0);
         teacherA.getStudentLinkedQueue().add(student1);
+        teacherB.setStudentLinkedQueue(new ConcurrentLinkedQueue<Student>());
         teacherB.getStudentLinkedQueue().add(student0);
         teacherB.getStudentLinkedQueue().add(student2);
         student0.setTeachersArray(new Teacher[]{teacherA, teacherB});
@@ -282,7 +331,7 @@ public class CascadeTestActivity extends BaseActivity {
 
     @Override
     public String[] getButtonTexts() {
-        return getResources().getStringArray(R.array.orm_test_list);
+        return getResources().getStringArray(R.array.orm_test_case);
     }
 
     @Override

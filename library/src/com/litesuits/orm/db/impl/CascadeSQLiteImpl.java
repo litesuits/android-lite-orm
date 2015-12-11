@@ -530,7 +530,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                     while (iterator.hasNext()) {
                         entity = iterator.next();
                         //1.1 绑定对应值
-                        stmt.bindArgs = getInsertOrUpdateArgs(entity);
+                        stmt.bindArgs = SQLBuilder.buildInsertSqlArgsOnly(entity);
                         //1.2 保存当前实体
                         insertRecursive(stmt, entity, db, handleMap);
                     }
@@ -570,7 +570,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                         //1.1 绑定对应值
                         entity = iterator.next();
                         //1.2 保存当前实体
-                        stmt.bindArgs = getInsertOrUpdateArgs(entity);
+                        stmt.bindArgs = SQLBuilder.buildInsertSqlArgsOnly(entity);
                         insertRecursive(stmt, entity, db, handleMap);
                     }
                     return collection.size();
@@ -601,7 +601,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                     HashMap<String, Integer> handleMap = new HashMap<String, Integer>();
                     Iterator<T> iterator = collection.iterator();
                     Object entity = iterator.next();
-                    SQLStatement stmt = SQLBuilder.buildUpdateAllSql(entity, cvs, conflictAlgorithm);
+                    SQLStatement stmt = SQLBuilder.buildUpdateSql(entity, cvs, conflictAlgorithm);
                     mTableManager.checkOrCreateTable(db, entity);
                     updateRecursive(stmt, entity, db, handleMap);
                     //1.0 保存剩余实体
@@ -609,7 +609,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                         //1.1 绑定对应值
                         entity = iterator.next();
                         //1.2 保存当前实体
-                        stmt.bindArgs = getInsertOrUpdateArgs(entity);
+                        stmt.bindArgs = SQLBuilder.buildUpdateSqlArgsOnly(entity, cvs);
                         updateRecursive(stmt, entity, db, handleMap);
                     }
                     return collection.size();
@@ -678,26 +678,6 @@ public final class CascadeSQLiteImpl extends LiteOrm {
             return args;
         }
         return null;
-    }
-
-    /**
-     * 获取被存储对象的参数
-     */
-    private Object[] getInsertOrUpdateArgs(Object entity) throws IllegalAccessException {
-        EntityTable table = TableManager.getTable(entity);
-        int size = 1, i = 0;
-        if (!Checker.isEmpty(table.pmap)) {
-            size += table.pmap.size();
-        }
-        Object[] args = new Object[size];
-        args[i++] = FieldUtil.getAssignedKeyObject(table.key, entity);
-        if (!Checker.isEmpty(table.pmap)) {
-            for (Property p : table.pmap.values()) {
-                // 后构造列名和占位符
-                args[i++] = FieldUtil.get(p.field, entity);
-            }
-        }
-        return args;
     }
 
     /* --------------------------------  私有方法：增删改相关 -------------------------------- */
@@ -896,6 +876,8 @@ public final class CascadeSQLiteImpl extends LiteOrm {
             boolean insertNew, HashMap<String, Integer> handleMap)
             throws IllegalAccessException, IOException {
         if (obj2 != null) {
+
+            // 注意：先递归处理关联对象（如果其主键无值，可以通过先处理赋值）
             if (insertNew) {
                 // 递归存储[关联实体]
                 checkTableAndSaveRecursive(obj2, db, handleMap);
@@ -921,6 +903,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                     st.execInsert(db);
                 }
             }
+
         }
     }
 
@@ -940,6 +923,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
             // 遍历每个关联的实体
             for (Object obj2 : coll) {
                 if (obj2 != null) {
+                    // 注意：先递归处理关联对象（如果其主键无值，可以通过先处理赋值）
                     if (insertNew) {
                         // 递归存储[关联实体]
                         checkTableAndSaveRecursive(obj2, db, handleMap);
@@ -947,6 +931,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                         // 递归删除[关联实体]
                         checkTableAndDeleteRecursive(obj2, db, handleMap);
                     }
+
                     if (class2 == null) {
                         class2 = obj2.getClass();
                         table2 = TableManager.getTable(class2);

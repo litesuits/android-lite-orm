@@ -3,13 +3,13 @@
 
     <string name="app_name">LiteOrm</string>
     <string name="title">Lite实验室-ORM</string>
-    <string name="title_single">ORM-简单操作</string>
-    <string name="title_cascade">ORM-级联操作（）</string>
-    <string name="sub_title">日志查看更多信息</string>
+    <string name="title_single">简单实例(仅操作当前实体)</string>
+    <string name="title_cascade">级联实例(操作全部关联实体)</string>
+    <string name="sub_title">通过日志查看测试信息</string>
     <string name="test_single">单一操作测试</string>
     <string name="test_cascade">级联操作测试</string>
 
-    <string-array name="orm_test_list">
+    <string-array name="orm_test_case">
         <item>保存(Insert Or Update)</item>
         <item>新增(Insert)</item>
         <item>更新(Update)</item>
@@ -18,12 +18,13 @@
         <item>查找 使用WhereBuilder</item>
         <item>查询 根据ID</item>
         <item>查询 任意</item>
+        <item>实体关联测试</item>
         <item>删除 实体</item>
         <item>删除 指定数量</item>
         <item>删除 使用WhereBuilder</item>
         <item>删除全部</item>
-        <item>LiteOrm 更快：大量(100,000)数据测试</item>
-        <item>SQLiteDatabase：大量(100,000)数据测试</item>
+        <item>LiteOrm 更快：大量数据测试(100,000)</item>
+        <item>SQLiteDatabase：大量数据测试(100,000)</item>
     </string-array>
 
 </resources>

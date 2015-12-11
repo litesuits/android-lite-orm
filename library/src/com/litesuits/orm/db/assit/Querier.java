@@ -18,13 +18,13 @@ public class Querier {
      */
     public static <T> T doQuery(SQLiteDatabase db, SQLStatement st, CursorParser<T> parser) {
         if (OrmLog.isPrint) {
-            OrmLog.i(TAG, "----> Query Start: " + st.toString());
+            OrmLog.d(TAG, "----> Query Start: " + st.toString());
         }
         Cursor cursor = db.rawQuery(st.sql, (String[]) st.bindArgs);
         if (cursor != null) {
             parser.process(db, cursor);
             if (OrmLog.isPrint) {
-                OrmLog.i(TAG, "<---- Query End , cursor size : " + cursor.getCount());
+                OrmLog.d(TAG, "<---- Query End , cursor size : " + cursor.getCount());
             }
         } else {
             if (OrmLog.isPrint) {
