@@ -180,7 +180,7 @@ public interface DataBase {
      *
      * @return the query result list
      */
-    <T> ArrayList query(QueryBuilder<T> qb);
+    <T> ArrayList<T> query(QueryBuilder<T> qb);
 
     /**
      * query entity by long id

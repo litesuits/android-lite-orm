@@ -183,15 +183,17 @@ public final class SingleSQLiteImpl extends LiteOrm {
 
     @Override
     public int delete(Object entity) {
-        acquireReference();
-        try {
-            SQLiteDatabase db = mHelper.getWritableDatabase();
-            mTableManager.checkOrCreateTable(db, entity);
-            return SQLBuilder.buildDeleteSql(entity).execDelete(db);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            releaseReference();
+        EntityTable table = TableManager.getTable(entity);
+        if (mTableManager.isSQLTableCreated(table.name)) {
+            acquireReference();
+            try {
+                SQLiteDatabase db = mHelper.getWritableDatabase();
+                return SQLBuilder.buildDeleteSql(entity).execDelete(db);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                releaseReference();
+            }
         }
         return SQLStatement.NONE;
     }
@@ -240,31 +242,35 @@ public final class SingleSQLiteImpl extends LiteOrm {
 
     @Override
     public int delete(WhereBuilder where) {
-        acquireReference();
-        try {
-            SQLiteDatabase db = mHelper.getWritableDatabase();
-            mTableManager.checkOrCreateTable(db, where.getTableClass());
-            return where.createStatementDelete().execDelete(db);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            releaseReference();
+        final EntityTable table = TableManager.getTable(where.getTableClass(), false);
+        if (mTableManager.isSQLTableCreated(table.name)) {
+            acquireReference();
+            try {
+                SQLiteDatabase db = mHelper.getWritableDatabase();
+                return where.createStatementDelete().execDelete(db);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                releaseReference();
+            }
         }
         return SQLStatement.NONE;
     }
 
     @Override
     public <T> int deleteAll(Class<T> claxx) {
-        acquireReference();
-        try {
-            SQLiteDatabase db = mHelper.getWritableDatabase();
-            SQLStatement stmt = SQLBuilder.buildDeleteAllSql(claxx);
-            mTableManager.checkOrCreateTable(db, claxx);
-            return stmt.execDelete(db);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            releaseReference();
+        final EntityTable table = TableManager.getTable(claxx, false);
+        if (mTableManager.isSQLTableCreated(table.name)) {
+            acquireReference();
+            try {
+                SQLiteDatabase db = mHelper.getWritableDatabase();
+                SQLStatement stmt = SQLBuilder.buildDeleteAllSql(claxx);
+                return stmt.execDelete(db);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                releaseReference();
+            }
         }
         return SQLStatement.NONE;
     }
@@ -274,21 +280,23 @@ public final class SingleSQLiteImpl extends LiteOrm {
      */
     @Override
     public <T> int delete(Class<T> claxx, long start, long end, String orderAscColumn) {
-        acquireReference();
-        try {
-            if (start < 0 || end < start) { throw new RuntimeException("start must >=0 and smaller than end"); }
-            if (start != 0) {
-                start -= 1;
+        final EntityTable table = TableManager.getTable(claxx, false);
+        if (mTableManager.isSQLTableCreated(table.name)) {
+            acquireReference();
+            try {
+                if (start < 0 || end < start) { throw new RuntimeException("start must >=0 and smaller than end"); }
+                if (start != 0) {
+                    start -= 1;
+                }
+                end = end == Integer.MAX_VALUE ? -1 : end - start;
+                SQLStatement stmt = SQLBuilder.buildDeleteSql(claxx, start, end, orderAscColumn);
+                SQLiteDatabase db = mHelper.getWritableDatabase();
+                return stmt.execDelete(db);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                releaseReference();
             }
-            end = end == Integer.MAX_VALUE ? -1 : end - start;
-            SQLStatement stmt = SQLBuilder.buildDeleteSql(claxx, start, end, orderAscColumn);
-            SQLiteDatabase db = mHelper.getWritableDatabase();
-            mTableManager.checkOrCreateTable(db, claxx);
-            return stmt.execDelete(db);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            releaseReference();
         }
         return SQLStatement.NONE;
     }
@@ -300,16 +308,16 @@ public final class SingleSQLiteImpl extends LiteOrm {
 
     @Override
     public <T> ArrayList<T> query(QueryBuilder<T> qb) {
-        acquireReference();
-        try {
-            final EntityTable table = TableManager.getTable(qb.getQueryClass(), false);
-            if (mTableManager.isSQLTableCreated(table.name)) {
+        final EntityTable table = TableManager.getTable(qb.getQueryClass(), false);
+        if (mTableManager.isSQLTableCreated(table.name)) {
+            acquireReference();
+            try {
                 return qb.createStatement().query(mHelper.getReadableDatabase(), qb.getQueryClass());
-            } else {
-                return new ArrayList<T>();
+            } finally {
+                releaseReference();
             }
-        } finally {
-            releaseReference();
+        } else {
+            return new ArrayList<T>();
         }
     }
 
@@ -320,10 +328,10 @@ public final class SingleSQLiteImpl extends LiteOrm {
 
     @Override
     public <T> T queryById(String id, Class<T> claxx) {
-        acquireReference();
-        try {
-            final EntityTable table = TableManager.getTable(claxx, false);
-            if (mTableManager.isSQLTableCreated(table.name)) {
+        final EntityTable table = TableManager.getTable(claxx, false);
+        if (mTableManager.isSQLTableCreated(table.name)) {
+            acquireReference();
+            try {
                 SQLStatement stmt = new QueryBuilder<T>(claxx)
                         .where(table.key.column + "=?", new String[]{id})
                         .createStatement();
@@ -331,9 +339,9 @@ public final class SingleSQLiteImpl extends LiteOrm {
                 if (!Checker.isEmpty(list)) {
                     return list.get(0);
                 }
+            } finally {
+                releaseReference();
             }
-        } finally {
-            releaseReference();
         }
         return null;
     }

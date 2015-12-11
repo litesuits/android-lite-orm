@@ -217,7 +217,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     public <T> int delete(final Collection<T> collection) {
         acquireReference();
         try {
-            return deleteCollection(collection);
+            return deleteCollectionIfTableHasCreated(collection);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -246,9 +246,11 @@ public final class CascadeSQLiteImpl extends LiteOrm {
         acquireReference();
         try {
             EntityTable table = TableManager.getTable(where.getTableClass());
-            List<?> list = query(
-                    QueryBuilder.create(where.getTableClass()).columns(new String[]{table.key.column}).where(where));
-            deleteCollection(list);
+            List<?> list = query(QueryBuilder
+                    .create(where.getTableClass())
+                    .columns(new String[]{table.key.column})
+                    .where(where));
+            deleteCollectionIfTableHasCreated(list);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -261,7 +263,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     public <T> int deleteAll(Class<T> claxx) {
         acquireReference();
         try {
-            EntityTable table = TableManager.getTable(claxx);
+            final EntityTable table = TableManager.getTable(claxx);
             List<T> list = query(QueryBuilder.create(claxx).columns(new String[]{table.key.column}));
             return delete(list);
         } finally {
@@ -277,16 +279,20 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     public <T> int delete(Class<T> claxx, long start, long end, String orderAscColumn) {
         acquireReference();
         try {
-            if (start < 0 || end < start) { throw new RuntimeException("start must >=0 and smaller than end"); }
+            if (start < 0 || end < start) {
+                throw new RuntimeException("start must >=0" +
+                                           " and smaller than end");
+            }
             if (start != 0) {
                 start -= 1;
             }
             end = end == Integer.MAX_VALUE ? -1 : end - start;
-            EntityTable table = TableManager.getTable(claxx);
-            List<T> list = query(QueryBuilder.create(claxx)
-                                             .limit(start + SQLBuilder.COMMA + end)
-                                             .appendOrderAscBy(orderAscColumn)
-                                             .columns(new String[]{table.key.column}));
+            final EntityTable table = TableManager.getTable(claxx);
+            List<T> list = query(QueryBuilder
+                    .create(claxx)
+                    .limit(start + SQLBuilder.COMMA + end)
+                    .appendOrderAscBy(orderAscColumn)
+                    .columns(new String[]{table.key.column}));
             return delete(list);
         } finally {
             releaseReference();
@@ -311,7 +317,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     @Override
     public <T> T queryById(String id, Class<T> claxx) {
         EntityTable table = TableManager.getTable(claxx);
-        ArrayList<T> list = checkTableAndQuery(claxx, new QueryBuilder(claxx)
+        ArrayList<T> list = checkTableAndQuery(claxx, new QueryBuilder<T>(claxx)
                 .whereEquals(table.key.column, String.valueOf(id)));
         if (!Checker.isEmpty(list)) {
             return list.get(0);
@@ -622,33 +628,35 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @param collection any collection
      * @return return size of collection if do successfully, -1 or not.
      */
-    private <T> int deleteCollection(final Collection<T> collection) {
+    private <T> int deleteCollectionIfTableHasCreated(final Collection<T> collection) {
         if (!Checker.isEmpty(collection)) {
-            SQLiteDatabase db = mHelper.getWritableDatabase();
-            Integer rowID = Transaction.execute(db, new Worker<Integer>() {
-                @Override
-                public Integer doTransaction(SQLiteDatabase db) throws Exception {
-                    //0. 删除第一个实体
-                    HashMap<String, Integer> handleMap = new HashMap<String, Integer>();
-                    Iterator<T> iterator = collection.iterator();
-                    Object entity = iterator.next();
-                    SQLStatement stmt = SQLBuilder.buildDeleteSql(entity);
-                    mTableManager.checkOrCreateTable(db, entity);
-                    deleteRecursive(stmt, entity, db, handleMap);
-
-                    //1.0 保存剩余实体
-                    while (iterator.hasNext()) {
-                        //1.1 绑定对应值
-                        entity = iterator.next();
-                        //1.2 保存当前实体
-                        stmt.bindArgs = getDeleteStatementArgs(entity);
+            final Iterator<T> iterator = collection.iterator();
+            final Object entity = iterator.next();
+            EntityTable table = TableManager.getTable(entity);
+            if (mTableManager.isSQLTableCreated(table.name)) {
+                SQLiteDatabase db = mHelper.getWritableDatabase();
+                Integer rowID = Transaction.execute(db, new Worker<Integer>() {
+                    @Override
+                    public Integer doTransaction(SQLiteDatabase db) throws Exception {
+                        //0. 删除第一个实体
+                        HashMap<String, Integer> handleMap = new HashMap<String, Integer>();
+                        SQLStatement stmt = SQLBuilder.buildDeleteSql(entity);
                         deleteRecursive(stmt, entity, db, handleMap);
+
+                        //1.0 保存剩余实体
+                        while (iterator.hasNext()) {
+                            //1.1 绑定对应值
+                            Object next = iterator.next();
+                            //1.2 保存当前实体
+                            stmt.bindArgs = getDeleteStatementArgs(next);
+                            deleteRecursive(stmt, next, db, handleMap);
+                        }
+                        return collection.size();
                     }
-                    return collection.size();
+                });
+                if (rowID != null) {
+                    return rowID;
                 }
-            });
-            if (rowID != null) {
-                return rowID;
             }
         }
         return SQLStatement.NONE;
@@ -839,8 +847,11 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     private int checkTableAndDeleteRecursive(Object obj1, SQLiteDatabase db,
             HashMap<String, Integer> handleMap)
             throws IOException, IllegalAccessException {
-        mTableManager.checkOrCreateTable(db, obj1);
-        return deleteRecursive(SQLBuilder.buildDeleteSql(obj1), obj1, db, handleMap);
+        EntityTable table = TableManager.getTable(obj1);
+        if (mTableManager.isSQLTableCreated(table.name)) {
+            return deleteRecursive(SQLBuilder.buildDeleteSql(obj1), obj1, db, handleMap);
+        }
+        return SQLStatement.NONE;
     }
 
     /**

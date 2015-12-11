@@ -1,5 +1,9 @@
 package com.litesuits.orm.db.model;
 
+import com.litesuits.orm.db.assit.Checker;
+
+import java.util.Map;
+
 /**
  * help to build custom column value
  * {@link #values}可为NULL，但若不为NULL则和{@link #columns}一一对应，数组大小必须一致。
@@ -21,6 +25,19 @@ public class ColumnsValue {
      * if not null, your columns well aways set value in {@link #values}.
      */
     public Object[] values;
+
+    public <T> ColumnsValue(Map<String, T> map) {
+        if (!Checker.isEmpty(map)) {
+            columns = new String[map.size()];
+            values = new Object[map.size()];
+            int i = 0;
+            for (Map.Entry<String, T> entry : map.entrySet()) {
+                columns[i] = entry.getKey();
+                values[i] = entry.getValue();
+                i++;
+            }
+        }
+    }
 
     public ColumnsValue(String[] columns) {
         this.columns = columns;

@@ -25,8 +25,11 @@ public class Teacher extends Person {
     @MapCollection(ConcurrentLinkedQueue.class)
     private Queue<Student> studentLinkedQueue;
 
-    public Teacher(String name) {
+    private int age;
+
+    public Teacher(String name, int age) {
         super(name);
+        this.age = age;
     }
 
     public Queue<Student> getStudentLinkedQueue() {
@@ -37,18 +40,18 @@ public class Teacher extends Person {
         this.studentLinkedQueue = studentLinkedQueue;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         StringBuilder sb = new StringBuilder();
         if (studentLinkedQueue != null) {
             sb.append(",  studentLinkedQueue=[");
             for (Student t : studentLinkedQueue) {
-                sb.append(t.getName() + " @" + Integer.toHexString(t.hashCode()) + ", ");
+                sb.append(t.getName()).append(" @").append(Integer.toHexString(t.hashCode())).append(", ");
             }
             sb.append("]  ");
         }
-        return "Teacher{" +
-               super.toString() +
+        return "Teacher{"
+               + super.toString() +
+               ", age=" + age +
                sb.toString() +
                "} ";
     }

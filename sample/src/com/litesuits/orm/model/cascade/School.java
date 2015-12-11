@@ -27,8 +27,19 @@ public class School extends Model {
     }
 
     @Override public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (classesList != null) {
+            sb.append(" classesList=[");
+            for (Classes t : classesList) {
+                sb.append("\n");
+                sb.append(t.toString()).append(" @ ").append(Integer.toHexString(t.hashCode()));
+            }
+            sb.append("\n");
+            sb.append("]  ");
+        }
         return "School{" +
-               "classesList=" + classesList +
-               "} " + super.toString();
+               super.toString() +
+               sb.toString() +
+               "} ";
     }
 }

@@ -53,8 +53,10 @@ public final class TableManager {
      */
     private final static HashMap<String, EntityTable> mEntityTableMap = new HashMap<String, EntityTable>();
 
-    public TableManager(String dbName) {
+    public TableManager(String dbName, SQLiteDatabase db) {
         this.dbName = dbName;
+        // 关键点：初始化全部数据库表
+        initAllTablesFromSQLite(db);
     }
 
     /**
@@ -76,11 +78,8 @@ public final class TableManager {
      * 检测[数据库表]是否建立，没有则建一张新表。
      */
     public synchronized EntityTable checkOrCreateTable(SQLiteDatabase db, Class claxx) {
-        // 关键点0：获取[实体表]
+        // 关键点1：获取[实体表]
         EntityTable table = getTable(claxx);
-        // 关键点1：初始化全部数据库表
-        initAllTablesFromSQLite(db);
-        // table lock synchronized
         // 关键点2: 判断[数据库表]是否存在，是否需要新加列。
         if (!checkExistAndColumns(db, table)) {
             // 关键点3：新建[数据库表]并加入表队列
@@ -96,7 +95,7 @@ public final class TableManager {
      * 检测[映射表]是否建立，没有则建一张新表。
      */
     public synchronized void checkOrCreateMappingTable(SQLiteDatabase db, String tableName,
-                                                       String column1, String column2) {
+            String column1, String column2) {
         // 关键点1：获取[实体表]
         EntityTable table = getMappingTable(tableName, column1, column2);
         // 关键点2: 判断[数据库表]是否存在，是否需要新加列。

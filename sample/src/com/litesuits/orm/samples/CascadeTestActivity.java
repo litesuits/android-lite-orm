@@ -3,26 +3,20 @@ package com.litesuits.orm.samples;
 import android.os.Bundle;
 import android.os.Environment;
 import com.litesuits.orm.LiteOrm;
-import com.litesuits.orm.R;
+import com.litesuits.orm.db.assit.QueryBuilder;
+import com.litesuits.orm.db.assit.WhereBuilder;
+import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.log.OrmLog;
-import com.litesuits.orm.model.cascade.Book;
-import com.litesuits.orm.model.cascade.Classes;
-import com.litesuits.orm.model.cascade.School;
-import com.litesuits.orm.model.cascade.Student;
-import com.litesuits.orm.model.cascade.Teacher;
+import com.litesuits.orm.model.Person;
+import com.litesuits.orm.model.cascade.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class CascadeTestActivity extends BaseActivity {
-    static Teacher teacher1;
-    static Teacher teacher2;
-
-    static Student studentA;
-    static Student studentB;
-    static Student studentC;
 
 
     public static final String SD_CARD = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -40,12 +34,13 @@ public class CascadeTestActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setSubTitile(getString(R.string.sub_title));
 
-        // 模拟数据
-        // school -> classes -> teacher -> student -> book
+        // Model Relation：school-(1,N)->classes-(1,1)->teacher-(N,N)->student-(1,N)->book
+        // 数据持有关系：学校 -(1,N)-> 班级 -(1,1)-> 老师 -(N,N)-> 学生 -(1,N)-> 书籍
+        // 模拟数据 (1,N)一对多；（N,N）多对多；(N,1)多对一；(1,1)一对一
         mockData();
-        // 使用级联操作
 
         if (liteOrm != null) {
+            // 使用级联操作
             liteOrm = LiteOrm.newCascadeInstance(this, DB_NAME);
             liteOrm.setDebugged(true);
         }
@@ -105,20 +100,18 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     private void testSave() {
-        liteOrm.save(teacher0);
+        liteOrm.save(student0);
     }
 
     private void testInsert() {
-        ArrayList<Teacher> ts = new ArrayList<Teacher>();
-        ts.add(teacher1);
-        ts.add(teacher2);
-        liteOrm.insert(ts, ConflictAlgorithm.Fail);
+        liteOrm.insert(school);
 
+        // 联合唯一测试
         Book book1 = new Book("书：year和author联合唯一");
         book1.setIndex(1988);
         book1.setAuthor("hehe");
 
-        Book book2 = new Book("其实是同一本书：year和author联合唯一");
+        Book book2 = new Book("和上一本冲突：year和author联合唯一");
         book2.setIndex(1988);
         book2.setAuthor("hehe");
 
@@ -127,55 +120,92 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     private void testUpdate() {
-
+        for (Book book : bookList) {
+            int j = book.getIndex() % 3;
+            if (j == 0) {
+                book.setStudent(student2);
+            } else if (j == 1) {
+                book.setStudent(student1);
+            } else if (j == 2) {
+                book.setStudent(student0);
+            }
+            book.setIndex(book.getIndex() + 100);
+        }
+        liteOrm.save(school);
+        // liteOrm.save(bookList);
     }
 
     private void testUpdateColumn() {
+        // 把所有书的作者改为liter
+        HashMap<String, String> bookIdMap = new HashMap<String, String>();
+        bookIdMap.put(Book.COL_AUTHOR, "liter");
+        liteOrm.update(bookList, new ColumnsValue(bookIdMap), ConflictAlgorithm.Fail);
 
+        // 使用下面方式也可以
+        //liteOrm.update(bookList, new ColumnsValue(new String[]{Book.COL_AUTHOR},
+        //        new String[]{"liter"}), ConflictAlgorithm.Fail);
     }
 
     private void testQueryAll() {
         queryAndPrintAll(School.class);
-        queryAndPrintAll(Classes.class);
-        queryAndPrintAll(Teacher.class);
-        queryAndPrintAll(Student.class);
-        queryAndPrintAll(Book.class);
+        //queryAndPrintAll(Classes.class);
+        //queryAndPrintAll(Teacher.class);
+        //queryAndPrintAll(Student.class);
+        //queryAndPrintAll(Book.class);
     }
 
     private void testQueryByWhere() {
-
+        List<Student> list = liteOrm.query(new QueryBuilder<Student>(Student.class)
+                .where(Person.COL_NAME + " LIKE ?", new String[]{"%a%"})
+                .whereAppendAnd()
+                .whereAppend(Person.COL_NAME + " LIKE %?%", new String[]{"s"}));
+        OrmLog.i(TAG, list);
     }
 
     private void testQueryByID() {
-
+        Student student = liteOrm.queryById(student1.getId(), Student.class);
+        OrmLog.i(TAG, student);
     }
 
     private void testQueryAnyUwant() {
-
+        List<Book> books = liteOrm.query(new QueryBuilder<Book>(Book.class)
+                .columns(new String[]{"id", "author", "index"})
+                .distinct(true)
+                .whereGreaterThan("id", 0)
+                .whereAppendAnd()
+                .whereLessThan("id", 10000)
+                .limit(6, 9)
+                .appendOrderAscBy("index"));
+        OrmLog.i(TAG, books);
     }
 
     private void testMapping() {
-
+        queryAndPrintAll(School.class);
     }
 
     private void testDelete() {
-
+        // 删除 student-0
+        liteOrm.delete(student0);
     }
 
     private void testDeleteByIndex() {
-
+        // 按id升序，删除[2, size-1]，结果：仅保留第一个和最后一个
+        // 最后一个参数可为null，默认按 id 升序排列
+        liteOrm.delete(Book.class, 2, bookList.size() - 1, "id");
     }
 
     private void testDeleteByWhereBuilder() {
-
+        // 删除 student-1
+        liteOrm.delete(new WhereBuilder(Student.class)
+                .where(Person.COL_NAME + " LIKE ?", new String[]{"%1%"})
+                .greaterThan("id", 0)
+                .and()
+                .lessThan("id", 10000));
     }
 
     private void testDeleteAll() {
+        // 连同其关联的classes，classes关联的其他对象一带删除
         liteOrm.deleteAll(School.class);
-        liteOrm.deleteAll(Classes.class);
-        liteOrm.deleteAll(Teacher.class);
-        liteOrm.deleteAll(Student.class);
-        liteOrm.deleteAll(Book.class);
     }
 
 
@@ -184,59 +214,64 @@ public class CascadeTestActivity extends BaseActivity {
         OrmLog.i(TAG, list);
     }
 
-    static Teacher teacher0;
-    static Student studentD;
+
+    protected static School school = null;
+    protected static Classes classA;
+    protected static Classes classB;
+    protected static Teacher teacherA;
+    protected static Teacher teacherB;
+    protected static Student student0;
+    protected static Student student1;
+    protected static Student student2;
+    protected static ArrayList<Book> bookList = new ArrayList<Book>();
 
     private void mockData() {
-        if (teacher1 != null) {
+        if (school != null) {
             return;
         }
+        school = new School("US MIT");
+        classA = new Classes("class-a");
+        classB = new Classes("class-b");
 
-        /**********************************************
-         简单的双向关联
-         T0 <-> SA
-         */
-        teacher0 = new Teacher("T0");
-        studentA = new Student("S0");
+        //school:classes = 1:N
+        school.classesList = new ArrayList<Classes>();
+        school.classesList.add(classA);
+        school.classesList.add(classB);
 
-        teacher0.setStudentLinkedQueue(new ConcurrentLinkedQueue<Student>());
-        teacher0.getStudentLinkedQueue().add(studentA);
+        teacherA = new Teacher("teacher-a", 19);
+        teacherB = new Teacher("teacher-b", 28);
 
-        studentA.setTeachersArray(new Teacher[1]);
-        studentA.getTeachersArray()[0] = teacher0;
+        //classes:teacher = 1:1
+        classA.teacher = teacherA;
+        classB.teacher = teacherB;
 
+        student0 = new Student("student-0");
+        student1 = new Student("student-1");
+        student2 = new Student("student-2");
 
-        /**********************************************
-         较多的双向关联
-         T1 <-> SB\SC
-         T2 <-> SC\SD
-         */
-        teacher1 = new Teacher("T1");
-        teacher2 = new Teacher("T2");
+        //teacher:student = N:N
+        teacherA.setStudentLinkedQueue(new ConcurrentLinkedQueue<Student>());
+        teacherA.getStudentLinkedQueue().add(student0);
+        teacherA.getStudentLinkedQueue().add(student1);
+        teacherB.getStudentLinkedQueue().add(student0);
+        teacherB.getStudentLinkedQueue().add(student2);
+        student0.setTeachersArray(new Teacher[]{teacherA, teacherB});
+        student1.setTeachersArray(new Teacher[]{teacherA});
+        student2.setTeachersArray(new Teacher[]{teacherB});
 
-        studentB = new Student("SB");
-        studentC = new Student("SC");
-        studentD = new Student("SD");
-
-        teacher1.setStudentLinkedQueue(new ConcurrentLinkedQueue<Student>());
-        teacher1.getStudentLinkedQueue().add(studentB);
-        teacher1.getStudentLinkedQueue().add(studentC);
-
-        teacher2.setStudentLinkedQueue(new ConcurrentLinkedQueue<Student>());
-        teacher2.getStudentLinkedQueue().add(studentC);
-        teacher2.getStudentLinkedQueue().add(studentD);
-
-        studentB.setTeachersArray(new Teacher[1]);
-        studentB.getTeachersArray()[0] = teacher1;
-
-        studentC.setTeachersArray(new Teacher[2]);
-        studentC.getTeachersArray()[0] = teacher1;
-        studentC.getTeachersArray()[0] = teacher2;
-
-        studentD.setTeachersArray(new Teacher[1]);
-        studentD.getTeachersArray()[0] = teacher2;
-
-
+        for (int i = 0; i < 30; i++) {
+            Book book = new Book("book-" + i);
+            book.setAuthor("autor" + i).setIndex(i);
+            int j = i % 3;
+            if (j == 0) {
+                book.setStudent(student0);
+            } else if (j == 1) {
+                book.setStudent(student1);
+            } else if (j == 2) {
+                book.setStudent(student2);
+            }
+            bookList.add(book);
+        }
     }
 
 

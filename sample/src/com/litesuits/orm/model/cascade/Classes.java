@@ -25,8 +25,9 @@ public class Classes extends Model {
     }
 
     @Override public String toString() {
-        return "Classes{" +
-               "teacher=" + teacher +
-               "} " + super.toString();
+        return "Classes{"
+               + super.toString() +
+               " teacher= " + teacher +
+               "} ";
     }
 }

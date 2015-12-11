@@ -62,7 +62,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
         if (mConfig.dbName.contains(File.separator)) {
             createDatabase();
         }
-        mTableManager = new TableManager(mConfig.dbName);
+        mTableManager = new TableManager(mConfig.dbName, mHelper.getReadableDatabase());
     }
 
     /**

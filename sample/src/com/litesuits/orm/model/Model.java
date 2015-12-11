@@ -16,8 +16,7 @@ public abstract class Model {
 
     @Override
     public String toString() {
-        return "  id=" + id +
-                ", title='" + title;
+        return "  id = " + id + ", title = " + title + "  ";
     }
 
     public long getId() {
