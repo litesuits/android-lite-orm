@@ -46,10 +46,11 @@ public class SingleTestActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setSubTitile(getString(R.string.sub_title));
         mockData();
+
         if (liteOrm == null) {
             liteOrm = LiteOrm.newSingleInstance(this, "liteorm.db");
         }
-        liteOrm.setDebugged(true);
+        liteOrm.setDebugged(true); // open the log
     }
 
     @Override
@@ -145,7 +146,6 @@ public class SingleTestActivity extends BaseActivity {
     }
 
     private void testSave() {
-
         liteOrm.save(uMax);
         liteOrm.save(uMin);
 

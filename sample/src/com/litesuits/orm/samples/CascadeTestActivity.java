@@ -124,6 +124,7 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     private void testSave() {
+        School school = new School("hello");
         liteOrm.save(school);
     }
 
@@ -156,11 +157,11 @@ public class CascadeTestActivity extends BaseActivity {
             }
             book.setIndex(book.getIndex() + 100);
         }
-        liteOrm.save(bookList);
+        liteOrm.update(bookList);
     }
 
     private void testUpdateColumn() {
-        // 把所有书的作者改为liter
+        // 把所有书的author改为liter
         HashMap<String, Object> bookIdMap = new HashMap<String, Object>();
         bookIdMap.put(Book.COL_AUTHOR, "liter");
         liteOrm.update(bookList, new ColumnsValue(bookIdMap), ConflictAlgorithm.Fail);
@@ -168,6 +169,9 @@ public class CascadeTestActivity extends BaseActivity {
         // 使用下面方式也可以
         //liteOrm.update(bookList, new ColumnsValue(new String[]{Book.COL_AUTHOR},
         //        new String[]{"liter"}), ConflictAlgorithm.Fail);
+
+        // 仅 author 这一列更新为该对象的最新值。
+        //liteOrm.update(bookList, new ColumnsValue(new String[]{Book.COL_AUTHOR}, null), ConflictAlgorithm.Fail);
     }
 
     private void testQueryAll() {
