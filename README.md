@@ -1,13 +1,21 @@
-#Android数据库框架LiteOrm 第一节：初步认识与简单用法
+#Android数据库框架LiteOrm
 
 ---
 Website： http://litesuits.com
 
-English doc ：[Readme](README-en.md)
-Chinese doc ：[Readme](README-cn.md)
+English Intro ：[Readme](README-en.md)
+
+A fast, small, powerful ORM framework for Android. LiteOrm makes you do CRUD operarions on SQLite database with a sigle line of code efficiently.
+
+汉语简介 ：[Readme](README-cn.md)
+
+LiteOrm是一个速度快、小巧、强大的android ORM框架类库，让你一行代码实现数据库的增删改查操作，以及实体关系的持久化和自动映射。
+
+
+QQ群： [大群 47357508][1] ， [二群 42960650][2]
 
 ---
-#第一节：初步认识与简单用法
+初步认识与简单用法
 
 ## 1. 初步认识
 LiteOrm是android上的一款数据库（ORM）框架库。速度快、体积小、性能高。开发者基本一行代码实现数据库的增删改查操作，以及实体关系的持久化和自动映射。
@@ -195,6 +203,7 @@ liteOrm.openOrCreateDatabase();
 我的博客 ：[http://vmatianyu.cn](http://vmatianyu.cn/)
 
 我的开源站点 ：[http://litesuits.com](http://litesuits.com/)
+
 
   [1]: http://jq.qq.com/?_wv=1027&k=anQacU
   [2]: http://jq.qq.com/?_wv=1027&k=YsLkC6
