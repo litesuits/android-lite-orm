@@ -6,11 +6,11 @@ A fast, small, powerful ORM framework for Android. LiteOrm makes you do CRUD ope
 #### Goal：simple, powerful, and most userful android ORM framework library. 
 
 
-100000 inset vs android SQLiteDatabase API
-![10万条数插入对比系统API](http://litesuits.com/imgs/lite-vs-system.png)
+100 000 inset vs android SQLiteDatabase API
+![100000 inset vs android SQLiteDatabase API](http://litesuits.com/imgs/lite-vs-system.png)
 
 100 000 test
-![100 000条数据测试](http://litesuits.com/imgs/lite-10w-test.png)
+![100000 test](http://litesuits.com/imgs/lite-10w-test.png)
 
 Principles :
 ---
@@ -55,8 +55,8 @@ LiteOrm super lightweight, focused, you do not even see any other features inclu
 
 Behind the simplicity is often complex. And all of this is due to the reduction of the object-oriented experience, so part of the increase, not increased.
 
-关于作者（About Author）
+About Author
 -----
-我的博客 ：[http://vmatianyu.cn](http://vmatianyu.cn/)
+blog：[http://vmatianyu.cn](http://vmatianyu.cn/)
 
-我的开源站点 ：[http://litesuits.com](http://litesuits.com/)
+site：[http://litesuits.com](http://litesuits.com/)
