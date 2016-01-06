@@ -71,8 +71,8 @@ public final class SingleSQLiteImpl extends LiteOrm {
             if (!Checker.isEmpty(collection)) {
                 SQLiteDatabase db = mHelper.getWritableDatabase();
                 Object entity = collection.iterator().next();
-                SQLStatement stmt = SQLBuilder.buildReplaceAllSql(entity);
                 mTableManager.checkOrCreateTable(db, entity);
+                SQLStatement stmt = SQLBuilder.buildReplaceAllSql(entity);
                 return stmt.execInsertCollection(db, collection);
             }
         } catch (Exception e) {
