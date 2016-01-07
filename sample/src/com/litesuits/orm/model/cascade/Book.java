@@ -16,17 +16,17 @@ public class Book extends Model {
     public static final String COL_AUTHOR = "author";
     public static final String COL_INDEX = "_index";
     /**
-     * 和 author 联合唯一
+     * UniqueCombine 值为1，和 UniqueCombine同值 的属性联合唯一
      */
     @UniqueCombine(1)
     @Column(COL_INDEX)//避开SQL关键词
     private int index;
 
     /**
-     * 和 index 联合唯一
+     * UniqueCombine值为1，和 index 联合唯一
      */
-    @Column(COL_AUTHOR)
     @UniqueCombine(1)
+    @Column(COL_AUTHOR)
     private String author;
 
     /**
