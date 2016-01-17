@@ -252,7 +252,7 @@ public class CascadeTestActivity extends BaseActivity {
     final int MAX = 100000;
 
     private void testLargeScaleUseLite() {
-        // 原生android代码插入10w条数的效率测试
+        // LiteOrm 代码插入10w条数的效率测试
         SqliteUtils.testLargeScaleUseLiteOrm(liteOrm, MAX);
     }
 

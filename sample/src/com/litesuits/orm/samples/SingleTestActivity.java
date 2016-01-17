@@ -404,12 +404,12 @@ public class SingleTestActivity extends BaseActivity {
     final int MAX = 100000;
 
     private void testLargeScaleUseLite() {
-        // 原生android代码插入10w条数的效率测试
+        // LiteOrm 插入10w条数的效率测试
         SqliteUtils.testLargeScaleUseLiteOrm(liteOrm, MAX);
     }
 
     private void testLargeScaleUseSystem() {
-        // 原生android代码插入10w条数的效率测试
+        // 原生android代码 插入10w条数的效率测试
         SqliteUtils.testLargeScaleUseDefault(SingleTestActivity.this, MAX);
     }
 
