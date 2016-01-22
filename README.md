@@ -96,6 +96,19 @@ LiteOrm将为开发者建一个名为“test_model”的数据库表，其字段
 建表语句：CREATE TABLE IF NOT EXISTS test_model (id INTEGER PRIMARY KEY AUTOINCREMENT ,name TEXT, login TEXT DEFAULT true)
 更多注解关注其他篇章或直接参看Samples。
 
+`Note`
+如果给实体设置了一个带参数的构造函数，请务必再设置一个无参的构造函数。
+
+```
+public Result() {
+}
+
+public Result(String name,int age) {
+    this.name = name;
+    this.age = age;
+}
+```
+
 ## 4. 常用操作
 直接操作对象即可，LiteOrm会为你完成探测、建表等工作。
 
