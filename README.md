@@ -5,7 +5,7 @@ A fast, small, powerful ORM framework for Android. LiteOrm makes you do CRUD ope
 
 English Intro ：[Readme](README-en.md)
 
-LiteOrm是一个小巧、强大、比系统自带数据库操作的android ORM框架类库，让你一行代码实现数据库的增删改查操作，以及实体关系的持久化和自动映射。
+LiteOrm是一个小巧、强大、比系统自带数据库操作性能快1倍的 android ORM 框架类库，让你一行代码实现数据库的增删改查操作，以及实体关系的持久化和自动映射。
 
 汉语简介 ：[Readme](README-cn.md)
 
