@@ -281,7 +281,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
         try {
             if (start < 0 || end < start) {
                 throw new RuntimeException("start must >=0" +
-                                           " and smaller than end");
+                        " and smaller than end");
             }
             if (start != 0) {
                 start -= 1;
@@ -370,7 +370,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * 循环遍历查找当前实体的关联实体
      */
     private void queryForMappingRecursive(Object obj1, SQLiteDatabase db, HashMap<String, Integer> queryMap,
-            HashMap<String, Object> entityMap)
+                                          HashMap<String, Object> entityMap)
             throws IllegalAccessException, InstantiationException {
         final EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.getAssignedKeyObject(table1.key, obj1);
@@ -393,8 +393,8 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * 查找N对一关系的实体
      */
     private void queryMapToOne(final EntityTable table1, Object key1, Object obj1,
-            Field field, SQLiteDatabase db, HashMap<String, Integer> queryMap,
-            HashMap<String, Object> entityMap)
+                               Field field, SQLiteDatabase db, HashMap<String, Integer> queryMap,
+                               HashMap<String, Object> entityMap)
             throws IllegalAccessException, InstantiationException {
         final EntityTable table2 = TableManager.getTable(field.getType());
         if (mTableManager.isSQLMapTableCreated(table1.name, table2.name)) {
@@ -429,8 +429,8 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      */
     @SuppressWarnings("unchecked")
     private void queryMapToMany(final EntityTable table1, Object key1, Object obj1,
-            Field field, SQLiteDatabase db, HashMap<String, Integer> queryMap,
-            final HashMap<String, Object> entityMap)
+                                Field field, SQLiteDatabase db, HashMap<String, Integer> queryMap,
+                                final HashMap<String, Object> entityMap)
             throws IllegalAccessException, InstantiationException {
         final Class<?> class2;
         if (Collection.class.isAssignableFrom(field.getType())) {
@@ -439,7 +439,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
             class2 = FieldUtil.getComponentType(field);
         } else {
             throw new RuntimeException("OneToMany and ManyToMany Relation, " +
-                                       "you must use collection or array object");
+                    "you must use collection or array object");
         }
         final EntityTable table2 = TableManager.getTable(class2);
         if (mTableManager.isSQLMapTableCreated(table1.name, table2.name)) {
@@ -494,7 +494,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                         FieldUtil.set(field, obj1, arrObj);
                     } else {
                         throw new RuntimeException("OneToMany and ManyToMany Relation, " +
-                                                   "you must use collection or array object");
+                                "you must use collection or array object");
                     }
                     for (Object obj2 : allList2) {
                         queryForMappingRecursive(obj2, db, queryMap, entityMap);
@@ -591,7 +591,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return return size of collection if do successfully, -1 or not.
      */
     private <T> int updateCollection(final Collection<T> collection, final ColumnsValue cvs,
-            final ConflictAlgorithm conflictAlgorithm) {
+                                     final ConflictAlgorithm conflictAlgorithm) {
         if (!Checker.isEmpty(collection)) {
             SQLiteDatabase db = mHelper.getWritableDatabase();
             Integer rowID = Transaction.execute(db, new Worker<Integer>() {
@@ -693,7 +693,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private long handleEntityRecursive(int type, SQLStatement stmt, Object obj1, SQLiteDatabase db,
-            HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+                                       HashMap<String, Integer> handleMap) throws Exception {
         EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.get(table1.key.field, obj1);
 
@@ -732,7 +732,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private int updateRecursive(SQLStatement stmt, Object obj1, SQLiteDatabase db,
-            HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+                                HashMap<String, Integer> handleMap) throws Exception {
         EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.get(table1.key.field, obj1);
 
@@ -758,7 +758,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private int deleteRecursive(SQLStatement stmt, Object obj1, SQLiteDatabase db,
-            HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+                                HashMap<String, Integer> handleMap) throws Exception {
         EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.get(table1.key.field, obj1);
 
@@ -783,7 +783,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private long insertRecursive(SQLStatement stmt, Object obj1, SQLiteDatabase db,
-            HashMap<String, Integer> handleMap) throws IOException, IllegalAccessException {
+                                 HashMap<String, Integer> handleMap) throws Exception {
         EntityTable table1 = TableManager.getTable(obj1);
         Object key1 = FieldUtil.get(table1.key.field, obj1);
 
@@ -812,7 +812,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private long checkTableAndSaveRecursive(Object obj1, SQLiteDatabase db, HashMap<String, Integer> handleMap)
-            throws IOException, IllegalAccessException {
+            throws Exception {
         mTableManager.checkOrCreateTable(db, obj1);
         return insertRecursive(SQLBuilder.buildReplaceSql(obj1), obj1, db, handleMap);
     }
@@ -825,8 +825,8 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * @return rowID of entity
      */
     private int checkTableAndDeleteRecursive(Object obj1, SQLiteDatabase db,
-            HashMap<String, Integer> handleMap)
-            throws IOException, IllegalAccessException {
+                                             HashMap<String, Integer> handleMap)
+            throws Exception {
         EntityTable table = TableManager.getTable(obj1);
         if (mTableManager.isSQLTableCreated(table.name)) {
             return deleteRecursive(SQLBuilder.buildDeleteSql(obj1), obj1, db, handleMap);
@@ -838,8 +838,8 @@ public final class CascadeSQLiteImpl extends LiteOrm {
      * 处理一个实体中所有的关联实体。
      */
     private void handleMapping(Object key1, Object obj1, SQLiteDatabase db,
-            boolean insertNew, HashMap<String, Integer> handleMap)
-            throws IOException, IllegalAccessException {
+                               boolean insertNew, HashMap<String, Integer> handleMap)
+            throws Exception {
         EntityTable table1 = TableManager.getTable(obj1);
         // 2. 存储[关联实体]以及其[关系映射]
         if (table1.mappingList != null) {
@@ -847,22 +847,24 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                 if (map.isToOne()) {
                     // handle <one to one>,<many to one> relation.
                     Object obj2 = FieldUtil.get(map.field, obj1);
-                    if (obj2 != null) {
-                        handleMapToOne(table1, key1, obj2, db, insertNew, handleMap);
-                    }
+                    EntityTable table2 = TableManager.getTable(map.field.getType());
+                    handleMapToOne(table1, table2, key1, obj2, db, insertNew, handleMap);
                 } else if (map.isToMany()) {
                     // hanlde <one to many>,<many to many> relation.
                     Object array = FieldUtil.get(map.field, obj1);
-                    if (array != null) {
-                        if (array instanceof Collection<?>) {
-                            handleMapToMany(table1, key1, (Collection<?>) array, db, insertNew, handleMap);
-                        } else if (array instanceof Object[]) {
+                    if (ClassUtil.isCollection(map.field.getType())) {
+                        EntityTable table2 = TableManager.getTable(FieldUtil.getGenericType(map.field));
+                        handleMapToMany(table1, table2, key1, (Collection<?>) array, db, insertNew, handleMap);
+                    } else if (ClassUtil.isArray(map.field.getType())) {
+                        EntityTable table2 = TableManager.getTable(FieldUtil.getComponentType(map.field));
+                        Collection<?> coll = null;
+                        if (array != null) {
                             // 一定要强转为(Object[])
-                            handleMapToMany(table1, key1, Arrays.asList((Object[]) array), db, insertNew, handleMap);
-                        } else {
-                            throw new RuntimeException("OneToMany and ManyToMany Relation, " +
-                                                       "you must use collection or array object");
+                            coll = Arrays.asList((Object[]) array);
                         }
+                        handleMapToMany(table1, table2, key1, coll, db, insertNew, handleMap);
+                    } else {
+                        throw new RuntimeException("OneToMany and ManyToMany Relation, you must use collection or array object");
                     }
                 }
             }
@@ -872,11 +874,10 @@ public final class CascadeSQLiteImpl extends LiteOrm {
     /**
      * 处理N对1关系的关联实体
      */
-    private void handleMapToOne(EntityTable table1, Object key1, Object obj2, SQLiteDatabase db,
-            boolean insertNew, HashMap<String, Integer> handleMap)
-            throws IllegalAccessException, IOException {
+    private void handleMapToOne(EntityTable table1, EntityTable table2, Object key1, Object obj2,
+                                SQLiteDatabase db, boolean insertNew, HashMap<String, Integer> handleMap)
+            throws Exception {
         if (obj2 != null) {
-
             // 注意：先递归处理关联对象（如果其主键无值，可以通过先处理赋值）
             if (insertNew) {
                 // 递归存储[关联实体]
@@ -885,41 +886,37 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                 // 递归删除[关联实体]
                 checkTableAndDeleteRecursive(obj2, db, handleMap);
             }
+        }
+        // 现在处理(当前实体)和(关联对象)的[映射关系]
+        String mapTableName = TableManager.getMapTableName(table1, table2);
 
-            // 现在处理(当前实体)和(关联对象)的[映射关系]
-            EntityTable table2 = TableManager.getTable(obj2.getClass());
-            String mapTableName = TableManager.getMapTableName(table1, table2);
+        // 删掉旧的[映射关系]
+        mTableManager.checkOrCreateMappingTable(db, mapTableName, table1.name, table2.name);
+        SQLStatement st = SQLBuilder.buildMappingDeleteSql(mapTableName, key1, table1);
+        st.execDelete(db);
 
-            // 删掉旧的[映射关系]
-            mTableManager.checkOrCreateMappingTable(db, mapTableName, table1.name, table2.name);
-            SQLStatement st = SQLBuilder.buildMappingDeleteSql(mapTableName, key1, table1);
-            st.execDelete(db);
-
-            // 存储新的[映射关系]
-            if (insertNew) {
-                Object key2 = FieldUtil.get(table2.key.field, obj2);
-                st = SQLBuilder.buildMappingToOneSql(mapTableName, key1, key2, table1, table2);
-                if (st != null) {
-                    st.execInsert(db);
-                }
+        // 存储新的[映射关系]
+        if (insertNew && obj2 != null) {
+            Object key2 = FieldUtil.get(table2.key.field, obj2);
+            st = SQLBuilder.buildMappingToOneSql(mapTableName, key1, key2, table1, table2);
+            if (st != null) {
+                st.execInsert(db);
             }
-
         }
     }
 
     /**
      * 处理N对N关系的关联实体
      */
-    private void handleMapToMany(EntityTable table1, Object key1, Collection coll, SQLiteDatabase db,
-            boolean insertNew, HashMap<String, Integer> handleMap)
-            throws IllegalAccessException, IOException {
+    private void handleMapToMany(EntityTable table1, EntityTable table2, Object key1, Collection coll,
+                                 SQLiteDatabase db, boolean insertNew, HashMap<String, Integer> handleMap)
+            throws Exception {
+        //ArrayList<String> keyList = new ArrayList<String>();
+        //StringBuilder sqlForMap = new StringBuilder();
         if (coll != null) {
-            boolean isF = true;
-            StringBuilder values = new StringBuilder();
-            ArrayList<String> list = new ArrayList<String>();
-            String key1Str = String.valueOf(key1);
-            Class<?> class2 = null;
-            EntityTable table2 = null;
+            //boolean isF = true;
+            //String key1Str = String.valueOf(key1);
+            //Class<?> class2 = null;
             // 遍历每个关联的实体
             for (Object obj2 : coll) {
                 if (obj2 != null) {
@@ -932,49 +929,55 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                         checkTableAndDeleteRecursive(obj2, db, handleMap);
                     }
 
-                    if (class2 == null) {
-                        class2 = obj2.getClass();
-                        table2 = TableManager.getTable(class2);
-                    }
+                    //if (class2 == null) {
+                    //    class2 = obj2.getClass();
+                    //}
                     // 提前构造[存储新映射关系]的SQL语句和参数
-                    if (insertNew) {
-                        Object key2 = FieldUtil.get(table2.key.field, obj2);
-                        if (key2 != null) {
-                            if (isF) {
-                                values.append(SQLBuilder.TWO_HOLDER);
-                                isF = false;
-                            } else {
-                                values.append(SQLBuilder.COMMA).append(SQLBuilder.TWO_HOLDER);
-                            }
-                            list.add(key1Str);
-                            list.add(String.valueOf(key2));
-                        }
-                    }
-                }
-            }
-            // 现在处理(当前实体)和(关联对象)的[映射关系]
-            if (table2 != null) {
-                String tableName = TableManager.getMapTableName(table1, table2);
-
-                // 删掉旧的[映射关系]
-                mTableManager.checkOrCreateMappingTable(db, tableName, table1.name, table2.name);
-                SQLStatement st = SQLBuilder.buildMappingDeleteSql(tableName, key1, table1);
-                st.execDelete(db);
-
-                // 存储新的[映射关系]
-                if (insertNew) {
-                    Object[] args = list.toArray(new String[list.size()]);
-                    if (!Checker.isEmpty(args)) {
-                        SQLStatement stmt = new SQLStatement();
-                        stmt.sql = SQLBuilder.REPLACE + SQLBuilder.INTO + tableName
-                                   + SQLBuilder.PARENTHESES_LEFT + table1.name + SQLBuilder.COMMA
-                                   + table2.name + SQLBuilder.PARENTHESES_RIGHT + SQLBuilder.VALUES + values;
-                        stmt.bindArgs = args;
-                        stmt.execInsert(db);
-                    }
+                    //if (insertNew) {
+                    //    Object key2 = FieldUtil.get(table2.key.field, obj2);
+                    //    if (key2 != null) {
+                    //        if (isF) {
+                    //            sqlForMap.append(SQLBuilder.TWO_HOLDER);
+                    //            isF = false;
+                    //        } else {
+                    //            sqlForMap.append(SQLBuilder.COMMA).append(SQLBuilder.TWO_HOLDER);
+                    //        }
+                    //        keyList.add(key1Str);
+                    //        keyList.add(String.valueOf(key2));
+                    //    }
+                    //}
                 }
             }
         }
+        // 现在处理(当前实体)和(关联对象)的[映射关系]
+        String tableName = TableManager.getMapTableName(table1, table2);
+
+        // 删掉旧的[映射关系]
+        mTableManager.checkOrCreateMappingTable(db, tableName, table1.name, table2.name);
+        SQLStatement delSql = SQLBuilder.buildMappingDeleteSql(tableName, key1, table1);
+        delSql.execDelete(db);
+
+
+        // 存储新的[映射关系]
+        if (insertNew && !Checker.isEmpty(coll)) {
+            ArrayList<SQLStatement> sqlList = SQLBuilder.buildMappingToManySql(key1, table1, table2, coll);
+            if (!Checker.isEmpty(sqlList)) {
+                for(SQLStatement sql: sqlList){
+                    sql.execInsert(db);
+                }
+            }
+        }
+
+        // 存储新的[映射关系]
+        //if (insertNew && !Checker.isEmpty(keyList)) {
+        //    Object[] args = keyList.toArray(new String[keyList.size()]);
+        //    SQLStatement addSql = new SQLStatement();
+        //    addSql.sql = SQLBuilder.REPLACE + SQLBuilder.INTO + tableName
+        //            + SQLBuilder.PARENTHESES_LEFT + table1.name + SQLBuilder.COMMA
+        //            + table2.name + SQLBuilder.PARENTHESES_RIGHT + SQLBuilder.VALUES + sqlForMap;
+        //    addSql.bindArgs = args;
+        //    addSql.execInsert(db);
+        //}
     }
 
 }

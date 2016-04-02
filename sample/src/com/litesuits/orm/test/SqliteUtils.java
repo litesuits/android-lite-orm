@@ -4,11 +4,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.SQLiteHelper;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.model.single.Boss;
+import com.litesuits.orm.model.single.Man;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +25,8 @@ public class SqliteUtils {
     public static SQLiteHelper helper;
 
     public static boolean testLargeScaleUseLiteOrm(LiteOrm liteOrm, int max) {
+        boolean logPrint = OrmLog.isPrint;
+        OrmLog.isPrint = false;
 
         // 1. 初始化数据
         List<Boss> list = new ArrayList<Boss>();
@@ -38,21 +42,22 @@ public class SqliteUtils {
         long start = System.currentTimeMillis();
         int num = liteOrm.insert(list);
         long end = System.currentTimeMillis();
-        OrmLog.i(TAG, "insert boss model num: " + num + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, " lite-orm insert boss model num: " + num + " , use time: " + (end - start) + " MS");
 
         // 3. 查询数量测试
         start = System.currentTimeMillis();
         long count = liteOrm.queryCount(Boss.class);
         end = System.currentTimeMillis();
-        OrmLog.i(TAG, "query all boss model num: " + count + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, " lite-orm query all boss model num: " + count + " , use time: " + (end - start) + " MS");
 
         // 4. 查询最后10条测试
         start = System.currentTimeMillis();
         ArrayList subList = liteOrm.query(
                 new QueryBuilder<Boss>(Boss.class).appendOrderDescBy("_id").limit(0, 9));
         end = System.currentTimeMillis();
-        OrmLog.i(TAG, "select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");
-        OrmLog.i(TAG, subList);
+        Log.i(TAG,
+                " lite-orm select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, String.valueOf(subList));
 
         // 5. 删除全部测试
         start = System.currentTimeMillis();
@@ -61,14 +66,16 @@ public class SqliteUtils {
         // delete list
         //num = liteOrm.delete(list);
         end = System.currentTimeMillis();
-        OrmLog.i(TAG, "delete boss model num: " + num + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, " lite-orm delete boss model num: " + num + " , use time: " + (end - start) + " MS");
 
         // 6. 再次查询数量测试
         start = System.currentTimeMillis();
         count = liteOrm.queryCount(Boss.class);
         end = System.currentTimeMillis();
 
-        OrmLog.i(TAG, "query all boss model num: " + count + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, " lite-orm query all boss model num: " + count + " , use time: " + (end - start) + " MS");
+
+        OrmLog.isPrint = logPrint;
         return true;
     }
 
@@ -111,7 +118,7 @@ public class SqliteUtils {
             wdb.endTransaction();
         }
         long end = System.currentTimeMillis();
-        OrmLog.i(TAG, "insert boss model num: " + list.size() + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, " android-api insert boss model num: " + list.size() + " , use time: " + (end - start) + " MS");
 
         // 3. 查询数量测试
         start = System.currentTimeMillis();
@@ -122,7 +129,7 @@ public class SqliteUtils {
         }
         cursor.close();
         end = System.currentTimeMillis();
-        OrmLog.i(TAG, "query all boss model num: " + count + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, " android-api query all boss model num: " + count + " , use time: " + (end - start) + " MS");
 
 
         // 4. 查询最后10条测试
@@ -141,14 +148,15 @@ public class SqliteUtils {
         }
         cursor.close();
         end = System.currentTimeMillis();
-        OrmLog.i(TAG, "select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");
-        OrmLog.i(TAG, subList.toString());
+        Log.i(TAG, " android-api select top 10 boss model num: " + subList
+                .size() + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, String.valueOf(subList));
 
         // 5. 删除全部测试
         start = System.currentTimeMillis();
         long num = wdb.delete("boss", null, null);
         end = System.currentTimeMillis();
-        OrmLog.i(TAG, "delete boss model num: " + num + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, " android-api delete boss model num: " + num + " , use time: " + (end - start) + " MS");
 
         // 6. 再次查询数量测试
         start = System.currentTimeMillis();
@@ -159,7 +167,40 @@ public class SqliteUtils {
         }
         cursor.close();
         end = System.currentTimeMillis();
-        OrmLog.i(TAG, "query all boss model num: " + count + " , use time: " + (end - start) + " MS");
+        Log.i(TAG, " android-api query all boss model num: " + count + " , use time: " + (end - start) + " MS");
         return true;
+    }
+
+    public static void testLargeScaleCascadeLiteOrm(LiteOrm liteOrm, int max) {
+        boolean logPrint = OrmLog.isPrint;
+        OrmLog.isPrint = false;
+
+        // 1. 初始化数据
+        Boss boss = new Boss();
+        boss.setAddress("ZheJiang Xihu ");
+        boss.setPhone("1860000");
+        boss.setName("boss");
+        boss.setList(new ArrayList<Man>());
+        for (int i = 0; i < max; i++) {
+            boss.getList().add(new Man(0, "test", i, false));
+        }
+        long num = 0;
+        // 2. 全部插入测试
+        long start = System.currentTimeMillis();
+        num = liteOrm.save(boss);
+        long end = System.currentTimeMillis();
+        Log.i(TAG, " lite-orm insert boss model num: " + num + " , use time: " + (end - start) + " MS");
+
+
+        // 5. 删除全部测试
+        start = System.currentTimeMillis();
+        // direct delete all faster
+        num = liteOrm.deleteAll(Boss.class);
+        // delete list
+        //num = liteOrm.delete(list);
+        end = System.currentTimeMillis();
+        Log.i(TAG, " lite-orm delete boss model num: " + num + " , use time: " + (end - start) + " MS");
+
+        OrmLog.isPrint = logPrint;
     }
 }

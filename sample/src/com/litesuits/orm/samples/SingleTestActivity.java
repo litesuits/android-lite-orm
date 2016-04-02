@@ -190,13 +190,14 @@ public class SingleTestActivity extends BaseActivity {
     private void testUpdateColumn() {
 
         //1. 集合更新实例：
-        Boss t1 = bossList.get(0);
-        t1.address = "随意写个乱七八糟的地址，反正我不会更新它";
+        Boss boss0 = bossList.get(0);
+        boss0.address = "随意写个乱七八糟的地址，反正我不会更新它";
         // 仅更新这一个字段
-        t1.phone = "168 8888 8888";
-        Boss t2 = bossList.get(1);
-        t2.address = "呵呵呵呵呵";
-        t2.phone = "168 0000 0000";
+        boss0.phone = "168 8888 8888";
+
+        Boss boss1 = bossList.get(1);
+        boss1.address = "呵呵呵呵呵";
+        boss1.phone = "168 0000 0000";
 
         ColumnsValue cv = new ColumnsValue(new String[]{"phone"});
         long c = liteOrm.update(bossList, cv, ConflictAlgorithm.None);

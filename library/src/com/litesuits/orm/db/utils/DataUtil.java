@@ -1,6 +1,8 @@
 package com.litesuits.orm.db.utils;
 
+import android.annotation.TargetApi;
 import android.database.Cursor;
+import android.os.Build;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.db.assit.Checker;
 import com.litesuits.orm.db.model.EntityTable;
@@ -8,7 +10,10 @@ import com.litesuits.orm.db.model.Property;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /**
  * SQLite支持的数据类型
@@ -245,6 +250,37 @@ public class DataUtil implements Serializable {
             if (oos != null)
                 oos.close();
         }
+    }
+
+
+    public static List<?> arrayToList(Object[] array) {
+        return Arrays.asList(array);
+    }
+
+    public static Object[] arrayToList(Collection<?> coll) {
+        return coll.toArray();
+    }
+
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+    public static <T> T[] concat(T[] first, T[] second) {
+        T[] result = Arrays.copyOf(first, first.length + second.length);
+        System.arraycopy(second, 0, result, first.length, second.length);
+        return result;
+    }
+
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+    public static <T> T[] concatAll(T[] first, T[]... rest) {
+        int totalLength = first.length;
+        for (T[] array : rest) {
+            totalLength += array.length;
+        }
+        T[] result = Arrays.copyOf(first, totalLength);
+        int offset = first.length;
+        for (T[] array : rest) {
+            System.arraycopy(array, 0, result, offset, array.length);
+            offset += array.length;
+        }
+        return result;
     }
 
 }

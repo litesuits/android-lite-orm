@@ -22,20 +22,19 @@ import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
+import com.litesuits.orm.db.annotation.Check;
 import com.litesuits.orm.db.assit.*;
 import com.litesuits.orm.db.impl.CascadeSQLiteImpl;
 import com.litesuits.orm.db.impl.SingleSQLiteImpl;
 import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.utils.ClassUtil;
+import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 import com.litesuits.orm.log.OrmLog;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * 数据SQLite操作实现
@@ -414,7 +413,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     /* --------------------------------  私有方法 -------------------------------- */
     @SuppressWarnings("unchecked")
     private <E, T> boolean keepMapping(Collection<E> col1,
-            Collection<T> col2) throws IllegalAccessException, InstantiationException {
+                                       Collection<T> col2) throws IllegalAccessException, InstantiationException {
         Class claxx1 = col1.iterator().next().getClass();
         Class claxx2 = col2.iterator().next().getClass();
         EntityTable table1 = TableManager.getTable(claxx1);
@@ -449,8 +448,8 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                             }
                         }
                     }
-                    ArrayList<RelationKey> mapList = queryRelation(claxx1, claxx2, key1List);
-                    if (!Checker.isEmpty(mapList)) {
+                    ArrayList<RelationKey> relationKeys = queryRelation(claxx1, claxx2, key1List);
+                    if (!Checker.isEmpty(relationKeys)) {
                         HashMap<String, Object> map2 = new HashMap<String, Object>();
                         // 构建第2个对象的value映射
                         for (Object o2 : col2) {
@@ -461,27 +460,49 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                                 }
                             }
                         }
-                        for (RelationKey m : mapList) {
+                        HashMap<Object, ArrayList> collMap = new HashMap<Object, ArrayList>();
+                        for (RelationKey m : relationKeys) {
                             Object obj1 = map1.get(m.key1);
                             Object obj2 = map2.get(m.key2);
                             if (obj1 != null && obj2 != null) {
                                 if (mp.isToMany()) {
                                     // N对多关系
-                                    if (ClassUtil.isCollection(fieldClass)) {
-                                        Collection col = (Collection) FieldUtil.get(mp.field, obj1);
-                                        if (col == null) {
-                                            col = (Collection) fieldClass.newInstance();
-                                            FieldUtil.set(mp.field, obj1, col);
-                                        }
-                                        col.add(obj2);
-                                    } else {
-                                        throw new RuntimeException(
-                                                "OneToMany and ManyToMany Relation, You must use collection object");
+                                    ArrayList col = collMap.get(obj1);
+                                    if (col == null) {
+                                        col = new ArrayList();
+                                        collMap.put(obj1, col);
                                     }
+                                    col.add(obj2);
                                 } else {
                                     FieldUtil.set(mp.field, obj1, obj2);
                                 }
                             }
+                        }
+                        // N对多关系,查出来的数组
+                        if (!Checker.isEmpty(collMap)) {
+                            for (Map.Entry<Object, ArrayList> entry : collMap.entrySet()) {
+                                Object obj1 = entry.getKey();
+                                Collection tempColl = entry.getValue();
+                                if (ClassUtil.isCollection(itemClass)) {
+                                    Collection col = (Collection) FieldUtil.get(mp.field, obj1);
+                                    if (col == null) {
+                                        FieldUtil.set(mp.field, obj1, tempColl);
+                                    } else {
+                                        col.addAll(tempColl);
+                                    }
+                                } else if (itemClass.isArray()) {
+                                    Object[] tempArray = (Object[]) ClassUtil.newArray(itemClass, tempColl.size());
+                                    tempColl.toArray(tempArray);
+                                    Object[] array = (Object[]) FieldUtil.get(mp.field, obj1);
+                                    if (array == null) {
+                                        FieldUtil.set(mp.field, obj1, tempArray);
+                                    } else {
+                                        Object[] newArray = DataUtil.concat(array, tempArray);
+                                        FieldUtil.set(mp.field, obj1, newArray);
+                                    }
+                                }
+                            }
+
                         }
                         return true;
                     }

@@ -1,13 +1,17 @@
 package com.litesuits.orm.db.utils;
 
+import android.annotation.TargetApi;
+import android.os.Build;
 import com.litesuits.orm.db.annotation.MapCollection;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 类工具
@@ -24,10 +28,10 @@ public class ClassUtil {
      */
     public static boolean isBaseDataType(Class<?> clazz) {
         return clazz.isPrimitive() || clazz.equals(String.class) || clazz.equals(Boolean.class)
-               || clazz.equals(Integer.class) || clazz.equals(Long.class) || clazz.equals(Float.class)
-               || clazz.equals(Double.class) || clazz.equals(Byte.class) || clazz.equals(Character.class)
-               || clazz.equals(Short.class) || clazz.equals(Date.class) || clazz.equals(byte[].class)
-               || clazz.equals(Byte[].class);
+                || clazz.equals(Integer.class) || clazz.equals(Long.class) || clazz.equals(Float.class)
+                || clazz.equals(Double.class) || clazz.equals(Byte.class) || clazz.equals(Character.class)
+                || clazz.equals(Short.class) || clazz.equals(Date.class) || clazz.equals(byte[].class)
+                || clazz.equals(Byte[].class);
     }
 
     /**

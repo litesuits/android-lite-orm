@@ -75,6 +75,7 @@ public class CascadeTestActivity extends BaseActivity {
         switch (id) {
             case 0:
                 testSave();
+                // testMappingForNull();
                 break;
             case 1:
                 testInsert();
@@ -113,6 +114,8 @@ public class CascadeTestActivity extends BaseActivity {
                 testDeleteAll();
                 break;
             case 13:
+                //SqliteUtils.testLargeScaleCascadeLiteOrm(liteOrm, 10000);
+                // 注意 级联操作10万个数据将会相当耗时
                 testLargeScaleUseLite();
                 break;
             case 14:
@@ -121,6 +124,29 @@ public class CascadeTestActivity extends BaseActivity {
             default:
                 break;
         }
+    }
+
+    private void testMappingForNull() {
+        School s = new School("A");
+        Classes c1 = new Classes("C1");
+        Classes c2 = new Classes("C2");
+        Classes c3 = new Classes("C3");
+        s.classesList = new ArrayList<Classes>();
+        s.classesList.add(c1);
+        s.classesList.add(c2);
+        s.classesList.add(c3);
+
+        liteOrm.save(s);
+        queryAndPrintAll(School.class);
+        queryAndPrintAll(Classes.class);
+
+        s.classesList = null;
+        liteOrm.save(s);
+        queryAndPrintAll(School.class);
+        queryAndPrintAll(Classes.class);
+
+        liteOrm.deleteAll(School.class);
+        liteOrm.deleteAll(Classes.class);
     }
 
     private void testSave() {
@@ -251,8 +277,11 @@ public class CascadeTestActivity extends BaseActivity {
      */
     final int MAX = 100000;
 
+    /**
+     * 注意 级联操作10万个数据将会相当耗时
+     */
     private void testLargeScaleUseLite() {
-        // LiteOrm 代码插入10w条数的效率测试
+        // LiteOrm 级联代码插入10w条数的效率测试
         SqliteUtils.testLargeScaleUseLiteOrm(liteOrm, MAX);
     }
 
