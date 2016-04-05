@@ -490,7 +490,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
                                     } else {
                                         col.addAll(tempColl);
                                     }
-                                } else if (itemClass.isArray()) {
+                                } else if (ClassUtil.isArray(itemClass)) {
                                     Object[] tempArray = (Object[]) ClassUtil.newArray(itemClass, tempColl.size());
                                     tempColl.toArray(tempArray);
                                     Object[] array = (Object[]) FieldUtil.get(mp.field, obj1);
