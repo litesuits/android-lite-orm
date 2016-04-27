@@ -106,12 +106,14 @@ public class SQLStatement implements Serializable {
                 bind(i + 1, bindArgs[i]);
             }
         }
+        //OrmLog.i(TAG, "SQL Execute bind over ");
         long rowID = NONE;
         try {
             rowID = mStatement.executeInsert();
         } finally {
             realease();
         }
+        //OrmLog.i(TAG, "SQL Execute insert over ");
         if (OrmLog.isPrint) {
             OrmLog.i(TAG, "SQL Execute Insert RowID --> " + rowID + "    sql: " + sql);
         }

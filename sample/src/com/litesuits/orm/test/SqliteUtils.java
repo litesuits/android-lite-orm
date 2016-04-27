@@ -8,6 +8,7 @@ import android.util.Log;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.SQLiteHelper;
+import com.litesuits.orm.db.assit.Transaction;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.model.single.Boss;
 import com.litesuits.orm.model.single.Man;
@@ -24,25 +25,37 @@ public class SqliteUtils {
     private static final String TAG = SqliteUtils.class.getSimpleName();
     public static SQLiteHelper helper;
 
-    public static boolean testLargeScaleUseLiteOrm(LiteOrm liteOrm, int max) {
+    public static boolean testLargeScaleUseLiteOrm(final LiteOrm liteOrm, int max) {
         boolean logPrint = OrmLog.isPrint;
         OrmLog.isPrint = false;
 
         // 1. 初始化数据
-        List<Boss> list = new ArrayList<Boss>();
+        final List<Boss> list = new ArrayList<Boss>();
         for (int i = 0; i < max; i++) {
             Boss boss = new Boss();
+            boss.setId(i + 1);
             boss.setAddress("ZheJiang Xihu " + i);
             boss.setPhone("1860000" + i);
             boss.setName("boss" + i);
             list.add(boss);
         }
 
-        // 2. 全部插入测试
-        long start = System.currentTimeMillis();
-        int num = liteOrm.insert(list);
-        long end = System.currentTimeMillis();
+        long start, end;
+        int num;
+
+        // 2 批量插入测试
+        start = System.currentTimeMillis();
+        num = liteOrm.insert(list);
+        end = System.currentTimeMillis();
         Log.i(TAG, " lite-orm insert boss model num: " + num + " , use time: " + (end - start) + " MS");
+
+        // 2.1 单个插入测试
+        //start = System.currentTimeMillis();
+        //for (Boss boss : list) {
+        //    liteOrm.insert(boss);
+        //}
+        //end = System.currentTimeMillis();
+        //Log.i(TAG, " lite-orm insert boss model one by one  num use time: " + (end - start) + " MS");
 
         // 3. 查询数量测试
         start = System.currentTimeMillis();
@@ -98,7 +111,7 @@ public class SqliteUtils {
         wdb.execSQL(
                 "CREATE TABLE IF NOT EXISTS boss (id INTEGER PRIMARY KEY AUTOINCREMENT ,name TEXT, phone TEXT, address TEXT)");
 
-        // 2. 全部插入
+        // 2. 批量插入
         long start = System.currentTimeMillis();
         wdb.beginTransaction();
         try {
