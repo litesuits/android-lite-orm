@@ -33,7 +33,6 @@ public class SqliteUtils {
         final List<Boss> list = new ArrayList<Boss>();
         for (int i = 0; i < max; i++) {
             Boss boss = new Boss();
-            boss.setId(i + 1);
             boss.setAddress("ZheJiang Xihu " + i);
             boss.setPhone("1860000" + i);
             boss.setName("boss" + i);
