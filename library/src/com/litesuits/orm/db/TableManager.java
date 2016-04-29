@@ -419,6 +419,7 @@ public final class TableManager {
                 }
                 Property p = new Property();
                 p.field = f;
+                p.classType = DataUtil.getFieldClassType(f);
                 // 获取列名,每个属性都有，没有注解默认取属性名
                 //if(OrmLog.isPrint)OrmLog.i(TAG, "Column : " + Column.class+ "  field: "+ f);
                 Column col = f.getAnnotation(Column.class);

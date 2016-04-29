@@ -4,6 +4,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
+import android.util.Log;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.assit.Querier.CursorParser;
 import com.litesuits.orm.db.model.ColumnsValue;
@@ -238,7 +239,7 @@ public class SQLStatement implements Serializable {
      * 执行批量更新
      */
     public int execUpdateCollectionWithMapping(SQLiteDatabase db, Collection<?> list,
-            ColumnsValue cvs, TableManager tableManager) {
+                                               ColumnsValue cvs, TableManager tableManager) {
         printSQL();
         db.beginTransaction();
         if (OrmLog.isPrint) {
@@ -338,7 +339,7 @@ public class SQLStatement implements Serializable {
      * 并将关系映射删除
      */
     public int execDeleteCollectionWithMapping(final SQLiteDatabase db, final Collection<?> collection,
-            final TableManager tableManager) throws IOException {
+                                               final TableManager tableManager) throws IOException {
         printSQL();
         // 删除全部数据
         mStatement = db.compileStatement(sql);
@@ -439,8 +440,12 @@ public class SQLStatement implements Serializable {
             Querier.doQuery(db, this, new CursorParser() {
                 @Override
                 public void parseEachCursor(SQLiteDatabase db, Cursor c) throws Exception {
+                    //long start = System.nanoTime();
                     T t = ClassUtil.newInstance(claxx);
+                    //Log.i(TAG, "parse new after  " + ((System.nanoTime() - start)/1000));
+                    //start = System.nanoTime();
                     DataUtil.injectDataToObject(c, t, table);
+                    //Log.i(TAG, "parse inject after  " +  ((System.nanoTime() - start)/1000));
                     list.add(t);
                 }
             });
@@ -489,8 +494,8 @@ public class SQLStatement implements Serializable {
      * @param insertNew 仅在执行删除该实体时，此值为false
      */
     private void mapRelationToDb(Object entity, final boolean insertNew,
-            final boolean tableCheck, SQLiteDatabase db,
-            final TableManager tableManager) {
+                                 final boolean tableCheck, SQLiteDatabase db,
+                                 final TableManager tableManager) {
         // 插入关系映射
         final MapInfo mapTable = SQLBuilder.buildMappingInfo(entity, insertNew, tableManager);
         if (mapTable != null && !mapTable.isEmpty()) {

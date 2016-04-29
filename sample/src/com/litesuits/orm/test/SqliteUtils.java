@@ -29,6 +29,7 @@ public class SqliteUtils {
         boolean logPrint = OrmLog.isPrint;
         OrmLog.isPrint = false;
 
+        Log.i(TAG, " lite-orm test start ...");
         // 1. 初始化数据
         final List<Boss> list = new ArrayList<Boss>();
         for (int i = 0; i < max; i++) {
@@ -65,7 +66,7 @@ public class SqliteUtils {
         // 4. 查询最后10条测试
         start = System.currentTimeMillis();
         ArrayList subList = liteOrm.query(
-                new QueryBuilder<Boss>(Boss.class).appendOrderDescBy("_id").limit(0, 9));
+                new QueryBuilder<Boss>(Boss.class).appendOrderDescBy("_id").limit(0, 50));
         end = System.currentTimeMillis();
         Log.i(TAG,
                 " lite-orm select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");

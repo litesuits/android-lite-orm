@@ -122,7 +122,7 @@ public class SQLBuilder {
             if (table.key.assign == AssignType.AUTO_INCREMENT) {
                 sb.append(table.key.column).append(DataUtil.INTEGER).append(PRIMARY_KEY_AUTOINCREMENT);
             } else {
-                sb.append(table.key.column).append(DataUtil.getSQLDataType(table.key.field)).append(PRIMARY_KEY);
+                sb.append(table.key.column).append(DataUtil.getSQLDataType(table.key.classType)).append(PRIMARY_KEY);
             }
         }
         if (!Checker.isEmpty(table.pmap)) {
@@ -143,7 +143,7 @@ public class SQLBuilder {
                     sb.append(DataUtil.TEXT);
                 } else {
                     Field f = en.getValue().field;
-                    sb.append(DataUtil.getSQLDataType(f));
+                    sb.append(DataUtil.getSQLDataType(en.getValue().classType));
 
                     if (f.getAnnotation(NotNull.class) != null) {
                         sb.append(NOT_NULL);

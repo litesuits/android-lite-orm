@@ -1,6 +1,11 @@
 package com.litesuits.orm.test;
 
+import com.litesuits.orm.db.utils.FieldUtil;
+import com.litesuits.orm.model.single.Boss;
+
+import java.lang.reflect.Field;
 import java.net.URLEncoder;
+import java.util.List;
 
 /**
  * @author MaTianyu
@@ -23,5 +28,12 @@ public class TestClassType {
         //System.out.println(URLDecoder.decode("%u9EC4%u5FD7%u52C7"));
         System.out.println(url.matches("^.+\\?(%[0-9a-fA-F]+|[=&A-Za-z0-9_#\\-\\.\\*])+$"));
         System.out.println(url.matches("^.+\\?[=&A-Za-z0-9_#%[0-9a-fA-F]+\\-\\.\\*]+$"));
+
+        List<Field> fs = FieldUtil.getAllDeclaredFields(Boss.class);
+        for(Field f : fs){
+            System.out.println(f.getName() + " : " + f.getType() +"  " + CharSequence.class.isAssignableFrom(f.getType()));
+            System.out.println(f.getName() + " : " + f.getType() +"  " + double.class.isAssignableFrom(f.getType()));
+            System.out.println(f.getName() + " : " + f.getType() +"  " + Double.class.isAssignableFrom(f.getType()));
+        }
     }
 }
