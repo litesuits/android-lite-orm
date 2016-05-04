@@ -30,6 +30,7 @@ public class DataBaseConfig {
     public static final int DEFAULT_DB_VERSION = 1;
 
     public Context context;
+    public boolean debugged = false;
     public String dbName = DEFAULT_DB_NAME;
     public int dbVersion = DEFAULT_DB_VERSION;
     public OnUpdateListener onUpdateListener;
@@ -39,15 +40,19 @@ public class DataBaseConfig {
     }
 
     public DataBaseConfig(Context context, String dbName) {
-        this(context, dbName, DEFAULT_DB_VERSION, null);
+        this(context, dbName, false, DEFAULT_DB_VERSION, null);
     }
 
-    public DataBaseConfig(Context context, String dbName, int dbVersion, OnUpdateListener onUpdateListener) {
+    public DataBaseConfig(Context context, String dbName, boolean debugged,
+                          int dbVersion, OnUpdateListener onUpdateListener) {
         this.context = context.getApplicationContext();
-        if (!Checker.isEmpty(dbName))
+        if (!Checker.isEmpty(dbName)) {
             this.dbName = dbName;
-        if (dbVersion > 1)
+        }
+        if (dbVersion > 1) {
             this.dbVersion = dbVersion;
+        }
+        this.debugged = debugged;
         this.onUpdateListener = onUpdateListener;
     }
 

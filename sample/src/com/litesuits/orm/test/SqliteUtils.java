@@ -66,7 +66,7 @@ public class SqliteUtils {
         // 4. 查询最后10条测试
         start = System.currentTimeMillis();
         ArrayList subList = liteOrm.query(
-                new QueryBuilder<Boss>(Boss.class).appendOrderDescBy("_id").limit(0, 50));
+                new QueryBuilder<Boss>(Boss.class).appendOrderDescBy("_id").limit(0, 10));
         end = System.currentTimeMillis();
         Log.i(TAG,
                 " lite-orm select top 10 boss model num: " + subList.size() + " , use time: " + (end - start) + " MS");

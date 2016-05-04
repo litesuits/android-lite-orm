@@ -71,6 +71,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
             config.dbVersion = DataBaseConfig.DEFAULT_DB_VERSION;
         }
         mConfig = config;
+        setDebugged(config.debugged);
         openOrCreateDatabase();
     }
 
@@ -159,6 +160,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
      * @param debugged true if debugged
      */
     public void setDebugged(boolean debugged) {
+        mConfig.debugged = debugged;
         OrmLog.isPrint = debugged;
     }
 

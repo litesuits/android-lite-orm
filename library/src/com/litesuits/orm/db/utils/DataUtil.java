@@ -3,6 +3,7 @@ package com.litesuits.orm.db.utils;
 import android.annotation.TargetApi;
 import android.database.Cursor;
 import android.os.Build;
+import android.util.Log;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.db.assit.Checker;
 import com.litesuits.orm.db.model.EntityTable;
@@ -176,6 +177,8 @@ public class DataUtil implements Serializable {
         Field f;
         Property p;
         for (int i = 0, size = c.getColumnCount(); i < size; i++) {
+            //long start = System.nanoTime();
+
             String col = c.getColumnName(i);
             p = null;
             if (!Checker.isEmpty(table.pmap)) {
@@ -192,6 +195,8 @@ public class DataUtil implements Serializable {
             }
             f = p.field;
             f.setAccessible(true);
+            //Log.i(TAG, "parse pre after  " + ((System.nanoTime() - start) / 1000));
+            //start = System.nanoTime();
             switch (p.classType) {
                 case CLASS_TYPE_STRING:
                     f.set(entity, c.getString(i));
@@ -199,17 +204,17 @@ public class DataUtil implements Serializable {
                 case CLASS_TYPE_BOOLEAN:
                     f.set(entity, Boolean.parseBoolean(c.getString(i)));
                     break;
-                case CLASS_TYPE_DOUBLE:
-                    f.set(entity, c.getDouble(i));
-                    break;
-                case CLASS_TYPE_FLOAT:
-                    f.set(entity, c.getFloat(i));
-                    break;
                 case CLASS_TYPE_LONG:
                     f.set(entity, c.getLong(i));
                     break;
                 case CLASS_TYPE_INT:
                     f.set(entity, c.getInt(i));
+                    break;
+                case CLASS_TYPE_DOUBLE:
+                    f.set(entity, c.getDouble(i));
+                    break;
+                case CLASS_TYPE_FLOAT:
+                    f.set(entity, c.getFloat(i));
                     break;
                 case CLASS_TYPE_SHORT:
                     f.set(entity, c.getShort(i));
@@ -244,6 +249,7 @@ public class DataUtil implements Serializable {
                 default:
                     break;
             }
+            //Log.i(TAG, "parse set after  " + ((System.nanoTime() - start) / 1000));
         }
     }
 

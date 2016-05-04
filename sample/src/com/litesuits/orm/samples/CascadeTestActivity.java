@@ -3,6 +3,7 @@ package com.litesuits.orm.samples;
 import android.os.Bundle;
 import android.os.Environment;
 import com.litesuits.orm.LiteOrm;
+import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.model.ColumnsValue;
@@ -42,8 +43,11 @@ public class CascadeTestActivity extends BaseActivity {
 
         if (liteOrm == null) {
             // 使用级联操作
-            liteOrm = LiteOrm.newCascadeInstance(this, DB_NAME);
-            liteOrm.setDebugged(true);
+            DataBaseConfig config = new DataBaseConfig(this, DB_NAME);
+            config.debugged = true; // open the log
+            config.dbVersion = 1; // set database version
+            config.onUpdateListener = null; // set database update listener
+            liteOrm = LiteOrm.newSingleInstance(config);
         }
 
         //DataBase db = LiteOrm.newCascadeInstance(this, "cascade.db");
@@ -273,9 +277,9 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     /**
-     * 100 000 条数据
+     * 10000 条数据
      */
-    final int MAX = 100000;
+    final int MAX = 10000;
 
     /**
      * 注意 级联操作10万个数据将会相当耗时

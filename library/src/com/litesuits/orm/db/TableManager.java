@@ -120,7 +120,7 @@ public final class TableManager {
      * 检测[映射表]是否建立，没有则建一张新表。
      */
     public synchronized void checkOrCreateMappingTable(SQLiteDatabase db, String tableName,
-            String column1, String column2) {
+                                                       String column1, String column2) {
         // 关键点1：获取[实体表]
         EntityTable table = getMappingTable(tableName, column1, column2);
         // 关键点2: 判断[数据库表]是否存在，是否需要新加列。

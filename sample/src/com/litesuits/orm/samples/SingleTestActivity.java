@@ -2,6 +2,7 @@ package com.litesuits.orm.samples;
 
 import android.os.Bundle;
 import com.litesuits.orm.LiteOrm;
+import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.model.ColumnsValue;
@@ -48,9 +49,12 @@ public class SingleTestActivity extends BaseActivity {
         mockData();
 
         if (liteOrm == null) {
-            liteOrm = LiteOrm.newSingleInstance(this, "liteorm.db");
+            DataBaseConfig config = new DataBaseConfig(this, "liteorm.db");
+            config.debugged = true; // open the log
+            config.dbVersion = 1; // set database version
+            config.onUpdateListener = null; // set database update listener
+            liteOrm = LiteOrm.newSingleInstance(config);
         }
-        liteOrm.setDebugged(true); // open the log
     }
 
     @Override
