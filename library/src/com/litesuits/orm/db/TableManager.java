@@ -417,20 +417,14 @@ public final class TableManager {
                 if (FieldUtil.isInvalid(f)) {
                     continue;
                 }
-                Property p = new Property();
-                p.field = f;
-                p.classType = DataUtil.getFieldClassType(f);
+
                 // 获取列名,每个属性都有，没有注解默认取属性名
-                //if(OrmLog.isPrint)OrmLog.i(TAG, "Column : " + Column.class+ "  field: "+ f);
                 Column col = f.getAnnotation(Column.class);
-                if (col != null) {
-                    p.column = col.value();
-                } else {
-                    p.column = f.getName();
-                }
+                String column = col != null ? col.value() : f.getName();
+                Property p = new Property(column, f);
+
 
                 // 主键判断
-                //if(OrmLog.isPrint)OrmLog.i(TAG, "Primarykey : " + Primarykey.class + "  field: "+ f + " asst:" + AssignType.AUTO_INCREMENT);
                 PrimaryKey key = f.getAnnotation(PrimaryKey.class);
                 if (key != null) {
                     // 主键不加入属性Map
@@ -439,7 +433,6 @@ public final class TableManager {
                     checkPrimaryKey(table.key);
                 } else {
                     //ORM handle
-                    //if(OrmLog.isPrint)OrmLog.i(TAG, "Mapping : " + Mapping.class+ " field: "+ f);
                     Mapping mapping = f.getAnnotation(Mapping.class);
                     if (mapping != null) {
                         table.addMapping(new MapProperty(p, mapping.value()));

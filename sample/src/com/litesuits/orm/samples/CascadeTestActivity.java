@@ -47,7 +47,7 @@ public class CascadeTestActivity extends BaseActivity {
             config.debugged = true; // open the log
             config.dbVersion = 1; // set database version
             config.onUpdateListener = null; // set database update listener
-            liteOrm = LiteOrm.newSingleInstance(config);
+            liteOrm = LiteOrm.newCascadeInstance(config);// cascade
         }
 
         //DataBase db = LiteOrm.newCascadeInstance(this, "cascade.db");
@@ -154,7 +154,6 @@ public class CascadeTestActivity extends BaseActivity {
     }
 
     private void testSave() {
-        School school = new School("hello");
         liteOrm.save(school);
     }
 
@@ -266,13 +265,13 @@ public class CascadeTestActivity extends BaseActivity {
     private void testDeleteAll() {
         // 连同其关联的classes，classes关联的其他对象一带删除
         liteOrm.deleteAll(School.class);
-        liteOrm.deleteAll(Book.class);
+        //liteOrm.deleteAll(Book.class);
 
 
         // 顺带测试：连库文件一起删掉
-        liteOrm.deleteDatabase();
+        //liteOrm.deleteDatabase();
         // 顺带测试：然后重建一个新库
-        liteOrm.openOrCreateDatabase();
+        //liteOrm.openOrCreateDatabase();
         // 满血复活
     }
 
@@ -296,7 +295,7 @@ public class CascadeTestActivity extends BaseActivity {
 
     private void queryAndPrintAll(Class claxx) {
         List list = liteOrm.query(claxx);
-        OrmLog.i(TAG, list);
+        OrmLog.i(TAG, claxx.getSimpleName() + " : " + list);
     }
 
 
