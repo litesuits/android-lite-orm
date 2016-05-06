@@ -643,7 +643,7 @@ public final class CascadeSQLiteImpl extends LiteOrm {
                         SQLStatement stmt = SQLBuilder.buildDeleteSql(entity);
                         deleteRecursive(stmt, entity, db, handleMap);
 
-                        //1.0 保存剩余实体
+                        //1.0 删除剩余实体
                         while (iterator.hasNext()) {
                             //1.1 绑定对应值
                             Object next = iterator.next();
