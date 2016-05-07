@@ -16,8 +16,8 @@ import com.litesuits.orm.db.enums.AssignType;
 public class Address extends BaseModel{
 
     public static final String COL_ID = "_id";
-    public static final String COL_ADDRESS = "_address";
-    public static final String COL_CITY= "_city";
+    public static final String COL_ADDRESS = "address";
+    public static final String COL_CITY= "city";
 
     @PrimaryKey(AssignType.AUTO_INCREMENT)
     @Column(COL_ID)

@@ -359,11 +359,22 @@ public class SingleTestActivity extends BaseActivity {
     }
 
     private void testDeleteByWhereBuilder() {
-        //AND关系 删掉 南京 的 香港路
+        //AND关系 删掉 南京 的 香港路 第一种写法
         liteOrm.delete(WhereBuilder
                 .create(Address.class)
                 .equals(Address.COL_ADDRESS, "香港路")
                 .andEquals(Address.COL_CITY, "南京"));
+
+        //AND关系 删掉 南京 的 香港路 第二种写法
+        liteOrm.delete(WhereBuilder
+                .create(Address.class)
+                .where("address=? AND city=?", new String[]{"香港路", "南京"}));
+
+        //AND关系 删掉 南京 的 香港路 第三种写法
+        liteOrm.delete(WhereBuilder
+                .create(Address.class)
+                .where("address=? AND city=?", "香港路", "南京"));
+
         printAllAddress();
 
         //OR关系 删掉所有地址为 香港路 ，同时删掉 青岛的所有地址

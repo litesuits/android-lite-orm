@@ -71,7 +71,7 @@ public class QueryBuilder<T> {
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
      */
-    public QueryBuilder<T> where(String where, Object[] whereArgs) {
+    public QueryBuilder<T> where(String where, Object... whereArgs) {
         whereBuilder.where(where, whereArgs);
         return this;
     }
@@ -83,7 +83,7 @@ public class QueryBuilder<T> {
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
      */
-    public QueryBuilder<T> whereAppend(String where, Object[] whereArgs) {
+    public QueryBuilder<T> whereAppend(String where, Object... whereArgs) {
         whereBuilder.append(null, where, whereArgs);
         return this;
     }
@@ -97,7 +97,7 @@ public class QueryBuilder<T> {
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
      */
-    public QueryBuilder<T> whereAnd(String where, Object[] whereArgs) {
+    public QueryBuilder<T> whereAnd(String where, Object... whereArgs) {
         whereBuilder.and(where, whereArgs);
         return this;
     }
@@ -111,7 +111,7 @@ public class QueryBuilder<T> {
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
      */
-    public QueryBuilder<T> whereOr(String where, Object[] whereArgs) {
+    public QueryBuilder<T> whereOr(String where, Object... whereArgs) {
         whereBuilder.or(where, whereArgs);
         return this;
     }
@@ -175,7 +175,7 @@ public class QueryBuilder<T> {
     /**
      * build as where+" column IN(?, ?, ?...)"
      */
-    public QueryBuilder<T> whereIn(String column, Object[] values) {
+    public QueryBuilder<T> whereIn(String column, Object... values) {
         whereBuilder.in(column, values);
         return this;
     }

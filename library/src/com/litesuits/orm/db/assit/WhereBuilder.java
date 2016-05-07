@@ -55,9 +55,8 @@ public class WhereBuilder {
      *                  "id LIKE %?"
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
-     * @return
      */
-    public WhereBuilder where(String where, Object[] whereArgs) {
+    public WhereBuilder where(String where, Object... whereArgs) {
         this.where = where;
         this.whereArgs = whereArgs;
         return this;
@@ -69,9 +68,8 @@ public class WhereBuilder {
      *                  "id LIKE %?"
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
-     * @return
      */
-    public WhereBuilder and(String where, Object[] whereArgs) {
+    public WhereBuilder and(String where, Object... whereArgs) {
         return append(AND, where, whereArgs);
     }
 
@@ -81,9 +79,8 @@ public class WhereBuilder {
      *                  "id LIKE %?"
      * @param whereArgs new String[]{"",""};
      *                  new Integer[]{1,2}
-     * @return
      */
-    public WhereBuilder or(String where, Object[] whereArgs) {
+    public WhereBuilder or(String where, Object... whereArgs) {
         return append(OR, where, whereArgs);
     }
 
@@ -162,21 +159,21 @@ public class WhereBuilder {
     /**
      * build as " column in(?,?...) "
      */
-    public WhereBuilder in(String column, Object[] values) {
+    public WhereBuilder in(String column, Object... values) {
         return append(null, buildWhereIn(column, values.length), values);
     }
 
     /**
      * build as " or column in(?,?...) "
      */
-    public WhereBuilder orIn(String column, Object[] values) {
+    public WhereBuilder orIn(String column, Object... values) {
         return append(OR, buildWhereIn(column, values.length), values);
     }
 
     /**
      * build as " and column in(?,?...) "
      */
-    public WhereBuilder andIn(String column, Object[] values) {
+    public WhereBuilder andIn(String column, Object... values) {
         return append(AND, buildWhereIn(column, values.length), values);
     }
 
@@ -201,10 +198,14 @@ public class WhereBuilder {
                 where += connect;
             }
             where += whereString;
-            Object[] newWhere = new Object[whereArgs.length + value.length];
-            System.arraycopy(whereArgs, 0, newWhere, 0, whereArgs.length);
-            System.arraycopy(value, 0, newWhere, whereArgs.length, value.length);
-            this.whereArgs = newWhere;
+            if (whereArgs == null) {
+                this.whereArgs = value;
+            } else {
+                Object[] newWhere = new Object[whereArgs.length + value.length];
+                System.arraycopy(whereArgs, 0, newWhere, 0, whereArgs.length);
+                System.arraycopy(value, 0, newWhere, whereArgs.length, value.length);
+                this.whereArgs = newWhere;
+            }
         }
         return this;
     }
