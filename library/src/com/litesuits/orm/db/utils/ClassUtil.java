@@ -1,17 +1,13 @@
 package com.litesuits.orm.db.utils;
 
-import android.annotation.TargetApi;
-import android.os.Build;
 import com.litesuits.orm.db.annotation.MapCollection;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 类工具
@@ -24,7 +20,7 @@ public class ClassUtil {
     /**
      * 判断类是否是基础数据类型
      * 目前支持11种
-     * 在{@link com.litesuits.orm.db.utils.DataUtil#injectDataToObject} 中注入也有体现
+     * 在{@link DataUtil#injectDataToObject} 中注入也有体现
      */
     public static boolean isBaseDataType(Class<?> clazz) {
         return clazz.isPrimitive() || clazz.equals(String.class) || clazz.equals(Boolean.class)
@@ -35,7 +31,7 @@ public class ClassUtil {
     }
 
     /**
-     * 根据类获取对象：不再必须一个无参构造
+     * 根据类获取对象：不再必须一个无参构造，如果提供了无参构造，会优先调用
      */
     public static <T> T newInstance(Class<T> claxx)
             throws IllegalAccessException, InvocationTargetException, InstantiationException {
@@ -45,14 +41,17 @@ public class ClassUtil {
             if (cls.length == 0) {
                 c.setAccessible(true);
                 return (T) c.newInstance();
-            } else {
-                Object[] objs = new Object[cls.length];
-                for (int i = 0; i < cls.length; i++) {
-                    objs[i] = getDefaultPrimiticeValue(cls[i]);
-                }
-                c.setAccessible(true);
-                return (T) c.newInstance(objs);
             }
+        }
+        if (cons.length > 0) {
+            Constructor<?> c = cons[0];
+            Class[] cls = c.getParameterTypes();
+            Object[] objs = new Object[cls.length];
+            for (int i = 0; i < cls.length; i++) {
+                objs[i] = getDefaultPrimiticeValue(cls[i]);
+            }
+            c.setAccessible(true);
+            return (T) c.newInstance(objs);
         }
         return null;
     }
