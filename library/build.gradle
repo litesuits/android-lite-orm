@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0" // Remove it if you won't to publish SNAPSHOT version.
+    }
+}
+
 apply plugin: 'com.android.library'
 
 android {
@@ -26,3 +37,6 @@ android {
 dependencies {
 }
 
+if (hasProperty("bintrayUser") || hasProperty("BINTRAY_USER")) {
+    apply from: '../bintray.gradle'
+}
