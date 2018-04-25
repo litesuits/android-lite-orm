@@ -1,0 +1,16 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
+
+    defaultConfig {
+        minSdkVersion 7
+        targetSdkVersion 22
+    }
+}
+
+dependencies {
+    implementation project(':library')
+}
+
