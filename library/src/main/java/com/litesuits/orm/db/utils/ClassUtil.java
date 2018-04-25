@@ -1,17 +1,14 @@
 package com.litesuits.orm.db.utils;
 
-import android.annotation.TargetApi;
-import android.os.Build;
 import com.litesuits.orm.db.annotation.MapCollection;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 类工具
@@ -20,6 +17,7 @@ import java.util.List;
  * @date 2013-6-10下午8:00:46
  */
 public class ClassUtil {
+    private static final Map<Class, ClassFactory> CLASS_FACTORIES = new HashMap();
 
     /**
      * 判断类是否是基础数据类型
@@ -39,22 +37,12 @@ public class ClassUtil {
      */
     public static <T> T newInstance(Class<T> claxx)
             throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        Constructor<?>[] cons = claxx.getDeclaredConstructors();
-        for (Constructor<?> c : cons) {
-            Class[] cls = c.getParameterTypes();
-            if (cls.length == 0) {
-                c.setAccessible(true);
-                return (T) c.newInstance();
-            } else {
-                Object[] objs = new Object[cls.length];
-                for (int i = 0; i < cls.length; i++) {
-                    objs[i] = getDefaultPrimiticeValue(cls[i]);
-                }
-                c.setAccessible(true);
-                return (T) c.newInstance(objs);
-            }
+        ClassFactory<T> factory = CLASS_FACTORIES.get(claxx);
+        if (factory == null) {
+            factory = ClassFactory.get(claxx);
+            CLASS_FACTORIES.put(claxx, factory);
         }
-        return null;
+        return factory.newInstance();
     }
 
     public static Object newCollection(Class<?> claxx) throws IllegalAccessException, InstantiationException {
