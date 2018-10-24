@@ -5,10 +5,18 @@ import com.litesuits.orm.db.annotation.MapCollection;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * 类工具
@@ -52,7 +60,22 @@ public class ClassUtil {
     public static Object newCollectionForField(Field field) throws IllegalAccessException, InstantiationException {
         MapCollection coll = field.getAnnotation(MapCollection.class);
         if (coll == null) {
-            return field.getType().newInstance();
+            final Class rawType = field.getType();
+            if (rawType.isInterface()) {
+                if (List.class.isAssignableFrom(rawType)) {
+                    return new ArrayList<>();
+                } else if (SortedSet.class.isAssignableFrom(rawType)) {
+                    return new TreeSet<>();
+                } else if (Set.class.isAssignableFrom(rawType)) {
+                    return new LinkedHashSet<>();
+                } else if (Queue.class.isAssignableFrom(rawType)) {
+                    return new ArrayDeque<>();
+                } else {
+                    throw new IllegalAccessException("The type " + rawType.getName() + " cannot be instantiated");
+                }
+            } else {
+                return rawType.newInstance();
+            }
         } else {
             return coll.value().newInstance();
         }
