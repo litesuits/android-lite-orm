@@ -139,13 +139,13 @@ public class FieldUtil {
         } else if (claxx == byte.class) {
             field.setByte(o, (byte) n);
         } else if (claxx == Long.class) {
-            field.set(o, new Long(n));
+            field.set(o, Long.valueOf(n));
         } else if (claxx == Integer.class) {
-            field.set(o, new Integer((int) n));
+            field.set(o, Integer.valueOf((int) n));
         } else if (claxx == Short.class) {
-            field.set(o, new Short((short) n));
+            field.set(o, Short.valueOf((short) n));
         } else if (claxx == Byte.class) {
-            field.set(o, new Byte((byte) n));
+            field.set(o, Byte.valueOf((byte) n));
         } else {
             throw new RuntimeException("field is not a number class");
         }
