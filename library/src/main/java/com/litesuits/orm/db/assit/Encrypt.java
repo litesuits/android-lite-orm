@@ -37,7 +37,7 @@ public final class Encrypt {
 
 	public static String getEncodeString(String src, String algorithm) {
 		try {
-			MessageDigest digest = MessageDigest.getInstance("MD5");
+			MessageDigest digest = MessageDigest.getInstance(algorithm);
 			digest.update(src.getBytes());
 			byte[] md = digest.digest();
 			int j = md.length;
