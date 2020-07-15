@@ -1,8 +1,9 @@
 package com.litesuits.orm.db.assit;
 
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.log.OrmLog;
+
+import net.sqlcipher.Cursor;
+import net.sqlcipher.database.SQLiteDatabase;
 
 /**
  * 辅助查询

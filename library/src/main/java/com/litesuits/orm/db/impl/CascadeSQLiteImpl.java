@@ -1,7 +1,5 @@
 package com.litesuits.orm.db.impl;
 
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
@@ -12,7 +10,9 @@ import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 
-import java.io.IOException;
+import net.sqlcipher.Cursor;
+import net.sqlcipher.database.SQLiteDatabase;
+
 import java.lang.reflect.Field;
 import java.util.*;
 

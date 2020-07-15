@@ -2,16 +2,16 @@ package com.litesuits.orm.test;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.SQLiteHelper;
-import com.litesuits.orm.db.assit.Transaction;
 import com.litesuits.orm.log.OrmLog;
 import com.litesuits.orm.model.single.Boss;
 import com.litesuits.orm.model.single.Man;
+
+import net.sqlcipher.Cursor;
+import net.sqlcipher.database.SQLiteDatabase;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,6 +1,5 @@
 package com.litesuits.orm.db.impl;
 
-import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.LiteOrm;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
@@ -8,6 +7,8 @@ import com.litesuits.orm.db.assit.*;
 import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.db.model.EntityTable;
+
+import net.sqlcipher.database.SQLiteDatabase;
 
 import java.util.ArrayList;
 import java.util.Collection;
