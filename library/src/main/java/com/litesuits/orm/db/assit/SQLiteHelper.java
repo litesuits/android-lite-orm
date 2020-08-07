@@ -2,6 +2,8 @@ package com.litesuits.orm.db.assit;
 
 import android.content.Context;
 
+import com.litesuits.orm.LiteOrmApplication;
+
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteOpenHelper;
 
@@ -36,10 +38,10 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 	}
 
 	public synchronized SQLiteDatabase getWritableDatabase() {
-		return super.getWritableDatabase("pwd");
+		return super.getWritableDatabase(LiteOrmApplication.getPwd());
 	}
 
 	public synchronized SQLiteDatabase getReadableDatabase() {
-		return super.getReadableDatabase("pwd");
+		return super.getReadableDatabase(LiteOrmApplication.getPwd());
 	}
 }
