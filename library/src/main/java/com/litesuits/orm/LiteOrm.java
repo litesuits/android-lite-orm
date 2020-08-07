@@ -16,13 +16,9 @@
 package com.litesuits.orm;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteClosable;
-import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.DataBase;
 import com.litesuits.orm.db.DataBaseConfig;
 import com.litesuits.orm.db.TableManager;
-import com.litesuits.orm.db.annotation.Check;
 import com.litesuits.orm.db.assit.*;
 import com.litesuits.orm.db.impl.CascadeSQLiteImpl;
 import com.litesuits.orm.db.impl.SingleSQLiteImpl;
@@ -31,6 +27,10 @@ import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 import com.litesuits.orm.log.OrmLog;
+
+import net.sqlcipher.Cursor;
+import net.sqlcipher.database.SQLiteClosable;
+import net.sqlcipher.database.SQLiteDatabase;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -332,7 +332,7 @@ public abstract class LiteOrm extends SQLiteClosable implements DataBase {
     @Override
     public SQLiteDatabase openOrCreateDatabase(String path, SQLiteDatabase.CursorFactory factory) {
         path = mConfig.context.getDatabasePath(mConfig.dbName).getPath();
-        return SQLiteDatabase.openOrCreateDatabase(path, factory);
+        return SQLiteDatabase.openOrCreateDatabase(path, "pwd", factory);
     }
 
     @Override

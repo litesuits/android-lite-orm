@@ -15,7 +15,6 @@
  */
 package com.litesuits.orm.db;
 
-import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.assit.QueryBuilder;
 import com.litesuits.orm.db.assit.WhereBuilder;
 import com.litesuits.orm.db.assit.SQLStatement;
@@ -23,6 +22,8 @@ import com.litesuits.orm.db.assit.SQLiteHelper;
 import com.litesuits.orm.db.model.ColumnsValue;
 import com.litesuits.orm.db.model.ConflictAlgorithm;
 import com.litesuits.orm.db.model.RelationKey;
+
+import net.sqlcipher.database.SQLiteDatabase;
 
 import java.io.File;
 import java.util.ArrayList;

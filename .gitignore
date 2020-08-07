@@ -35,3 +35,17 @@ proguard/
 .idea/
 
 .DS_Store
+
+.gradle
+
+.idea
+
+local.properties
+
+liteorm.iml
+
+library/library.iml
+library/build
+
+sample/sample.iml
+sample/build

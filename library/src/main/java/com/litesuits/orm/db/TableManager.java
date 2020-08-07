@@ -15,9 +15,6 @@
  */
 package com.litesuits.orm.db;
 
-
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import com.litesuits.orm.db.annotation.Column;
 import com.litesuits.orm.db.annotation.Mapping;
 import com.litesuits.orm.db.annotation.PrimaryKey;
@@ -32,6 +29,9 @@ import com.litesuits.orm.db.model.*;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 import com.litesuits.orm.log.OrmLog;
+
+import net.sqlcipher.Cursor;
+import net.sqlcipher.database.SQLiteDatabase;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

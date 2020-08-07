@@ -1,9 +1,11 @@
 package com.litesuits.orm.db.assit;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
-import android.database.sqlite.SQLiteOpenHelper;
+
+import com.litesuits.orm.LiteOrmApplication;
+
+import net.sqlcipher.database.SQLiteDatabase;
+import net.sqlcipher.database.SQLiteOpenHelper;
 
 /**
  * SQLite辅助类
@@ -19,8 +21,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
 	private OnUpdateListener onUpdateListener;
 
-	public SQLiteHelper(Context context, String name, CursorFactory factory, int version,
-			OnUpdateListener onUpdateListener) {
+	public SQLiteHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version,
+						OnUpdateListener onUpdateListener) {
 		super(context, name, factory, version);
 		this.onUpdateListener = onUpdateListener;
 	}
@@ -35,4 +37,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 		}
 	}
 
+	public synchronized SQLiteDatabase getWritableDatabase() {
+		return super.getWritableDatabase(LiteOrmApplication.getPwd());
+	}
+
+	public synchronized SQLiteDatabase getReadableDatabase() {
+		return super.getReadableDatabase(LiteOrmApplication.getPwd());
+	}
 }

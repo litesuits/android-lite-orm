@@ -1,10 +1,6 @@
 package com.litesuits.orm.db.assit;
 
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
-import android.util.Log;
 import com.litesuits.orm.db.TableManager;
 import com.litesuits.orm.db.assit.Querier.CursorParser;
 import com.litesuits.orm.db.model.ColumnsValue;
@@ -16,6 +12,10 @@ import com.litesuits.orm.db.utils.ClassUtil;
 import com.litesuits.orm.db.utils.DataUtil;
 import com.litesuits.orm.db.utils.FieldUtil;
 import com.litesuits.orm.log.OrmLog;
+
+import net.sqlcipher.Cursor;
+import net.sqlcipher.database.SQLiteDatabase;
+import net.sqlcipher.database.SQLiteStatement;
 
 import java.io.IOException;
 import java.io.Serializable;

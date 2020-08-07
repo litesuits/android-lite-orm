@@ -1,0 +1,37 @@
+apply plugin: "com.android.application"
+
+android {
+    compileSdkVersion rootProject.compileSdkVersion as int
+    buildToolsVersion rootProject.buildToolsVersion
+
+    defaultConfig {
+        applicationId "com.litesuits.orm.samples"
+        minSdkVersion rootProject.minSdkVersion as int
+        targetSdkVersion rootProject.targetSdkVersion as int
+        versionCode rootProject.versionCode as int
+        versionName rootProject.versionName
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro", "proguard-fresco.pro"
+        }
+
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro", "proguard-fresco.pro"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation project(path: ":library")
+}
